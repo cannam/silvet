@@ -1,0 +1,71 @@
+
+program loadShiftedW;
+
+/*
+
+   The shiftedW.txt file contains the data from shiftedW.mat in the
+   amt_mssiplca_fast repository, exported as text via MATLAB dlmwrite.
+
+   This is described as "3 sets of piano templates learned from MAPS
+   database".
+
+   The data consists of a 4D array of dimensions 5 x 88 x 545 x 3.
+
+   I believe these dimensions are:
+    * bins per semitone (5)
+    * semitones, or number of components (88)
+    * spectral profile for a single pitch template (545)
+    * distinct piano sources (3)
+
+   In the text file, it is formatted as 5 rows of 143880 values.  Each
+   row contains 88 consecutive values from shiftedW(row,1,1,1) to
+   shiftedW(row,88,1,1), then 88 values from shiftedW(row,1,2,1) to
+   shiftedW(row,88,2,1), etc.
+
+   Here we load the file, convert it to a more structured JSON format,
+   and write it out again as templates.json.
+
+*/
+
+load yeti.experimental.json;
+
+mat = load may.matrix;
+plt = load may.plot;
+
+bps = 5;
+semitones = 88;
+values = 545;
+sources = 3;
+
+f = openInFile "shiftedW.txt" "UTF-8";
+
+raw = array (map do s: array (map number (strSplit "," s)) done (f.lines ()));
+
+println "Read \(length raw) rows, length of first row is \(length (head raw))";
+
+if length raw != 5 or length (head raw) != 88*545*3 then
+   failWith "Error: expected 5 rows of \(88*545*3) values each"
+fi;
+
+reshaped = jsonList (concatMap
+    do source:
+        map do bin:
+            jsonObj [
+                "source": jsonNum source,
+                "f": jsonNum bin,
+                "templates": mat.json
+                   (mat.generate do i semitone:
+                        raw[bin][source * (semitones * values) +
+                                 i * semitones +
+                                 semitone]
+                    done { rows = values, columns = semitones })
+            ]
+        done [0..bps-1]
+    done [0..sources-1]);
+
+o = openOutFile "templates.json" "UTF-8";
+
+o.write (jsonEncode reshaped);
+
+o.close ();
+                
