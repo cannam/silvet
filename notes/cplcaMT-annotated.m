@@ -116,8 +116,8 @@ if ~exist( 'u') || isempty( u)
     %% all 1s if note is in-range for instrument and all 0s otherwise
 end
 
-fh = cell(1, K);
-fw = cell(R, K);
+fh = cell(1, K); %% 1x88
+fw = cell(R, K); %% 10x88
 for k = 1:K
     fh{k} = ones(wc) + 1i*ones(wc);
     for r=1:R
@@ -125,9 +125,15 @@ for k = 1:K
     end;
 end;
 
+%% now fh is a 1x88 cell, and fh{note} is a 553x199 array initialised
+%% with all complex values 1 + 1i
+
+%% fw is a 10x88 cell, and fw{instrument,note} is a 553x199 array
+%% likewise
 
 
 % Make commands for subsequent multidim operations and initialize fw
+
 fnh = 'c(hc(1)-(T(1)+(1:size(h{k},1))-2),hc(2)-(T(2)+(1:size(h{k},2))-2))';
 xai = 'xa(1:size(x,1),1:size(x,2))';
 flz = 'xbar(end:-1:1,end:-1:1)';
@@ -135,6 +141,20 @@ flz = 'xbar(end:-1:1,end:-1:1)';
 for k = 1:K
     for r=1:R
         if( (pa(r,1) <= k &&  k <= pa(r,2)) )
+
+	  %% fftn(X,siz) takes an N-dimensional FFT (same number of
+	  %% dimensions as siz) of X, padding or truncating X
+	  %% beforehand so that it is of size siz. Here w{r,k} is the
+	  %% 545x1 template for instrument r and note k, and wc is
+	  %% 553x199.
+
+	  %% I believe this is equivalent to performing a 553-point
+	  %% FFT of each column of the input (with w{r,k} in the first
+	  %% 545 elements of the first column of that input) and then
+	  %% a 199-point FFT of each row of the result.
+
+	  %% The output is of course complex.
+
             fw{r,k} = fftn( w{r,k}, wc);
         end;
     end;
@@ -147,7 +167,7 @@ for it = 1:iter
     
     % E-step
     xa = eps;
-    for k = 16:73
+    for k = 16:73  %% overall note range found in instrument set
         fh{k} = fftn( h{k}, wc);
         for r=1:R
             if( (pa(r,1) <= k &&  k <= pa(r,2)) )
