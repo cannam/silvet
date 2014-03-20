@@ -36,7 +36,22 @@ clear('noteTemplatesBassoon','noteTemplatesCello','noteTemplatesClarinet','noteT
 %% range 27.5 -> samplerate/3, 60 bins per octave, a 'q' of 0.8 (lower
 %% than the maximum, and default, value of 1), 'atomHopFactor' 0.3
 %% rather than the default 0.25 (why?), Hann window, default sparsity
-%% threshold.
+%% threshold. The CQT obtained is the interpolated real-valued
+%% magnitude spectrogram rather than the complex output.
+
+%% The audio is always resampled to 44100Hz (if it isn't at that rate
+%% already) and mixed down to mono.
+
+%% The computed CQT parameters actually obtained are:
+%%   10 octaves
+%%   highest frequency 14700Hz
+%%   lowest frequency 14.5223Hz
+%%   column height 600 (60 bpo * 10 oct)
+%% But only bins 56:600 are used, the first 55 are dropped, leaving
+%% 545 bins per column. I *think* the spectrogram is the "right" way
+%% up at this point so those first 55 bins are the lowest-frequency
+%% ones, meaning the frequency range actually returned is 27.4144Hz
+%% to 14700Hz.
 
 %% for a 43.5 second 44.1 KHz audio file, intCQT will be a 545x30941
 %% array, one column every 0.0014 seconds.
