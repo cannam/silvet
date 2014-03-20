@@ -1,5 +1,5 @@
 
-program loadShiftedW;
+program convertShiftedW;
 
 /*
 
@@ -23,14 +23,15 @@ program loadShiftedW;
    shiftedW(row,88,2,1), etc.
 
    Here we load the file, convert it to a more structured JSON format,
-   and write it out again as templates.json.
+   and write it out again as templates.json; we also produce a set of
+   three files pianoN.csv which contain only the middle bin per
+   semitone for a single piano sample.
 
 */
 
 load yeti.experimental.json;
 
 mat = load may.matrix;
-plt = load may.plot;
 
 bps = 5;
 semitones = 88;
@@ -46,6 +47,19 @@ println "Read \(length raw) rows, length of first row is \(length (head raw))";
 if length raw != 5 or length (head raw) != 88*545*3 then
    failWith "Error: expected 5 rows of \(88*545*3) values each"
 fi;
+
+for [0..sources-1] do source:
+    o = openOutFile "piano\(source+1).csv" "UTF-8";
+    for [0..semitones-1] do semitone:
+        template = map do i:
+            raw[int(bps/2)][source * (semitones * values) +
+                            i * semitones +
+                            semitone]
+        done [0..values-1];
+        o.write ((strJoin "," (map string template)) ^ "\n");
+    done;
+    o.close ();
+done;
 
 reshaped = jsonList (concatMap
     do source:

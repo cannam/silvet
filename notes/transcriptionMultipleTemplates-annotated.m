@@ -11,8 +11,11 @@ load('noteTemplatesHorn');         W(:,:,6) = noteTemplatesHorn;
 load('noteTemplatesOboe');         W(:,:,7) = noteTemplatesOboe;
 load('noteTemplatesTenorSax');     W(:,:,8) = noteTemplatesTenorSax;
 load('noteTemplatesViolin');       W(:,:,9) = noteTemplatesViolin;
-load('noteTemplatesSptkBGCl');     W(:,:,10) = noteTemplatesSptkBGCl;
 
+%% SptkBGCl -> piano (it stands for Sampletek Steinway "Black Grand").
+%% It took me a while to figure this out! (It is documented in the
+%% MAPS database)
+load('noteTemplatesSptkBGCl');     W(:,:,10) = noteTemplatesSptkBGCl;
 
 %pitchActivity = [14 16 30 40 20 21 38 24 35 1; 52 61 69 76 56 57 71 55 80 88]';
 pitchActivity = [16 16 30 40 20 21 38 24 35 16; 52 61 69 73 56 57 71 55 73 73]';
