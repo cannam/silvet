@@ -58,7 +58,7 @@ X = max(X-noiseLevel2',0);
 Y = X(1:4:size(X,1),:);  % 40ms step
 
 %% a 1x1088 array containing the sum of each column. Doesn't appear to
-%% be used.
+%% be used in here, but it is returned to the caller.
 sumY = sum(Y');
 
 clear('intCQT','X','noiseLevel1','noiseLevel2');

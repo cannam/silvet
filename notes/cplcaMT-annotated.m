@@ -132,6 +132,58 @@ end;
 %% likewise
 
 
+%% The MIREX paper describes the model as
+%%
+%% P(w,t) = P(t) sum[p,f,s]( P(w-f|s,p) P(f|p,t) P(s|p,t) P(p|t) )
+%%
+%% where 
+%%   w = log-frequency bin index
+%%   t = time
+%%   s = instrument number
+%%   p = MIDI pitch number
+%%   f = frequency offset (pitch-adjustment convolution)
+%% so
+%%   P(w,t) = the input distribution (constant q spectrum)
+%%   P(t) = overall energy by time
+%%   P(w-f|s,p) = spectral template for instrument s, pitch p with offset f
+%%   P(f|p,t) = frequency offset for pitch p, time t?
+%%   P(s|p,t) = instrument contribution for pitch p, time t
+%%   P(p|t) = pitch probability for time t
+%% the outputs we want to produce are P(p|t) (the transcription matrix)
+%% and P(s|p,t) (the instrument classification).
+%%
+%% In this program,
+%%   x -> P(w,t), the input distribution
+%%   w -> P(w|s,p), the templates
+%%   h -> P(f|p,t), the pitch shift component
+%%   z -> P(p|t), the pitch probabilities, the main return value
+%%   u -> P(s|p,t), the source contribution, the secondary return value
+%%
+%% The paper gives the update rule for the expectation step as
+%% 
+%% P(p,f,s|w,t) =       P(w-f|s,p) P(f|p,t) P(s|p,t) P(p|t)
+%%                --------------------------------------------------
+%%                sum[p,f,s] ( P(w-f|s,p) P(f|p,t) P(s|p,t) P(p|t) )
+%%
+%% and the update equations for the maximization step as
+%%
+%% P(f|p,t) =  sum[w,s] ( P(p,f,s|w,t) P(w,t) )
+%%  or h      ----------------------------------
+%%            sum[f,w,s] ( P(p,f,s|w,t) P(w,t) )
+%%
+%% P(s|p,t) =  sum[w,f] ( P(p,f,s|w,t) P(w,t) )
+%%  or u      ----------------------------------
+%%            sum[s,w,f] ( P(p,f,s|w,t) P(w,t) )
+%%
+%% P(p|t) =  sum[w,f,s] ( P(p,f,s|w,t) P(w,t) )
+%%  or z    ------------------------------------
+%%          sum[p,w,f,s] ( P(p,f,s|w,t) P(w,t) )
+%%
+%% (there is also an update equation for x, or P(w|s,p) but we
+%% don't want that as it's the input)
+
+
+
 % Make commands for subsequent multidim operations and initialize fw
 
 fnh = 'c(hc(1)-(T(1)+(1:size(h{k},1))-2),hc(2)-(T(2)+(1:size(h{k},2))-2))';
@@ -155,6 +207,11 @@ for k = 1:K
 
 	  %% The output is of course complex.
 
+	  %% The purpose of this is to support convolution for pitch
+	  %% shifting. w{r,k} are the templates, and fw{r,k} are ffts
+	  %% of the templates which will be multiplied by fh, the
+	  %% equivalent ffts of the pitch shift contributions, later
+
             fw{r,k} = fftn( w{r,k}, wc);
         end;
     end;
@@ -166,13 +223,29 @@ for it = 1:iter
     %disp(['Iteration: ' num2str(it)]);
     
     % E-step
-    xa = eps;
+    xa = eps; %% tiny non-zero initialiser
     for k = 16:73  %% overall note range found in instrument set
-        fh{k} = fftn( h{k}, wc);
+        fh{k} = fftn( h{k}, wc); %% this and the subsequent ifftn are for the pitch-shift convolution step I think
         for r=1:R
             if( (pa(r,1) <= k &&  k <= pa(r,2)) )
                 xa1 = abs( real( ifftn( fw{r,k} .* fh{k})));                
                 xa = xa + xa1(1:size(x,1),1:size(x,2)) .*repmat(z{k},1,size(x,1))'.*repmat(u{r,k},1,size(x,1))';
+
+		%% so xa is the accumulation of the element-by-element
+		%% product of: the pitch-shifted templates (xa1); the
+		%% pitch probabilities (z); and the source
+		%% contributions (u); across all instruments and notes
+
+		%% note that xa1 is resized to match x, the input,
+		%% which is possible because fw and fh were
+		%% constructed at (just over) the same width and
+		%% (almost) twice the height (553x199 if x is
+		%% 549x100). 
+
+		%% the other components are 100x1, i.e. one value per
+		%% time step, so they are tiled up to 100x549 and then
+		%% transposed for the multiplication
+
                 clear xa1;
             end
         end
@@ -187,6 +260,9 @@ for it = 1:iter
     for k = 16:73
         
         
+      %% Throughout here, r is an instrument number (1..R) and k is a
+      %% note number (1..K)
+
         % Update h, z, u
         nh=eps;
         for r=1:R
