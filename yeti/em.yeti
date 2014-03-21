@@ -1,0 +1,31 @@
+
+module em;
+
+mm = load may.mathmisc;
+vec = load may.vector;
+mat = load may.matrix;
+
+initialiseEM ranges notes size =
+    {
+        pitches = // z in the original
+            array (map do note:
+                map \(mm.random ()) [0..size.columns-1]
+            done [0..notes-1]),
+        sources =
+            mapIntoHash id // u in the original
+                do instrument:
+                    array (map do note:
+                        if note >= ranges[instrument].lowestNote and
+                           note <= ranges[instrument].highestNote
+                        then vec.ones size.columns
+                        else vec.zeros size.columns
+                        fi
+                    done [0..notes-1])
+                done (keys ranges);
+    };
+
+{
+    initialiseEM
+}
+
+

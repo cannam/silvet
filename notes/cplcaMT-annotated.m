@@ -223,7 +223,7 @@ for it = 1:iter
     %disp(['Iteration: ' num2str(it)]);
     
     % E-step
-    xa = eps; %% tiny non-zero initialiser
+    xa = eps; %% tiny non-zero initialiser as we'll be dividing by this later
     for k = 16:73  %% overall note range found in instrument set
         fh{k} = fftn( h{k}, wc); %% this and the subsequent ifftn are for the pitch-shift convolution step I think
         for r=1:R  %% instruments

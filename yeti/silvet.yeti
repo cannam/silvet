@@ -2,31 +2,42 @@
 program silvet;
 
 { prepareTimeFrequency } = load timefreq;
-{ loadTemplates } = load templates;
+{ loadTemplates, extractRanges } = load templates;
+{ initialiseEM } = load em;
 
 mat = load may.matrix;
 vec = load may.vector;
 
 templates = loadTemplates ();
 
-eprintln "we have \(length (keys templates)) instruments:";
-for (sort (keys templates)) eprintln;
+ranges = extractRanges templates;
+
+eprintln "\nWe have \(length (keys templates)) instruments:";
+for (sort (keys templates)) do k:
+    eprintln " * \(k) \(mat.size templates[k]) range \(ranges[k].lowestNote) -> \(ranges[k].highestNote)";
+done;
 eprintln "";
 
 columns = prepareTimeFrequency "test.wav";
 
-chunkSize = 100;
 height = if empty? columns then 0 else vec.length (head columns) fi;
+
+chunkSize = { rows = height, columns = 100 };
+
+emdata = initialiseEM ranges 88 chunkSize;
+
+eprintln "initialised EM data";
 
 chunkify cols = 
     if empty? cols then []
     else
-       (mat.resizedTo { rows = chunkSize, columns = height }
-           (mat.fromColumns (take chunkSize cols)))
-        :. \(chunkify (drop chunkSize cols));
+       (mat.resizedTo chunkSize
+           (mat.fromColumns (take chunkSize.columns cols)))
+        :. \(chunkify (drop chunkSize.columns cols));
     fi;
 
 chunks = chunkify columns;
 
 eprintln "we have \(length chunks) chunks of size \(mat.size (head chunks))";
+
 

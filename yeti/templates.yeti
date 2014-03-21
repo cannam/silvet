@@ -2,6 +2,7 @@
 module templates;
 
 vec = load may.vector;
+mat = load may.matrix;
 
 // Load instrument templates
 
@@ -22,14 +23,24 @@ loadTemplates () = mapIntoHash id
     do instrument:
         readFile "../data/\(instrument).csv" "UTF-8"
             do istr:
-                array
+                mat.fromColumns
                    (map do line:
                         vec.fromList (map number (strSplit "," line))
-                   done (istr.lines ()));
+                    done (istr.lines ()));
             done;
     done instruments;
 
+//!!! these ranges are hardcoded in the original (and are a bit more restrictive)
+extractRanges templates = mapIntoHash id
+    do instrument:
+        levels = map vec.sum (mat.asColumns (templates[instrument]));
+        first = length levels - length (find (>0) levels);
+        last = length (find (>0) (reverse levels)) - 1;
+        { lowestNote = first, highestNote = last }
+    done (keys templates);
+
 {
-    loadTemplates
+    loadTemplates,
+    extractRanges
 }
 
