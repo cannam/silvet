@@ -226,7 +226,7 @@ for it = 1:iter
     xa = eps; %% tiny non-zero initialiser
     for k = 16:73  %% overall note range found in instrument set
         fh{k} = fftn( h{k}, wc); %% this and the subsequent ifftn are for the pitch-shift convolution step I think
-        for r=1:R
+        for r=1:R  %% instruments
             if( (pa(r,1) <= k &&  k <= pa(r,2)) )
                 xa1 = abs( real( ifftn( fw{r,k} .* fh{k})));                
                 xa = xa + xa1(1:size(x,1),1:size(x,2)) .*repmat(z{k},1,size(x,1))'.*repmat(u{r,k},1,size(x,1))';

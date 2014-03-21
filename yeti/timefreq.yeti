@@ -1,0 +1,98 @@
+
+module timefreq;
+
+// Obtain the time-frequency representation (based on constant-Q
+// transform) as transcription input
+
+af = load may.stream.audiofile;
+mat = load may.matrix;
+plot = load may.plot;
+vec = load may.vector;
+
+{ pow } = load may.mathmisc;
+
+{ resampledTo } = load may.stream.resample;
+
+{ cqt } = load cqt;
+
+prepareTimeFrequency wavfile =
+   (stream = resampledTo 44100 (af.openMono wavfile);
+
+    streamLength =
+        case stream.available of
+        Known n: n;
+        _: failWith "Audio file length unknown?!";
+        esac;
+      
+    eprintln "streamLength = \(streamLength)";
+
+   //!!! original also scales to peak = 0.5
+
+    cq = cqt {
+        maxFreq = stream.sampleRate / 3,
+        minFreq = 27.5,
+        binsPerOctave = 60
+    } stream;
+
+    //!!! note: original also modifies the Q and atomHopFactor
+    eprintln "atomSpacing = \(cq.kernel.atomSpacing)";
+
+    matrices = case cq.output (Spectrogram ()) of
+        Real mm: mm;
+        _: failWith "Expected real";
+        esac;
+
+    eprintln "have \(length matrices) matrices of size \(mat.size (head matrices)), isRowMajor? = \(mat.isRowMajor? (head matrices))";
+
+    levels = concatMap do m:
+        map do c: vec.sum c done (mat.asColumns m);
+    done matrices;
+
+    nztail = find (> 0.1) levels;
+    nzonly = reverse (find (> 0.1) (reverse nztail));
+
+    eprintln "non-zero columns start at \(length levels - length nztail), go on for \(length nzonly) [of \(length levels)]";
+    
+    nzstart = (length levels - length nztail) * cq.kernel.atomSpacing;
+    nzduration = (length nzonly) * cq.kernel.atomSpacing;
+
+    // Get a stream of columns at 25 per second.
+    // 
+    // The original picks samples at a rate of 100-per-second then
+    // median filters to reduce noise then picks samples again at
+    // 25-per-second. We don't do that (yet)
+
+    samplesPerCol = stream.sampleRate / 25;
+    var sample = samplesPerCol - nzstart;
+
+    columns = take (nzduration / samplesPerCol)
+       (concatMap do m:
+            concatMap do col:
+                sample := sample + cq.kernel.atomSpacing;
+                if sample >= samplesPerCol then
+                    sample := sample - samplesPerCol;
+                    [col]
+                else 
+                    []
+                fi;
+            done (mat.asColumns m);
+        done matrices);
+
+    eprintln "have \(length columns) columns of \(vec.length (head columns)) values each";
+
+    // drop the lowest 55 of the 600 bins
+    columns = map do c:
+        vec.slice c 55 (vec.length c);
+    done columns;
+
+    eprintln "now have \(length columns) columns of \(vec.length (head columns))";
+
+//    plot.plot [ Grid (mat.fromColumns columns) ];
+
+    columns);
+
+
+{
+    prepareTimeFrequency
+}
+

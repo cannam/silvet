@@ -1,0 +1,35 @@
+
+module templates;
+
+vec = load may.vector;
+
+// Load instrument templates
+
+instruments = [
+    "bassoon",
+    "cello",
+    "clarinet",
+    "flute",
+    "guitar",
+    "horn",
+    "oboe",
+    "tenorsax",
+    "violin",
+    "piano-maps-SptkBGCl"
+];
+
+loadTemplates () = mapIntoHash id
+    do instrument:
+        readFile "../data/\(instrument).csv" "UTF-8"
+            do istr:
+                array
+                   (map do line:
+                        vec.fromList (map number (strSplit "," line))
+                   done (istr.lines ()));
+            done;
+    done instruments;
+
+{
+    loadTemplates
+}
+
