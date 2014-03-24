@@ -267,13 +267,29 @@ for it = 1:iter
         nh=eps;
         for r=1:R
             if( (pa(r,1) <= k &&  k <= pa(r,2)) )
+
+	        %% so we're accumulating to nh (which is per-note but
+                %% across all instruments) here
+
+	        %% this is a convolution of the error (xbar) with w,
+	        %% carried out as a frequency-domain multiplication.
+	        %% so it's like xbar-for-all-w
                 c = abs( real( ifftn( fx .* fw{r,k} )));
-                nh1 = eval( fnh);
-                nh1 = nh1 .*repmat(u{r,k},1,size(h{k},1))';
-                nh = nh + nh1;
+
+                nh1 = eval( fnh); %% this one is highly mysterious
+
+		%% take the 100x1 note range matrix, repeat to 100x5
+		%% (as h{k} is 5x100), transpose, multiply nh1 by that
+                nh1 = nh1 .* repmat(u{r,k},1,size(h{k},1))';
+                nh = nh + nh1; %% so nh will presumably be 100x5 too
                 
-                nhu = eval( fnh);
+                nhu = eval( fnh); %% more mystery
+
+		%% h{k} is 5x100, I'd expect this to be 100x5, I must
+		%% have got something transposed somewhere
                 nhu = nhu .* h{k};
+
+		%% so I guess this is xbar-for-all-w-for-all-h?
                 nu = sum(nhu)';
                 nu = u{r,k} .* nu + eps;
                 if lu

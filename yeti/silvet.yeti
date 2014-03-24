@@ -3,10 +3,12 @@ program silvet;
 
 { prepareTimeFrequency } = load timefreq;
 { loadTemplates, extractRanges } = load templates;
-{ initialiseEM } = load em;
+
+em = load em;
 
 mat = load may.matrix;
 vec = load may.vector;
+plot = load may.plot;
 
 templates = loadTemplates ();
 
@@ -14,7 +16,7 @@ ranges = extractRanges templates;
 
 eprintln "\nWe have \(length (keys templates)) instruments:";
 for (sort (keys templates)) do k:
-    eprintln " * \(k) \(mat.size templates[k]) range \(ranges[k].lowestNote) -> \(ranges[k].highestNote)";
+    eprintln " * \(k) \(mat.size templates[k]) range \(ranges[k].lowest) -> \(ranges[k].highest)";
 done;
 eprintln "";
 
@@ -24,9 +26,9 @@ height = if empty? columns then 0 else vec.length (head columns) fi;
 
 chunkSize = { rows = height, columns = 100 };
 
-emdata = initialiseEM ranges 88 chunkSize;
+emdata = em.initialise ranges templates 88 chunkSize;
 
-eprintln "initialised EM data";
+eprintln "initialised EM data: overall pitch range \(emdata.lowest) -> \(emdata.highest)";
 
 chunkify cols = 
     if empty? cols then []
@@ -39,5 +41,24 @@ chunkify cols =
 chunks = chunkify columns;
 
 eprintln "we have \(length chunks) chunks of size \(mat.size (head chunks))";
+
+eprintln "attempting one expectation phase...";
+
+error = em.performExpectation emdata (head chunks);
+
+eprintln "done, result has dimension \(mat.size error)";
+
+eprintln "attempting one maximisation phase...";
+
+newP = em.performMaximisation emdata (head chunks) error;
+
+eprintln "done";
+
+\() (plot.plot [ Grid (head chunks) ]);
+\() (plot.plot [ Grid error ]);
+
+\() (plot.plot [ Grid newP ]);
+
+();
 
 

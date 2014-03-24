@@ -36,7 +36,7 @@ extractRanges templates = mapIntoHash id
         levels = map vec.sum (mat.asColumns (templates[instrument]));
         first = length levels - length (find (>0) levels);
         last = length (find (>0) (reverse levels)) - 1;
-        { lowestNote = first, highestNote = last }
+        { lowest = first, highest = last }
     done (keys templates);
 
 {
