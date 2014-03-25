@@ -180,7 +180,8 @@ end;
 %%          sum[p,w,f,s] ( P(p,f,s|w,t) P(w,t) )
 %%
 %% (there is also an update equation for x, or P(w|s,p) but we
-%% don't want that as it's the input)
+%% don't want that as it's the input -- one paper proposes an 89th
+%% template to learn the noise component but... not yet)
 
 
 
@@ -202,8 +203,7 @@ for k = 1:K
 
 	  %% I believe this is equivalent to performing a 553-point
 	  %% FFT of each column of the input (with w{r,k} in the first
-	  %% 545 elements of the first column of that input) and then
-	  %% a 199-point FFT of each row of the result.
+	  %% 545 elements of the first column of that input).
 
 	  %% The output is of course complex.
 
@@ -253,6 +253,9 @@ for it = 1:iter
     
     xbar = x ./ xa;
     xbar = eval( flz);
+
+    %% xbar now contains the result of Eqn 8 in the CMJ paper, Pt(p,f,s|w)
+
     fx = fftn( xbar, wc);
     
     
@@ -283,7 +286,7 @@ for it = 1:iter
                 nh1 = nh1 .* repmat(u{r,k},1,size(h{k},1))';
                 nh = nh + nh1; %% so nh will presumably be 100x5 too
                 
-                nhu = eval( fnh); %% more mystery
+                nhu = eval( fnh); %% more magic
 
 		%% h{k} is 5x100, I'd expect this to be 100x5, I must
 		%% have got something transposed somewhere

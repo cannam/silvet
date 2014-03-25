@@ -40,9 +40,10 @@ performExpectation data chunk =
         fold do acc instrument:
             fold do acc note:
                 template = mat.getColumn note data.templates[instrument];
-                w = mat.repeatedHorizontal (mat.width chunk) (mat.newColumnVector template);
-                p = mat.repeatedVertical (mat.height chunk) data.pitches[note];
-                s = mat.repeatedVertical (mat.height chunk) data.sources[instrument][note];
+                resize = mat.tiledTo (mat.size chunk);
+                w = resize (mat.newColumnVector template);
+                p = resize data.pitches[note];
+                s = resize data.sources[instrument][note];
                 mat.sum [acc, mat.entryWiseProduct [w, p, s]];
             done acc [data.ranges[instrument].lowest .. 
                       data.ranges[instrument].highest]
@@ -50,18 +51,20 @@ performExpectation data chunk =
     mat.entryWiseDivide chunk estimate);
 
 performMaximisation data chunk error =
-   (fold do acc note:
-        fold do acc instrument:
+   (pitches =
+        fold do acc note:
+            fold do acc instrument:
+                // want sum of error * original for all template and instruments
+                // for this pitch, divided by sum of error * original for all
+                // template and instruments for all pitches
+
             template = mat.getColumn note data.templates[instrument];
             w = mat.repeatedHorizontal (mat.width chunk) (mat.newColumnVector template);
             p = mat.repeatedVertical (mat.height chunk) data.pitches[note];
             s = mat.repeatedVertical (mat.height chunk) data.sources[instrument][note];
-
-
-            mat.sum [acc, mat.entryWiseProduct [w, s, error]]
-
+            mat.sum [acc, mat.entryWiseProduct [w, p, s, error]]
         done acc (select do i: inRange data.ranges i note done data.instruments)
-    done (mat.constMatrix epsilon (mat.size chunk)) [data.lowest .. data.highest]);
+    done (mat.constMatrix epsilon  [data.lowest .. data.highest]);
 
 {
     initialise,
