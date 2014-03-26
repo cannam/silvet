@@ -64,7 +64,8 @@ performMaximisation data chunk error =
             s = mat.repeatedVertical (mat.height chunk) data.sources[instrument][note];
             mat.sum [acc, mat.entryWiseProduct [w, p, s, error]]
         done acc (select do i: inRange data.ranges i note done data.instruments)
-    done (mat.constMatrix epsilon  [data.lowest .. data.highest]);
+    done (mat.constMatrix epsilon (mat.size chunk)) [data.lowest .. data.highest];
+    pitches);
 
 {
     initialise,
