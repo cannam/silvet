@@ -1,0 +1,63 @@
+
+I agree with you - having a look at a model that does not support 
+convolution would help. You'll find attached 'hnmf.m', which is 
+essentially the same model without convolution. So the simplified model 
+is: P(w,t) = P(t) \sum_{s,p} P(w|p,s)P(p|t)P(s|p,t)
+
+Also, a more recent (and much more efficient) version of the CMJ system 
+converts the model from a convolutive to a linear one, but still keeping 
+the shift-invariance support. That is achieved by having a pre-extracted 
+4-D dictionary that also supports templates that are pre-shifted across 
+log-frequency (so that the system would not need to compute the 
+convolutions during the EM step). I have uploaded the source code on 
+SoundSoftware [i], and you can find the related paper in [ii]. This 
+system has the exact same performance with the CMJ one, but is much 
+easier to understand/implement, and is over 50 times faster. 
+
+[i] https://code.soundsoftware.ac.uk/projects/amt_mssiplca_fast
+[ii] http://www.ecmlpkdd2013.org/wp-content/uploads/2013/09/MLMU_benetos.pdf
+
+> In eqn 12,
+>    Pt(p) =
+>        sum[w,f,s] ( P(p,f,s|w,t) Vw,t ) /
+>        sum[p,w,f,s] ( P(p,f,s|w,t) Vw,t )
+>
+> P(p,f,s|w,t) is the result of the E-step (and a time-frequency
+> distribution), and Vw,t is the input spectrogram (also a
+> time-frequency distribution), right?
+
+Right! Basically, P(p,f,s|w,t) is a 5-dimensional matrix, essentially 
+the model without the sums (the sums convert P(p,f,s|w,t) into a 2-D 
+matrix P(w,t)).
+
+> So I read this as something like: update the pitch probability
+> distribution for time t so that its value for a pitch p is the ratio
+> of the sum of the expression P(p,f,s|w,t) Vw,t for *that* pitch
+> variable to the sum of the same expression across *all* pitch
+> variables.
+
+The equation you put essentially takes the 5-dimensional quantity 
+P(p,f,s|w,t) Vw,t and marginalises it to P(p,t), i.e. it sums over all 
+other dimensions. All these 'unknown' parameters, e.g. P(s|p,t), are 
+generated from this 5-dimensional posterior distribution.
+
+> But what does it mean to refer to P(p,f,s|w,t) for a single pitch
+> variable, given that P(p,f,s|w,t) is just a time-frequency
+> distribution? There doesn't seem to be any dependence on p in it. I
+> think this is where I'm missing the (hopefully obvious) fundamental
+> thing.
+
+P(p,f,s|w,t) is not a time-frequency distribution; it is a 5-dimensional 
+posterior distribution of the 3 unknown model parameters given time and 
+frequency.
+
+The basic concept of EM is that you have a latent variable in your 
+model, e.g. p; in the E-step, you compute the posterior given the 
+known/input data (e.g. P(p|w,t)). For the M-step, you compute the 
+complete likelihood given the original input, P(p|w,t)Vwt; and you 
+marginalise over the variables that you don't care about, e.g. if you 
+want to find P(p|t), you compute \sum_w P(p|w,t)V_wt; finally, you 
+normalise that result according to your model, so if your model has a 
+P(p|t) component, you normalise so that P(p) for a given timeframe sums 
+to one (this is the denominator in the equation you showed).
+

@@ -5,6 +5,7 @@ program silvet;
 { loadTemplates, extractRanges } = load templates;
 
 em = load em;
+em1 = load em_onecolumn;
 
 mat = load may.matrix;
 vec = load may.vector;
@@ -22,6 +23,7 @@ eprintln "";
 
 columns = prepareTimeFrequency "test.wav";
 
+/*
 height = if empty? columns then 0 else vec.length (head columns) fi;
 
 chunkSize = { rows = height, columns = 100 };
@@ -58,6 +60,25 @@ eprintln "done";
 \() (plot.plot [ Grid error ]);
 
 \() (plot.plot [ Grid newP ]);
+*/
+
+em1data = em1.initialise ranges templates 88;
+
+col = head (drop 35 columns);
+
+\() (plot.plot [ Vector col ]);
+
+oneIteration em1data col =
+   (q = em1.performExpectation em1data col;
+    \() (plot.plot [ Vector col, Vector q ]);
+    newdata = em1.performMaximisation em1data col q;
+    \() (plot.plot [ Vector (em1data.pitches), Vector (newdata.pitches) ]);
+    newdata);
+
+em1data = oneIteration em1data col;
+em1data = oneIteration em1data col;
+em1data = oneIteration em1data col;
+
 
 ();
 

@@ -68,7 +68,7 @@ end;
 for it = 1:iter
     
     % E-step
-    zh = z .* permute(repmat(h,[1 1 R]),[3 1 2]);
+    zh = z .* permute(repmat(h,[1 1 R]),[3 1 2]); %% z is the source activation distribution, h the component (pitch) activation
     xa=eps;
     for r=1:R
         for k=1:K
