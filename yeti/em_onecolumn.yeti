@@ -5,6 +5,8 @@ mm = load may.mathmisc;
 vec = load may.vector;
 mat = load may.matrix;
 
+plot = load may.plot;
+
 inRange ranges instrument note =
     note >= ranges[instrument].lowest and note <= ranges[instrument].highest;
 
@@ -53,31 +55,45 @@ performExpectation data column =
     vec.divide column estimate);
 
 performMaximisation data column q =
-   (pitchTop = vec.fromList
+   (pitches = vec.fromList
        (map do note:
             fold do acc instrument:
                 { w, p, s } = distributionsFor data instrument note;
                 fold do acc bin:
-                    acc + s * (vec.at w bin) * (vec.at column bin);
+                    acc + s * (vec.at w bin) * (vec.at q bin);
                 done acc [0..vec.length column - 1]
             done epsilon data.instruments;
         done [data.lowest .. data.highest]);
-    pitchBottom = vec.sum pitchTop;
+    pitches = vec.divideBy (vec.sum pitches) pitches;
 
-/*    sourceTop = vec.fromList
-       (map do instrument:
-            fold do acc note:
-                { w, p, s } = distributionsFor data instrument note;
-                fold do acc bin:
-                    acc + p * (vec.at w bin) * (vec.at column bin);
-                done acc [0..vec.length column - 1]
-            done epsilon [data.lowest .. data.highest]
-        done data.instruments);
-    sourceBottom = vec.sum sourceTop;
-*/
+    sources = mapIntoHash id
+        do instrument: vec.fromList
+           (map do note:
+                if not inRange data.ranges instrument note then epsilon else
+                    { w, p, s } = distributionsFor data instrument note;
+                    fold do acc bin:
+                        acc + (vec.at w bin) * (vec.at q bin);
+                    done epsilon [0..vec.length column - 1]
+                fi;
+            done [data.lowest .. data.highest])
+        done data.instruments;
+   
+    sourceDenoms = fold do acc instrument:
+        vec.add [acc, sources[instrument]]
+    done (vec.zeros (data.highest - data.lowest + 1)) data.instruments;
+
+        \() (plot.plot [ Caption "Source numerators for piano", Vector (sources["piano-maps-SptkBGCl"]) ]);
+
+        \() (plot.plot [ Caption "Source denominators", Vector sourceDenoms ]);
+    
+    sources = mapIntoHash id
+        do instrument: 
+            vec.divide sources[instrument] sourceDenoms;
+        done (keys sources);
+ 
     data with { 
-        pitches = vec.divideBy pitchBottom pitchTop,
-//        sources = vec.divideBy sourceBottom sourceTop
+        pitches,
+        sources,
     });
 
 {

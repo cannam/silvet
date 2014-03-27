@@ -66,19 +66,30 @@ em1data = em1.initialise ranges templates 88;
 
 col = head (drop 35 columns);
 
-\() (plot.plot [ Vector col ]);
+\() (plot.plot [ Caption "Source frequency distribution", Vector col ]);
 
-oneIteration em1data col =
+sourceGrid d =
+    mat.fromColumns (map do k: d.sources[k] done (sort (keys d.sources)));
+
+\() (plot.plot [ Caption "Source distribution beforehand", Grid (sourceGrid em1data)]);
+
+oneIteration em1data col n =
    (q = em1.performExpectation em1data col;
-    \() (plot.plot [ Vector col, Vector q ]);
+//    \() (plot.plot [ Caption "Frequency distribution and output of E-step for iteration \(n)", Vector col, Vector q ]);
     newdata = em1.performMaximisation em1data col q;
-    \() (plot.plot [ Vector (em1data.pitches), Vector (newdata.pitches) ]);
+    if (n % 2 == 0) then
+        \() (plot.plot [ Caption "Pitch distribution before and after M-step update for iteration \(n)", Vector (em1data.pitches), Vector (newdata.pitches) ]);
+        \() (plot.plot [ Caption "Source distribution after M-step update for iteration \(n)", Grid (sourceGrid newdata) ]);
+    fi;
     newdata);
 
-em1data = oneIteration em1data col;
-em1data = oneIteration em1data col;
-em1data = oneIteration em1data col;
+iterations = 6;
 
+var d = em1data;
+
+for [1..iterations] do i:
+    d := oneIteration d col i;
+done;    
 
 ();
 
