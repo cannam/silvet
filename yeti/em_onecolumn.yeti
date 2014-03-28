@@ -32,6 +32,7 @@ initialise ranges templates notes =
                 done instruments),
         instruments = array instruments,
         instCount = length instruments,
+        noteCount = notes,
         templates = array 
            (map do iname:
                 m = templates[iname];
@@ -75,13 +76,16 @@ performMaximisation data column q =
 
     pitches = vec.fromList
        (map do note:
-            fold do acc inst:
-                { w, p, s } = distributionsFor data inst note;
-                fold do acc bin:
-                    acc + s * p * (vec.at w bin) * (vec.at q bin);
-                done acc [0..vec.length column - 1]
-            done epsilon [0..data.instCount-1];
-        done [data.lowest .. data.highest]);
+            if note >= data.lowest and note <= data.highest then
+                fold do acc inst:
+                    { w, p, s } = distributionsFor data inst note;
+                    fold do acc bin:
+                        acc + s * p * (vec.at w bin) * (vec.at q bin);
+                    done acc [0..vec.length column - 1]
+                done epsilon [0..data.instCount-1];
+           else epsilon
+           fi
+        done [0..data.noteCount-1]);
     pitches = vec.divideBy (vec.sum pitches) pitches;
 
     sources = mat.fromColumns
@@ -93,12 +97,12 @@ performMaximisation data column q =
                         acc + s * p * (vec.at w bin) * (vec.at q bin);
                     done epsilon [0..vec.length column - 1]
                 fi;
-            done [data.lowest .. data.highest])
+            done [0..data.noteCount-1])
         done [0..data.instCount-1]);
    
     sourceDenoms = fold do acc inst:
         vec.add [acc, (mat.getColumn inst sources)]
-    done (vec.zeros (data.highest - data.lowest + 1)) [0..data.instCount-1];
+    done (vec.zeros data.noteCount) [0..data.instCount-1];
     
     sources = mat.fromColumns
        (map do inst: 

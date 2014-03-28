@@ -30,14 +30,29 @@ loadTemplates () = mapIntoHash id
             done;
     done instruments;
 
+hardcodedRanges = [
+    "bassoon": { lowest = 15, highest = 51 },
+    "cello": { lowest = 15, highest = 60 },
+    "clarinet": { lowest = 29, highest = 68 },
+    "flute": { lowest = 39, highest = 72 },
+    "guitar": { lowest = 19, highest = 55 },
+    "horn": { lowest = 20, highest = 56 },
+    "oboe": { lowest = 37, highest = 70 },
+    "tenorsax": { lowest = 23, highest = 54 },
+    "violin": { lowest = 34, highest = 72 },
+    "piano-maps-SptkBGCl": { lowest = 16, highest = 72 },
+];
+
 //!!! these ranges are hardcoded, in the original (and are a bit more restrictive)
-extractRanges templates = mapIntoHash id
+extractRanges' templates = mapIntoHash id
     do instrument:
         levels = map vec.sum (mat.asColumns (templates[instrument]));
         first = length levels - length (find (>0) levels);
         last = length (find (>0) (reverse levels)) - 1;
         { lowest = first, highest = last }
     done (keys templates);
+
+extractRanges templates = hardcodedRanges;
 
 {
     loadTemplates,
