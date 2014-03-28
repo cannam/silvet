@@ -30,7 +30,7 @@ loadTemplates () = mapIntoHash id
             done;
     done instruments;
 
-//!!! these ranges are hardcoded in the original (and are a bit more restrictive)
+//!!! these ranges are hardcoded, in the original (and are a bit more restrictive)
 extractRanges templates = mapIntoHash id
     do instrument:
         levels = map vec.sum (mat.asColumns (templates[instrument]));

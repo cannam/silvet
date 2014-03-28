@@ -10,82 +10,100 @@ plot = load may.plot;
 inRange ranges instrument note =
     note >= ranges[instrument].lowest and note <= ranges[instrument].highest;
 
+normalise v =
+   (s = vec.sum v;
+    if s > 0 then vec.divideBy s v 
+    else v
+    fi);
+
 initialise ranges templates notes =
-   (instruments = keys ranges;
+   (instruments = sort (keys ranges);
     {
         pitches = // z in the original. 1 per note
-            vec.randoms notes,
+            normalise (vec.randoms notes),
         sources = // u in the original. 1 per note-instrument
-            mapIntoHash id
-                do instrument:
+            //!!! should this be normalised across instruments? i.e. row-wise
+            mat.fromColumns
+               (map do instrument:
                     vec.fromList
                        (map do note:
                             if inRange ranges instrument note then 1 else 0 fi
                         done [0..notes-1])
-                done instruments,
-        instruments,
-        templates,
-        ranges,
+                done instruments),
+        instruments = array instruments,
+        instCount = length instruments,
+        templates = array 
+           (map do iname:
+                m = templates[iname];
+                mat.fromColumns (map normalise (mat.asColumns m))
+            done instruments),
+        ranges = array
+           (map do iname:
+               ranges[iname]
+            done instruments),
         lowest = head
-           (sort (map do i: ranges[i].lowest done instruments)),
+           (sort (map do iname: ranges[iname].lowest done instruments)),
         highest = head (reverse
-           (sort (map do i: ranges[i].highest done instruments))),
+           (sort (map do iname: ranges[iname].highest done instruments))),
     });
 
 epsilon = 1e-16;
 
 select predicate = concatMap do v: if predicate v then [v] else [] fi done;
 
-distributionsFor data instrument note =
+distributionsFor data instNo note =
     {
-        w = mat.getColumn note data.templates[instrument],
+        w = mat.getColumn note data.templates[instNo],
         p = vec.at data.pitches note,
-        s = vec.at data.sources[instrument] note,
+        s = mat.at data.sources note instNo,
     };
 
 performExpectation data column =
-   (estimate = 
-        fold do acc instrument:
+   (column = normalise column;
+    estimate = 
+        fold do acc inst:
             fold do acc note:
-                { w, p, s } = distributionsFor data instrument note;
+                { w, p, s } = distributionsFor data inst note;
                 vec.add [acc, vec.scaled (p * s) w];
-            done acc [data.ranges[instrument].lowest .. 
-                      data.ranges[instrument].highest]
-        done (vec.consts epsilon (vec.length column)) data.instruments;
+            done acc [data.ranges[inst].lowest .. 
+                      data.ranges[inst].highest]
+        done (vec.consts epsilon (vec.length column)) [0..data.instCount-1];
     vec.divide column estimate);
 
 performMaximisation data column q =
-   (pitches = vec.fromList
+   (column = normalise column;
+
+    pitches = vec.fromList
        (map do note:
-            fold do acc instrument:
-                { w, p, s } = distributionsFor data instrument note;
+            fold do acc inst:
+                { w, p, s } = distributionsFor data inst note;
                 fold do acc bin:
                     acc + s * p * (vec.at w bin) * (vec.at q bin);
                 done acc [0..vec.length column - 1]
-            done epsilon data.instruments;
+            done epsilon [0..data.instCount-1];
         done [data.lowest .. data.highest]);
     pitches = vec.divideBy (vec.sum pitches) pitches;
 
-    sources = mapIntoHash id
-        do instrument: vec.fromList
+    sources = mat.fromColumns
+       (map do inst: vec.fromList
            (map do note:
-                if not inRange data.ranges instrument note then epsilon else
-                    { w, p, s } = distributionsFor data instrument note;
+                if not inRange data.ranges inst note then epsilon else
+                    { w, p, s } = distributionsFor data inst note;
                     fold do acc bin:
                         acc + s * p * (vec.at w bin) * (vec.at q bin);
                     done epsilon [0..vec.length column - 1]
                 fi;
             done [data.lowest .. data.highest])
-        done data.instruments;
+        done [0..data.instCount-1]);
    
-    sourceDenoms = fold do acc instrument:
-        vec.add [acc, sources[instrument]]
-    done (vec.zeros (data.highest - data.lowest + 1)) data.instruments;
+    sourceDenoms = fold do acc inst:
+        vec.add [acc, (mat.getColumn inst sources)]
+    done (vec.zeros (data.highest - data.lowest + 1)) [0..data.instCount-1];
     
-    sources = mapIntoHash id
-        do instrument: 
-            vec.divide sources[instrument] sourceDenoms;
-        done (keys sources);
+    sources = mat.fromColumns
+       (map do inst: 
+            vec.divide (mat.getColumn inst sources) sourceDenoms;
+        done [0..data.instCount-1]);
  
     data with { 
         pitches,

@@ -68,10 +68,7 @@ col = head (drop ((length columns) / 2) columns);
 
 \() (plot.plot [ Caption "Source frequency distribution", Vector col ]);
 
-sourceGrid d =
-    mat.fromColumns (map do k: d.sources[k] done (sort (keys d.sources)));
-
-\() (plot.plot [ Caption "Source distribution beforehand", Grid (sourceGrid em1data)]);
+\() (plot.plot [ Caption "Source distribution beforehand", Grid em1data.sources]);
 
 oneIteration em1data col n =
    (q = em1.performExpectation em1data col;
@@ -79,7 +76,7 @@ oneIteration em1data col n =
     newdata = em1.performMaximisation em1data col q;
     if (n % 6 == 0) then
         \() (plot.plot [ Caption "Pitch distribution before and after M-step update for iteration \(n)", Vector (em1data.pitches), Vector (newdata.pitches) ]);
-        \() (plot.plot [ Caption "Source distribution after M-step update for iteration \(n)", Grid (sourceGrid newdata) ]);
+        \() (plot.plot [ Caption "Source distribution after M-step update for iteration \(n)", Grid newdata.sources ]);
     fi;
     newdata);
 
@@ -93,7 +90,7 @@ done;
 
 var sounding = [];
 
-println "pitch distribution: \(d.pitches)";
+println "pitch distribution: \(vec.list d.pitches)";
 
 for [d.lowest .. d.highest] do p:
     if (vec.at d.pitches p) > 0.05 then
@@ -109,22 +106,22 @@ println "Notes: \(map toNote sounding)";
 
 var instruments = [];
 for sounding do p:
-    var best = "";
+    var best = 0;
     var bestp = 0;
-    for d.instruments do i:
-        if vec.at d.sources[i] p > bestp then
-            bestp := vec.at d.sources[i] p;
+    for [0..d.instCount-1] do i:
+        if mat.at d.sources p i > bestp then
+            bestp := mat.at d.sources p i;
             best := i;
         fi;
     done;
     if bestp > 0 then
         instruments := instruments ++ [best];
     else
-        instruments := instruments ++ ["unknown"];
+        instruments := instruments ++ [-1];
     fi;
 done;
 
-println "Instruments: \(instruments)";
+println "Instruments: \(map do i: (d.instruments[i]) done instruments)";
 
 
 ();
