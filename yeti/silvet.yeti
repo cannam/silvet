@@ -64,7 +64,7 @@ eprintln "done";
 
 em1data = em1.initialise ranges templates 88;
 
-col = head (drop 35 columns);
+col = head (drop ((length columns) / 2) columns);
 
 \() (plot.plot [ Caption "Source frequency distribution", Vector col ]);
 
@@ -77,19 +77,55 @@ oneIteration em1data col n =
    (q = em1.performExpectation em1data col;
 //    \() (plot.plot [ Caption "Frequency distribution and output of E-step for iteration \(n)", Vector col, Vector q ]);
     newdata = em1.performMaximisation em1data col q;
-    if (n % 2 == 0) then
+    if (n % 6 == 0) then
         \() (plot.plot [ Caption "Pitch distribution before and after M-step update for iteration \(n)", Vector (em1data.pitches), Vector (newdata.pitches) ]);
         \() (plot.plot [ Caption "Source distribution after M-step update for iteration \(n)", Grid (sourceGrid newdata) ]);
     fi;
     newdata);
 
-iterations = 6;
+iterations = 12;
 
 var d = em1data;
 
 for [1..iterations] do i:
     d := oneIteration d col i;
 done;    
+
+var sounding = [];
+
+println "pitch distribution: \(d.pitches)";
+
+for [d.lowest .. d.highest] do p:
+    if (vec.at d.pitches p) > 0.05 then
+        sounding := sounding ++ [p];
+    fi;
+done;
+
+println "Sounding: \(sounding)";
+
+toNote p = (array ["A","A#","B","C","C#","D","D#","E","F","F#","G","G#"])[p % 12];
+
+println "Notes: \(map toNote sounding)";
+
+var instruments = [];
+for sounding do p:
+    var best = "";
+    var bestp = 0;
+    for d.instruments do i:
+        if vec.at d.sources[i] p > bestp then
+            bestp := vec.at d.sources[i] p;
+            best := i;
+        fi;
+    done;
+    if bestp > 0 then
+        instruments := instruments ++ [best];
+    else
+        instruments := instruments ++ ["unknown"];
+    fi;
+done;
+
+println "Instruments: \(instruments)";
+
 
 ();
 

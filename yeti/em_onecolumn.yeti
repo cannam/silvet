@@ -60,7 +60,7 @@ performMaximisation data column q =
             fold do acc instrument:
                 { w, p, s } = distributionsFor data instrument note;
                 fold do acc bin:
-                    acc + s * (vec.at w bin) * (vec.at q bin);
+                    acc + s * p * (vec.at w bin) * (vec.at q bin);
                 done acc [0..vec.length column - 1]
             done epsilon data.instruments;
         done [data.lowest .. data.highest]);
@@ -72,7 +72,7 @@ performMaximisation data column q =
                 if not inRange data.ranges instrument note then epsilon else
                     { w, p, s } = distributionsFor data instrument note;
                     fold do acc bin:
-                        acc + (vec.at w bin) * (vec.at q bin);
+                        acc + s * p * (vec.at w bin) * (vec.at q bin);
                     done epsilon [0..vec.length column - 1]
                 fi;
             done [data.lowest .. data.highest])
@@ -81,10 +81,6 @@ performMaximisation data column q =
     sourceDenoms = fold do acc instrument:
         vec.add [acc, sources[instrument]]
     done (vec.zeros (data.highest - data.lowest + 1)) data.instruments;
-
-        \() (plot.plot [ Caption "Source numerators for piano", Vector (sources["piano-maps-SptkBGCl"]) ]);
-
-        \() (plot.plot [ Caption "Source denominators", Vector sourceDenoms ]);
     
     sources = mapIntoHash id
         do instrument: 
