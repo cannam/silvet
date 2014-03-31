@@ -23,7 +23,6 @@ eprintln "";
 
 columns = prepareTimeFrequency "test.wav";
 
-/*
 height = if empty? columns then 0 else vec.length (head columns) fi;
 
 chunkSize = { rows = height, columns = 100 };
@@ -44,24 +43,27 @@ chunks = chunkify columns;
 
 eprintln "we have \(length chunks) chunks of size \(mat.size (head chunks))";
 
-eprintln "attempting one expectation phase...";
+oneIteration emdata chunk n =
+   ({ estimate, q } = em.performExpectation emdata chunk;
+    newdata = em.performMaximisation emdata chunk q;
+    if (n % 6 == 0) then
+        \() (plot.plot [ Grid chunk ]);
+        \() (plot.plot [ Grid estimate ]);
+    fi;
+    newdata);
 
-error = em.performExpectation emdata (head chunks);
+iterations = 6;
 
-eprintln "done, result has dimension \(mat.size error)";
-
-eprintln "attempting one maximisation phase...";
-
-newP = em.performMaximisation emdata (head chunks) error;
+var d = emdata;
+for [1..iterations] do i:
+    eprintln "iteration \(i)...";
+    d := oneIteration d (head chunks) i;
+done;    
 
 eprintln "done";
 
-\() (plot.plot [ Grid (head chunks) ]);
-\() (plot.plot [ Grid error ]);
 
-\() (plot.plot [ Grid newP ]);
-*/
-
+/*
 em1data = em1.initialise ranges templates 88;
 
 col = head (drop 50 columns); // (drop ((length columns) / 2) columns);
@@ -78,7 +80,6 @@ normalise v =
 
 oneIteration em1data col n =
    ({ estimate, q } = em1.performExpectation em1data col;
-//    \() (plot.plot [ Caption "Frequency distribution and output of E-step for iteration \(n)", Vector col, Vector q ]);
     newdata = em1.performMaximisation em1data col q;
     if (n % 6 == 0) then
         \() (plot.plot [ Caption "Pitch distribution before and after M-step update for iteration \(n)", Vector (em1data.pitches), Vector (newdata.pitches) ]);
@@ -137,6 +138,7 @@ if not (empty? sounding) then
    w = mat.getColumn p d.templates[i];
    \() (plot.plot [ Vector w, Vector (normalise col), Caption "Template for instrument \(d.instruments[i]), pitch \(p), against normalised source distribution" ]);
 fi;
+*/
 
 ();
 
