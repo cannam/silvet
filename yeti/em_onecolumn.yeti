@@ -22,14 +22,14 @@ initialise ranges templates notes =
         pitches = // z in the original. 1 per note
             normalise (vec.randoms notes),
         sources = // u in the original. 1 per note-instrument
-            //!!! should this be normalised across instruments? i.e. row-wise
-            mat.fromColumns
-               (map do instrument:
-                    vec.fromList
-                       (map do note:
-                            if inRange ranges instrument note then 1 else 0 fi
-                        done [0..notes-1])
-                done instruments),
+            mat.fromRows
+               (map do note:
+                   normalise
+                      (vec.fromList
+                          (map do instrument:
+                               if inRange ranges instrument note then 1 else 0 fi
+                           done instruments))
+                done [0..notes-1]),
         instruments = array instruments,
         instCount = length instruments,
         noteCount = notes,
@@ -88,27 +88,33 @@ performMaximisation data column q =
         done [0..data.noteCount-1]);
     pitches = vec.divideBy (vec.sum pitches) pitches;
 
-    sources = mat.fromColumns
-       (map do inst: vec.fromList
-           (map do note:
+    sources = mat.fromRows
+       (map do note: vec.fromList
+           (map do inst:
                 if not inRange data.ranges inst note then epsilon else
                     { w, p, s } = distributionsFor data inst note;
                     fold do acc bin:
                         acc + s * p * (vec.at w bin) * (vec.at q bin);
                     done epsilon [0..vec.length column - 1]
                 fi;
-            done [0..data.noteCount-1])
-        done [0..data.instCount-1]);
+            done [0..data.instCount-1])
+        done [0..data.noteCount-1]);
    
     sourceDenoms = fold do acc inst:
         vec.add [acc, (mat.getColumn inst sources)]
     done (vec.zeros data.noteCount) [0..data.instCount-1];
-    
-    sources = mat.fromColumns
+
+    //!!! shouldn't this normalisation be the other way? (rows, not columns)    
+/*    sources = mat.fromColumns
        (map do inst: 
             vec.divide (mat.getColumn inst sources) sourceDenoms;
         done [0..data.instCount-1]);
- 
+*/
+    sources = mat.fromRows
+       (map do note: 
+            vec.divide (mat.getRow note sources) sourceDenoms;
+        done [0..data.noteCount-1]);
+
     data with { 
         pitches,
         sources,

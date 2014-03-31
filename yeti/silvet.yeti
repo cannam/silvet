@@ -123,6 +123,18 @@ done;
 
 println "Instruments: \(map do i: (d.instruments[i]) done instruments)";
 
+normalise v =
+   (s = vec.sum v;
+    if s > 0 then vec.divideBy s v 
+    else v
+    fi);
+
+if not (empty? sounding) then
+   p = head sounding;
+   i = head instruments;
+   w = mat.getColumn p d.templates[i];
+   \() (plot.plot [ Vector w, Vector (normalise col), Caption "Template for instrument \(d.instruments[i]), pitch \(p), against normalised source distribution" ]);
+fi;
 
 ();
 
