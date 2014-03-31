@@ -83,18 +83,23 @@ performMaximisation data chunk q =
     columns = mat.width chunk;
     e = mat.constMatrix epsilon { rows = 1, columns };
 
+    noteInstrumentProducts = [:];
+
     pitches = mat.concatVertical
        (map do note:
             if note < data.lowest or note > data.highest then e else
                 fold do acc inst:
                     { w, p, s } = distributionsFor data inst note;
-                    fold do acc bin:
-                         mat.sum
-                            [acc, 
-                             mat.scaled (mat.at w bin 0) 
-                                (mat.entryWiseProduct
-                                    [p, s, mat.newRowVector (mat.getRow bin chunk)])]
-                    done acc [0..mat.height chunk - 1]
+                    prod =
+                        fold do acc bin:
+                            mat.sum
+                               [acc, 
+                                mat.scaled (mat.at w bin 0) 
+                                   (mat.entryWiseProduct
+                                       [p, s, mat.newRowVector (mat.getRow bin chunk)])]
+                        done e [0..mat.height chunk - 1];
+                    noteInstrumentProducts[{inst,note}] := prod;
+                    mat.sum [acc, prod];
                 done e [0..data.nInstruments-1]
             fi;
         done [0..data.nNotes - 1]);
@@ -105,14 +110,7 @@ performMaximisation data chunk q =
            (mat.concatVertical
                (map do note:
                     if not inRange data.ranges inst note then e else
-                        { w, p, s } = distributionsFor data inst note;
-                        fold do acc bin:
-                            mat.sum
-                               [acc,
-                                mat.scaled (mat.at w bin 0)
-                                   (mat.entryWiseProduct
-                                       [p, s, mat.newRowVector (mat.getRow bin chunk)])]
-                        done e [0..mat.height chunk - 1]
+                        noteInstrumentProducts[{inst,note}]
                     fi
                 done [0..data.nNotes - 1]))
         done [0..data.nInstruments-1]);

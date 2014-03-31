@@ -5,7 +5,6 @@ program silvet;
 { loadTemplates, extractRanges } = load templates;
 
 em = load em;
-em1 = load em_onecolumn;
 
 mat = load may.matrix;
 vec = load may.vector;
@@ -44,7 +43,9 @@ chunks = chunkify columns;
 eprintln "we have \(length chunks) chunks of size \(mat.size (head chunks))";
 
 oneIteration emdata chunk n =
-   ({ estimate, q } = em.performExpectation emdata chunk;
+   (eprintln "E";
+    { estimate, q } = em.performExpectation emdata chunk;
+    eprintln "M";
     newdata = em.performMaximisation emdata chunk q;
     if (n % 6 == 0) then
         \() (plot.plot [ Grid chunk ]);
@@ -60,7 +61,10 @@ for [1..iterations] do i:
     d := oneIteration d (head chunks) i;
 done;    
 
-eprintln "done";
+eprintln "done, plotting pitch activation matrix";
+
+\() (plot.plot [Grid d.pitches]);
+\() (plot.plot [Contour d.pitches]);
 
 
 ();
