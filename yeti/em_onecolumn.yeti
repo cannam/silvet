@@ -16,20 +16,26 @@ normalise v =
     else v
     fi);
 
+normaliseSources s =
+   (denoms = fold do acc inst: vec.add [acc, (mat.getColumn inst s)] done
+       (vec.zeros (mat.height s)) [0..(mat.width s)-1];
+    mat.fromColumns
+       (map do inst: vec.divide (mat.getColumn inst s) denoms done
+            [0..(mat.width s)-1]));
+
 initialise ranges templates notes =
    (instruments = sort (keys ranges);
     {
         pitches = // z in the original. 1 per note
             normalise (vec.randoms notes),
-        sources = // u in the original. 1 per note-instrument
-            mat.fromRows
-               (map do note:
-                   normalise
-                      (vec.fromList
-                          (map do instrument:
-                               if inRange ranges instrument note then 1 else 0 fi
-                           done instruments))
-                done [0..notes-1]),
+        sources = normaliseSources // u in the original. 1 per note-instrument
+           (mat.fromColumns
+               (map do instrument:
+                  (vec.fromList
+                      (map do note:
+                           if inRange ranges instrument note then 1 else 0 fi
+                       done [0..notes-1]))
+                done instruments)),
         instruments = array instruments,
         instCount = length instruments,
         noteCount = notes,
@@ -69,7 +75,7 @@ performExpectation data column =
             done acc [data.ranges[inst].lowest .. 
                       data.ranges[inst].highest]
         done (vec.consts epsilon (vec.length column)) [0..data.instCount-1];
-    vec.divide column estimate);
+    { estimate, q = vec.divide column estimate });
 
 performMaximisation data column q =
    (column = normalise column;
@@ -88,32 +94,19 @@ performMaximisation data column q =
         done [0..data.noteCount-1]);
     pitches = vec.divideBy (vec.sum pitches) pitches;
 
-    sources = mat.fromRows
-       (map do note: vec.fromList
-           (map do inst:
-                if not inRange data.ranges inst note then epsilon else
+    sources = mat.fromColumns
+       (map do inst: vec.fromList
+           (map do note:
+               (if not inRange data.ranges inst note then epsilon else
                     { w, p, s } = distributionsFor data inst note;
                     fold do acc bin:
                         acc + s * p * (vec.at w bin) * (vec.at q bin);
                     done epsilon [0..vec.length column - 1]
-                fi;
-            done [0..data.instCount-1])
-        done [0..data.noteCount-1]);
-   
-    sourceDenoms = fold do acc inst:
-        vec.add [acc, (mat.getColumn inst sources)]
-    done (vec.zeros data.noteCount) [0..data.instCount-1];
-
-    //!!! shouldn't this normalisation be the other way? (rows, not columns)    
-/*    sources = mat.fromColumns
-       (map do inst: 
-            vec.divide (mat.getColumn inst sources) sourceDenoms;
+                fi);
+            done [0..data.noteCount-1])
         done [0..data.instCount-1]);
-*/
-    sources = mat.fromRows
-       (map do note: 
-            vec.divide (mat.getRow note sources) sourceDenoms;
-        done [0..data.noteCount-1]);
+
+    sources = normaliseSources sources;
 
     data with { 
         pitches,

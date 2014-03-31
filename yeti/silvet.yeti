@@ -70,13 +70,21 @@ col = head (drop 50 columns); // (drop ((length columns) / 2) columns);
 
 \() (plot.plot [ Caption "Source distribution beforehand", Grid em1data.sources]);
 
+normalise v =
+   (s = vec.sum v;
+    if s > 0 then vec.divideBy s v 
+    else v
+    fi);
+
 oneIteration em1data col n =
-   (q = em1.performExpectation em1data col;
+   ({ estimate, q } = em1.performExpectation em1data col;
 //    \() (plot.plot [ Caption "Frequency distribution and output of E-step for iteration \(n)", Vector col, Vector q ]);
     newdata = em1.performMaximisation em1data col q;
     if (n % 6 == 0) then
         \() (plot.plot [ Caption "Pitch distribution before and after M-step update for iteration \(n)", Vector (em1data.pitches), Vector (newdata.pitches) ]);
         \() (plot.plot [ Caption "Source distribution after M-step update for iteration \(n)", Grid newdata.sources ]);
+        \() (plot.plot [ Caption "Q function for E-step iteration \(n)", Vector q ]);
+        \() (plot.plot [ Caption "Estimate from E-step iteration \(n) against original source distribution, and difference between them", Vector estimate, Vector (normalise col), Vector (vec.subtract estimate (normalise col)) ]);
     fi;
     newdata);
 
@@ -122,12 +130,6 @@ for sounding do p:
 done;
 
 println "Instruments: \(map do i: (d.instruments[i]) done instruments)";
-
-normalise v =
-   (s = vec.sum v;
-    if s > 0 then vec.divideBy s v 
-    else v
-    fi);
 
 if not (empty? sounding) then
    p = head sounding;
