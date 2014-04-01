@@ -254,7 +254,14 @@ for it = 1:iter
     xbar = x ./ xa;
     xbar = eval( flz);
 
-    %% xbar now contains the result of Eqn 8 in the CMJ paper, Pt(p,f,s|w)
+    %% xbar now contains the summation of Eqn 8 in the CMJ paper, i.e.
+    %% it is a time-frequency distribution consisting of the
+    %% five-dimensional distribution Pt(p,f,s|w) summed across p, f,
+    %% and s. In the M step, for each parameter we want to update, we
+    %% take the same five-dimensional distribution and marginalise it
+    %% across the other parameters that that one does not depend on.
+    %% The M-step is a bit tricky for me to follow here, with the
+    %% convolution and use of MATLAB eval macros.
 
     fx = fftn( xbar, wc);
     
@@ -288,11 +295,8 @@ for it = 1:iter
                 
                 nhu = eval( fnh); %% more magic
 
-		%% h{k} is 5x100, I'd expect this to be 100x5, I must
-		%% have got something transposed somewhere
                 nhu = nhu .* h{k};
 
-		%% so I guess this is xbar-for-all-w-for-all-h?
                 nu = sum(nhu)';
                 nu = u{r,k} .* nu + eps;
                 if lu
