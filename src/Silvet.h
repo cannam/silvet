@@ -18,10 +18,16 @@
 
 #include <vamp-sdk/Plugin.h>
 
+#include <vector>
+#include <string>
+
+#include "maths/MedianFilter.h"
+
 using std::string;
+using std::vector;
 
 class Resampler;
-class ConstantQ;
+class CQInterpolated;
 
 class Silvet : public Vamp::Plugin
 {
@@ -62,9 +68,20 @@ public:
 
 protected:
     Resampler *m_resampler;
-    ConstantQ *m_cq;
+    CQInterpolated *m_cq;
+
+    typedef vector<vector<double> > Grid;
+
+    vector<MedianFilter<double> *> m_filterA;
+    vector<MedianFilter<double> *> m_filterB;
+    Grid preProcess(const Grid &);
 
     int m_blockSize;
+    int m_columnCount;
+    int m_reducedColumnCount;
+
+    mutable int m_notesOutputNo;
+    mutable int m_cqOutputNo;
 };
 
 #endif

@@ -22,8 +22,8 @@ PLUGIN	:= silvet$(PLUGIN_EXT)
 VAMP_HEADERS := $(SRC_DIR)/Silvet.h
 VAMP_SOURCES := $(SRC_DIR)/Silvet.cpp $(SRC_DIR)/libmain.cpp
 
-CQ_HEADERS   := $(CQ_DIR)/CQKernel.h $(CQ_DIR)/ConstantQ.h
-CQ_SOURCES   := $(CQ_DIR)/CQKernel.cpp $(CQ_DIR)/ConstantQ.cpp
+CQ_HEADERS   := $(CQ_DIR)/CQKernel.h $(CQ_DIR)/ConstantQ.h $(CQ_DIR)/CQInterpolated.h
+CQ_SOURCES   := $(CQ_DIR)/CQKernel.cpp $(CQ_DIR)/ConstantQ.cpp $(CQ_DIR)/CQInterpolated.cpp
 
 HEADERS	     := $(VAMP_HEADERS) $(CQ_HEADERS)
 SOURCES	     := $(VAMP_SOURCES) $(CQ_SOURCES)
@@ -47,3 +47,23 @@ depend:
 
 # DO NOT DELETE
 
+src/Silvet.o: src/Silvet.h data/include/templates.h data/include/bassoon.h
+src/Silvet.o: data/include/cello.h data/include/clarinet.h
+src/Silvet.o: data/include/flute.h data/include/guitar.h data/include/horn.h
+src/Silvet.o: data/include/oboe.h data/include/tenorsax.h
+src/Silvet.o: data/include/violin.h data/include/piano-maps-SptkBGCl.h
+src/Silvet.o: data/include/piano1.h data/include/piano2.h
+src/Silvet.o: data/include/piano3.h
+src/Silvet.o: constant-q-cpp/cpp-qm-dsp/CQInterpolated.h
+src/Silvet.o: constant-q-cpp/cpp-qm-dsp/ConstantQ.h
+src/Silvet.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
+src/libmain.o: src/Silvet.h
+constant-q-cpp/cpp-qm-dsp/CQKernel.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
+constant-q-cpp/cpp-qm-dsp/ConstantQ.o: constant-q-cpp/cpp-qm-dsp/ConstantQ.h
+constant-q-cpp/cpp-qm-dsp/ConstantQ.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
+constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/CQInterpolated.h
+constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/ConstantQ.h
+constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
+constant-q-cpp/cpp-qm-dsp/ConstantQ.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
+constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/ConstantQ.h
+constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h

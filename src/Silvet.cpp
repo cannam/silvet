@@ -17,11 +17,14 @@
 
 #include "data/include/templates.h"
 
+#include "maths/MedianFilter.h"
 #include "dsp/rateconversion/Resampler.h"
 
-#include "constant-q-cpp/cpp-qm-dsp/ConstantQ.h"
+#include "constant-q-cpp/cpp-qm-dsp/CQInterpolated.h"
 
 #include <vector>
+
+#include <cstdio>
 
 using std::vector;
 using std::cerr;
@@ -29,7 +32,7 @@ using std::endl;
 
 static int processingSampleRate = 44100;
 static int processingBPO = 60;
-
+static int processingHeight = 545;
 
 Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
@@ -42,6 +45,10 @@ Silvet::~Silvet()
 {
     delete m_resampler;
     delete m_cq;
+    for (int i = 0; i < (int)m_filterA.size(); ++i) {
+        delete m_filterA[i];
+        delete m_filterB[i];
+    }
 }
 
 string
@@ -169,8 +176,32 @@ Silvet::getOutputDescriptors() const
     d.hasKnownExtents = false;
     d.isQuantized = false;
     d.sampleType = OutputDescriptor::VariableSampleRate;
-    d.sampleRate = 0;
+    d.sampleRate = m_inputSampleRate / (m_cq ? m_cq->getColumnHop() : 256);
     d.hasDuration = true;
+    m_notesOutputNo = list.size();
+    list.push_back(d);
+
+    d.identifier = "inputgrid";
+    d.name = "Filtered time-frequency grid";
+    d.description = "The pre-processed constant-Q time-frequency distribution used as input to the PLCA step";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = processingHeight;
+    d.binNames.clear();
+    if (m_cq) {
+        char name[20];
+        for (int i = 0; i < processingHeight; ++i) {
+            float freq = m_cq->getBinFrequency(i + 55);
+            sprintf(name, "%.1f Hz", freq);
+            d.binNames.push_back(name);
+        }
+    }
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::FixedSampleRate;
+    d.sampleRate = 25;
+    d.hasDuration = false;
+    m_cqOutputNo = list.size();
     list.push_back(d);
 
     return list;
@@ -207,9 +238,22 @@ Silvet::reset()
 	m_resampler = 0;
     }
 
-    m_cq = new ConstantQ
-	(processingSampleRate, 27.5, processingSampleRate / 3, processingBPO);
+    m_cq = new CQInterpolated
+	(processingSampleRate, 27.5, processingSampleRate / 3, processingBPO,
+         CQInterpolated::Linear);
 
+    for (int i = 0; i < (int)m_filterA.size(); ++i) {
+        delete m_filterA[i];
+        delete m_filterB[i];
+    }
+    m_filterA.clear();
+    m_filterB.clear();
+    for (int i = 0; i < processingHeight; ++i) {
+        m_filterA.push_back(new MedianFilter<double>(40));
+        m_filterB.push_back(new MedianFilter<double>(40));
+    }
+    m_columnCount = 0;
+    m_reducedColumnCount = 0;
 }
 
 Silvet::FeatureSet
@@ -222,9 +266,20 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 	data = m_resampler->process(data.data(), data.size());
     }
 
-    vector<vector<double> > cqout = m_cq->process(data);
+    Grid cqout = m_cq->process(data);
+    Grid filtered = preProcess(cqout);
 
-    return FeatureSet();
+    FeatureSet fs;
+
+    for (int i = 0; i < (int)filtered.size(); ++i) {
+        Feature f;
+        for (int j = 0; j < processingHeight; ++j) {
+            f.values.push_back(float(filtered[i][j]));
+        }
+        fs[m_cqOutputNo].push_back(f);
+    }
+
+    return fs;
 }
 
 Silvet::FeatureSet
@@ -234,3 +289,61 @@ Silvet::getRemainingFeatures()
     return FeatureSet();
 }
 
+Silvet::Grid
+Silvet::preProcess(const Grid &in)
+{
+    int width = in.size();
+
+    // reduce to 100 columns per second, or one column every 441 samples
+
+    int spacing = processingSampleRate / 100;
+
+    Grid out;
+
+    for (int i = 0; i < width; ++i) {
+
+        int prevSampleNo = (m_columnCount - 1) * m_cq->getColumnHop();
+        int sampleNo = m_columnCount * m_cq->getColumnHop();
+
+        bool select = (sampleNo / spacing != prevSampleNo / spacing);
+
+        if (select) {
+            vector<double> inCol = in[i];
+            vector<double> outCol(processingHeight);
+
+            // we reverse the column as we go (the CQ output is
+            // "upside-down", with high frequencies at the start of
+            // each column, and we want it the other way around) and
+            // then ignore the first 55 (lowest-frequency) bins,
+            // giving us 545 bins instead of 600
+
+            for (int j = 0; j < processingHeight; ++j) {
+
+                int ix = inCol.size() - j - 55;
+
+                double val = inCol[ix];
+                m_filterA[j]->push(val);
+
+                double a = m_filterA[j]->get();
+                m_filterB[j]->push(std::min(a, val));
+
+                double filtered = m_filterB[j]->get();
+                outCol[j] = filtered;
+            }
+
+            // then we only use every fourth filtered column, for 25
+            // columns per second in the eventual grid
+
+            if (m_reducedColumnCount % 4 == 0) {
+                out.push_back(outCol);
+            }
+
+            ++m_reducedColumnCount;
+        }
+
+        ++m_columnCount;
+    }
+
+    return out;
+}
+    
