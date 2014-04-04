@@ -177,6 +177,15 @@ EM::report()
     cerr << " sounding: ";
     for (int i = 0; i < (int)sounding.size(); ++i) {
         cerr << sounding[i] << " ";
+        int maxj = -1;
+        double maxs = 0.0;
+        for (int j = 0; j < m_instruments; ++j) {
+            if (j == 0 || m_sources[j][sounding[i]] > maxs) {
+                maxj = j;
+                maxs = m_sources[j][sounding[i]];
+            }
+        }
+        cerr << silvet_templates[maxj].name << " ";
     }
     cerr << endl;
 }

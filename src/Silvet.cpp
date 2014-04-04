@@ -296,10 +296,20 @@ Silvet::transcribe(const Grid &cqout)
     int iterations = 12;
 
     for (int i = 0; i < width; ++i) {
+
+        double sum = 0.0;
+        for (int j = 0; j < processingHeight; ++j) {
+            sum += filtered[i][j];
+        }
+        cerr << "sum = " << sum << endl;
+
+        if (sum < 1e-5) continue;
+
         EM em;
         for (int j = 0; j < iterations; ++j) {
             em.iterate(filtered[i]);
         }
+
         //!!! now do something with the results from em!
         em.report();
     }
