@@ -152,9 +152,10 @@ EM::maximisation(const V &column)
             newSources[i][n] = epsilon;
             if (inRange(i, n)) {
                 float *w = silvet_templates[i].data[n];
+                double pitch = m_pitches[n];
+                double source = m_sources[i][n];
                 for (int j = 0; j < m_bins; ++j) {
-                    newSources[i][n] +=
-                        w[j] * m_q[j] * m_pitches[n] * m_sources[i][n];
+                    newSources[i][n] += w[j] * m_q[j] * pitch * source;
                 }
             }
         }

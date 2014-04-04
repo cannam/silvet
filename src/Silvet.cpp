@@ -32,6 +32,7 @@ using std::endl;
 static int processingSampleRate = 44100;
 static int processingBPO = 60;
 static int processingHeight = 545;
+static int processingNotes = 88;
 
 Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
@@ -203,7 +204,42 @@ Silvet::getOutputDescriptors() const
     m_cqOutputNo = list.size();
     list.push_back(d);
 
+    d.identifier = "pitchdistribution";
+    d.name = "Pitch distribution";
+    d.description = "The estimated pitch contribution matrix";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = processingNotes;
+    d.binNames.clear();
+    for (int i = 0; i < processingNotes; ++i) {
+        d.binNames.push_back(noteName(i));
+    }
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::FixedSampleRate;
+    d.sampleRate = 25;
+    d.hasDuration = false;
+    m_pitchOutputNo = list.size();
+    list.push_back(d);
+
     return list;
+}
+
+std::string
+Silvet::noteName(int i) const
+{
+    static const char *names[] = {
+        "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"
+    };
+
+    const char *n = names[i % 12];
+
+    int oct = (i + 9) / 12; 
+    
+    char buf[20];
+    sprintf(buf, "%s%d", n, oct);
+
+    return buf;
 }
 
 bool
@@ -309,6 +345,13 @@ Silvet::transcribe(const Grid &cqout)
         for (int j = 0; j < iterations; ++j) {
             em.iterate(filtered[i]);
         }
+
+        vector<double> pitches = em.getPitchDistribution();
+        Feature f;
+        for (int j = 0; j < (int)pitches.size(); ++j) {
+            f.values.push_back(float(pitches[i]));
+        }
+        fs[m_pitchOutputNo].push_back(f);
 
         //!!! now do something with the results from em!
         em.report();

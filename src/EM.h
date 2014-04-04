@@ -27,6 +27,16 @@ public:
     void iterate(std::vector<double> column);
     void report();
 
+    const std::vector<double> &getEstimate() const { 
+	return m_estimate;
+    }
+    const std::vector<double> &getPitchDistribution() const {
+	return m_pitches;
+    }
+    const std::vector<std::vector<double> > &getSources() const {
+	return m_sources; 
+    }
+
 private:
     typedef std::vector<double> V;
     typedef std::vector<std::vector<double> > Grid;

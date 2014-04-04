@@ -77,12 +77,15 @@ protected:
     Grid preProcess(const Grid &);
     FeatureSet transcribe(const Grid &);
 
+    std::string noteName(int n) const;
+
     int m_blockSize;
     int m_columnCount;
     int m_reducedColumnCount;
 
     mutable int m_notesOutputNo;
     mutable int m_cqOutputNo;
+    mutable int m_pitchOutputNo;
 };
 
 #endif
