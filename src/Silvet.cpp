@@ -300,7 +300,17 @@ Silvet::preProcess(const Grid &in)
 
     Grid out;
 
+    //!!! nb we count the CQ latency in terms of processing hops, but
+    //!!! actually it isn't guaranteed to be an exact number (in fact
+    //!!! it probably isn't) so this is imprecise -- fix
+    int latentColumns = m_cq->getLatency() / m_cq->getColumnHop();
+
     for (int i = 0; i < width; ++i) {
+
+        if (m_columnCount < latentColumns) {
+            ++m_columnCount;
+            continue;
+        }
 
         int prevSampleNo = (m_columnCount - 1) * m_cq->getColumnHop();
         int sampleNo = m_columnCount * m_cq->getColumnHop();
@@ -320,6 +330,8 @@ Silvet::preProcess(const Grid &in)
             for (int j = 0; j < processingHeight; ++j) {
 
                 int ix = inCol.size() - j - 55;
+
+                //!!! note these filters introduce more latency
 
                 double val = inCol[ix];
                 m_filterA[j]->push(val);
