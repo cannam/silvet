@@ -69,6 +69,7 @@ writeMainHeader () =
         "",
         "#define SILVET_TEMPLATE_NOTE_COUNT \(noteCount)",
         "#define SILVET_TEMPLATE_HEIGHT     \(templateHeight)",
+        "#define SILVET_TEMPLATE_COUNT      \(length instruments)",
         "",
         "typedef struct {",
         "    const char *name;",
@@ -77,7 +78,7 @@ writeMainHeader () =
         "    float data[SILVET_TEMPLATE_NOTE_COUNT][SILVET_TEMPLATE_HEIGHT];",
         "} silvet_template_t;",
         "",
-        "static silvet_template_t silvet_templates[\(length instruments)] = {",
+        "static silvet_template_t silvet_templates[SILVET_TEMPLATE_COUNT] = {",
     ] ostr.writeln;
     for instruments do instrument:
         ostr.writeln "#include \"\(instrument).h\"";

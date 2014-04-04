@@ -7,6 +7,7 @@
 
 #define SILVET_TEMPLATE_NOTE_COUNT 88
 #define SILVET_TEMPLATE_HEIGHT     545
+#define SILVET_TEMPLATE_COUNT      13
 
 typedef struct {
     const char *name;
@@ -15,7 +16,7 @@ typedef struct {
     float data[SILVET_TEMPLATE_NOTE_COUNT][SILVET_TEMPLATE_HEIGHT];
 } silvet_template_t;
 
-static silvet_template_t silvet_templates[13] = {
+static silvet_template_t silvet_templates[SILVET_TEMPLATE_COUNT] = {
 #include "bassoon.h"
 #include "cello.h"
 #include "clarinet.h"

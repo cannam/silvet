@@ -34,8 +34,14 @@ private:
     Grid m_sources;
     Grid m_q;
     
+    int m_notes;
+    int m_bins;
+    int m_instruments;
+
     int m_lowest;
     int m_highest;
+
+    bool inRange(int instrument, int note);
 };
 
 #endif
