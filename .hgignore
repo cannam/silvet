@@ -1,4 +1,8 @@
 syntax: glob
 *~
 *.orig
+*.o
+*.class
+*.bak
+*.so
 

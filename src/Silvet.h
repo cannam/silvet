@@ -75,6 +75,7 @@ protected:
     vector<MedianFilter<double> *> m_filterA;
     vector<MedianFilter<double> *> m_filterB;
     Grid preProcess(const Grid &);
+    FeatureSet transcribe(const Grid &);
 
     int m_blockSize;
     int m_columnCount;

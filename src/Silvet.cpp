@@ -14,8 +14,7 @@
 */
 
 #include "Silvet.h"
-
-#include "data/include/templates.h"
+#include "EM.h"
 
 #include "maths/MedianFilter.h"
 #include "dsp/rateconversion/Resampler.h"
@@ -267,6 +266,19 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
     }
 
     Grid cqout = m_cq->process(data);
+    return transcribe(cqout);
+}
+
+Silvet::FeatureSet
+Silvet::getRemainingFeatures()
+{
+    Grid cqout = m_cq->getRemainingBlocks();
+    return transcribe(cqout);
+}
+
+Silvet::FeatureSet
+Silvet::transcribe(const Grid &cqout)
+{
     Grid filtered = preProcess(cqout);
 
     FeatureSet fs;
@@ -279,14 +291,19 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
         fs[m_cqOutputNo].push_back(f);
     }
 
+    int width = filtered.size();
+
+    int iterations = 12;
+
+    for (int i = 0; i < width; ++i) {
+        EM em;
+        for (int j = 0; j < iterations; ++j) {
+            em.iterate(filtered[i]);
+        }
+        //!!! now do something with the results from em!
+    }
+
     return fs;
-}
-
-Silvet::FeatureSet
-Silvet::getRemainingFeatures()
-{
-
-    return FeatureSet();
 }
 
 Silvet::Grid
@@ -330,8 +347,6 @@ Silvet::preProcess(const Grid &in)
             for (int j = 0; j < processingHeight; ++j) {
 
                 int ix = inCol.size() - j - 55;
-
-                //!!! note these filters introduce more latency
 
                 double val = inCol[ix];
                 m_filterA[j]->push(val);
