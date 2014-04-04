@@ -24,7 +24,8 @@ public:
     EM();
     ~EM();
 
-    void iterate(const std::vector<double> &column);
+    void iterate(std::vector<double> column);
+    void report();
 
 private:
     typedef std::vector<double> V;
@@ -32,7 +33,9 @@ private:
 
     V m_pitches;
     Grid m_sources;
-    Grid m_q;
+
+    V m_estimate;
+    V m_q;
     
     int m_notes;
     int m_bins;
@@ -40,6 +43,10 @@ private:
 
     int m_lowest;
     int m_highest;
+
+    void normalise(V &column);
+    void expectation(const V &column);
+    void maximisation(const V &column);
 
     bool inRange(int instrument, int note);
 };

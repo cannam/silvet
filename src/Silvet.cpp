@@ -301,6 +301,7 @@ Silvet::transcribe(const Grid &cqout)
             em.iterate(filtered[i]);
         }
         //!!! now do something with the results from em!
+        em.report();
     }
 
     return fs;
