@@ -349,7 +349,7 @@ Silvet::transcribe(const Grid &cqout)
         vector<double> pitches = em.getPitchDistribution();
         Feature f;
         for (int j = 0; j < (int)pitches.size(); ++j) {
-            f.values.push_back(float(pitches[i]));
+            f.values.push_back(float(pitches[j]));
         }
         fs[m_pitchOutputNo].push_back(f);
 
