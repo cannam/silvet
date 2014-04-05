@@ -28,6 +28,7 @@
 using std::vector;
 using std::cerr;
 using std::endl;
+using Vamp::RealTime;
 
 static int processingSampleRate = 44100;
 static int processingBPO = 60;
@@ -168,10 +169,10 @@ Silvet::getOutputDescriptors() const
     d.identifier = "transcription";
     d.name = "Transcription";
     d.description = ""; //!!!
-    d.unit = "Hz";
+    d.unit = "MIDI Pitch";
     d.hasFixedBinCount = true;
     d.binCount = 2;
-    d.binNames.push_back("Frequency");
+    d.binNames.push_back("Note");
     d.binNames.push_back("Velocity");
     d.hasKnownExtents = false;
     d.isQuantized = false;
@@ -289,13 +290,21 @@ Silvet::reset()
     }
     m_columnCount = 0;
     m_reducedColumnCount = 0;
+    m_transcribedColumnCount = 0;
+    m_startTime = RealTime::zeroTime;
 }
 
 Silvet::FeatureSet
 Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 {
+    if (m_columnCount == 0) {
+        m_startTime = timestamp;
+    }
+    
     vector<double> data;
-    for (int i = 0; i < m_blockSize; ++i) data.push_back(inputBuffers[0][i]);
+    for (int i = 0; i < m_blockSize; ++i) {
+        data.push_back(inputBuffers[0][i]);
+    }
 
     if (m_resampler) {
 	data = m_resampler->process(data.data(), data.size());
@@ -331,7 +340,15 @@ Silvet::transcribe(const Grid &cqout)
 
     int iterations = 12;
 
+    // we have 25 columns per second
+    double columnDuration = 1.0 / 25.0;
+
     for (int i = 0; i < width; ++i) {
+
+        RealTime t = m_startTime +
+            RealTime::fromSeconds(m_transcribedColumnCount * columnDuration);
+
+        ++m_transcribedColumnCount;
 
         double sum = 0.0;
         for (int j = 0; j < processingHeight; ++j) {
@@ -349,9 +366,26 @@ Silvet::transcribe(const Grid &cqout)
         vector<double> pitches = em.getPitchDistribution();
         Feature f;
         for (int j = 0; j < (int)pitches.size(); ++j) {
-            f.values.push_back(float(pitches[j]));
+            f.values.push_back(float(pitches[j] * sum));
         }
         fs[m_pitchOutputNo].push_back(f);
+
+        //!!! fake notes
+        for (int j = 0; j < (int)pitches.size(); ++j) {
+            if (pitches[j] * sum > 5) {
+                cerr << "pitch " << j << " level: " << pitches[j] * sum << endl;
+                Feature nf;
+                nf.hasTimestamp = true;
+                nf.timestamp = t;
+                nf.hasDuration = true;
+                nf.duration = RealTime::fromSeconds(columnDuration);
+                nf.values.push_back(j + 21);
+                float velocity = pitches[j] * sum * 2;
+                if (velocity > 127.f) velocity = 127.f;
+                nf.values.push_back(velocity);
+                fs[m_notesOutputNo].push_back(nf);
+            }
+        }
 
         //!!! now do something with the results from em!
         em.report();

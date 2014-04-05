@@ -82,6 +82,8 @@ protected:
     int m_blockSize;
     int m_columnCount;
     int m_reducedColumnCount;
+    int m_transcribedColumnCount;
+    Vamp::RealTime m_startTime;
 
     mutable int m_notesOutputNo;
     mutable int m_cqOutputNo;
