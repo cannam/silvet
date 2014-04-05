@@ -19,6 +19,25 @@ instruments = [
     "piano3",
 ];
 
+hardcodedRanges = [
+    "bassoon": { lowest = 15, highest = 51 },
+    "cello": { lowest = 15, highest = 60 },
+    "clarinet": { lowest = 29, highest = 68 },
+    "flute": { lowest = 39, highest = 72 },
+    "guitar": { lowest = 19, highest = 55 },
+    "horn": { lowest = 20, highest = 56 },
+    "oboe": { lowest = 37, highest = 70 },
+    "tenorsax": { lowest = 23, highest = 54 },
+    "violin": { lowest = 34, highest = 72 },
+    "piano-maps-SptkBGCl": { lowest = 16, highest = 72 },
+    "piano1": { lowest = 16, highest = 72 },
+    "piano2": { lowest = 16, highest = 72 },
+    "piano3": { lowest = 16, highest = 72 },
+];
+
+overallLowest = 15;
+overallHighest = 72;
+
 dataDir = "../../data";
 includeDir = "\(dataDir)/include";
 
@@ -40,8 +59,10 @@ convert instrument lines ostr =
         fi
     done;
     levels = map vec.sum notes;
-    first = length levels - length (find (>0) levels);
-    last = length (find (>0) (reverse levels)) - 1;
+//    first = length levels - length (find (>0) levels);
+//    last = length (find (>0) (reverse levels)) - 1;
+    first = hardcodedRanges[instrument].lowest;
+    last = hardcodedRanges[instrument].highest;
     ostr.writeln warning;
     ostr.writeln "";
     ostr.writeln "{\n    \"\(instrument)\",\n    \(first),\n    \(last),";
@@ -77,6 +98,9 @@ writeMainHeader () =
         "    int highest;",
         "    float data[SILVET_TEMPLATE_NOTE_COUNT][SILVET_TEMPLATE_HEIGHT];",
         "} silvet_template_t;",
+        "",
+        "static int silvet_templates_lowest_note = \(overallLowest);",
+        "static int silvet_templates_highest_note = \(overallHighest);",
         "",
         "static silvet_template_t silvet_templates[SILVET_TEMPLATE_COUNT] = {",
     ] ostr.writeln;

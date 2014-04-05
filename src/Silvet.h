@@ -20,11 +20,13 @@
 
 #include <vector>
 #include <string>
+#include <set>
 
 #include "maths/MedianFilter.h"
 
 using std::string;
 using std::vector;
+using std::set;
 
 class Resampler;
 class CQInterpolated;
@@ -74,15 +76,19 @@ protected:
 
     vector<MedianFilter<double> *> m_filterA;
     vector<MedianFilter<double> *> m_filterB;
+    vector<MedianFilter<double> *> m_postFilter;
+    vector<set<int> > m_pianoRoll;
+
     Grid preProcess(const Grid &);
+    FeatureList postProcess(const vector<double> &);
     FeatureSet transcribe(const Grid &);
 
-    std::string noteName(int n) const;
+    string noteName(int n) const;
+    float noteFrequency(int n) const;
 
     int m_blockSize;
     int m_columnCount;
     int m_reducedColumnCount;
-    int m_transcribedColumnCount;
     Vamp::RealTime m_startTime;
 
     mutable int m_notesOutputNo;

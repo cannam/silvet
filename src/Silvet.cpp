@@ -50,6 +50,9 @@ Silvet::~Silvet()
         delete m_filterA[i];
         delete m_filterB[i];
     }
+    for (int i = 0; i < (int)m_postFilter.size(); ++i) {
+        delete m_postFilter[i];
+    }
 }
 
 string
@@ -169,10 +172,10 @@ Silvet::getOutputDescriptors() const
     d.identifier = "transcription";
     d.name = "Transcription";
     d.description = ""; //!!!
-    d.unit = "MIDI Pitch";
+    d.unit = "Hz";
     d.hasFixedBinCount = true;
     d.binCount = 2;
-    d.binNames.push_back("Note");
+    d.binNames.push_back("Frequency");
     d.binNames.push_back("Velocity");
     d.hasKnownExtents = false;
     d.isQuantized = false;
@@ -243,6 +246,12 @@ Silvet::noteName(int i) const
     return buf;
 }
 
+float
+Silvet::noteFrequency(int note) const
+{
+    return float(27.5 * pow(2.0, note / 12.0));
+}
+
 bool
 Silvet::initialise(size_t channels, size_t stepSize, size_t blockSize)
 {
@@ -282,15 +291,22 @@ Silvet::reset()
         delete m_filterA[i];
         delete m_filterB[i];
     }
+    for (int i = 0; i < (int)m_postFilter.size(); ++i) {
+        delete m_postFilter[i];
+    }
     m_filterA.clear();
     m_filterB.clear();
+    m_postFilter.clear();
     for (int i = 0; i < processingHeight; ++i) {
         m_filterA.push_back(new MedianFilter<double>(40));
         m_filterB.push_back(new MedianFilter<double>(40));
     }
+    for (int i = 0; i < processingNotes; ++i) {
+        m_postFilter.push_back(new MedianFilter<double>(3));
+    }
+    m_pianoRoll.clear();
     m_columnCount = 0;
     m_reducedColumnCount = 0;
-    m_transcribedColumnCount = 0;
     m_startTime = RealTime::zeroTime;
 }
 
@@ -340,15 +356,7 @@ Silvet::transcribe(const Grid &cqout)
 
     int iterations = 12;
 
-    // we have 25 columns per second
-    double columnDuration = 1.0 / 25.0;
-
     for (int i = 0; i < width; ++i) {
-
-        RealTime t = m_startTime +
-            RealTime::fromSeconds(m_transcribedColumnCount * columnDuration);
-
-        ++m_transcribedColumnCount;
 
         double sum = 0.0;
         for (int j = 0; j < processingHeight; ++j) {
@@ -364,31 +372,22 @@ Silvet::transcribe(const Grid &cqout)
         }
 
         vector<double> pitches = em.getPitchDistribution();
+        
+        for (int j = 0; j < processingNotes; ++j) {
+            pitches[j] *= sum;
+        }
+
         Feature f;
-        for (int j = 0; j < (int)pitches.size(); ++j) {
-            f.values.push_back(float(pitches[j] * sum));
+        for (int j = 0; j < processingNotes; ++j) {
+            f.values.push_back(float(pitches[j]));
         }
         fs[m_pitchOutputNo].push_back(f);
 
-        //!!! fake notes
-        for (int j = 0; j < (int)pitches.size(); ++j) {
-            if (pitches[j] * sum > 5) {
-                cerr << "pitch " << j << " level: " << pitches[j] * sum << endl;
-                Feature nf;
-                nf.hasTimestamp = true;
-                nf.timestamp = t;
-                nf.hasDuration = true;
-                nf.duration = RealTime::fromSeconds(columnDuration);
-                nf.values.push_back(j + 21);
-                float velocity = pitches[j] * sum * 2;
-                if (velocity > 127.f) velocity = 127.f;
-                nf.values.push_back(velocity);
-                fs[m_notesOutputNo].push_back(nf);
-            }
+        FeatureList noteFeatures = postProcess(pitches);
+        for (FeatureList::const_iterator fi = noteFeatures.begin();
+             fi != noteFeatures.end(); ++fi) {
+            fs[m_notesOutputNo].push_back(*fi);
         }
-
-        //!!! now do something with the results from em!
-        em.report();
     }
 
     return fs;
@@ -462,3 +461,99 @@ Silvet::preProcess(const Grid &in)
     return out;
 }
     
+Vamp::Plugin::FeatureList
+Silvet::postProcess(const vector<double> &pitches)        
+{        
+    vector<double> filtered;
+
+    for (int j = 0; j < processingNotes; ++j) {
+        m_postFilter[j]->push(pitches[j]);
+        filtered.push_back(m_postFilter[j]->get());
+    }
+
+    // Threshold for level and reduce number of candidate pitches
+
+    int polyphony = 5;
+    double threshold = 4.8;
+
+    typedef std::multimap<double, int> ValueIndexMap;
+
+    ValueIndexMap strengths;
+    for (int j = 0; j < processingNotes; ++j) {
+        strengths.insert(ValueIndexMap::value_type(filtered[j], j));
+    }
+
+    set<int> active;
+    ValueIndexMap::const_iterator si = strengths.end();
+    for (int j = 0; j < polyphony; ++j) {
+        --si;
+        if (si->first < threshold) break;
+        cerr << si->second << " : " << si->first << endl;
+        active.insert(si->second);
+    }
+
+    // Minimum duration pruning, and conversion to notes. We can only
+    // report notes that have just ended (i.e. that are absent in the
+    // latest active set but present in the last set in the piano
+    // roll) -- any notes that ended earlier will have been reported
+    // already, and if they haven't ended, we don't know their
+    // duration.
+
+    int width = m_pianoRoll.size();
+
+    int durationThreshold = 2; // columns
+
+    FeatureList noteFeatures;
+
+    if (width < durationThreshold + 1) {
+        m_pianoRoll.push_back(active);
+        return noteFeatures;
+    }
+
+    // we have 25 columns per second
+    double columnDuration = 1.0 / 25.0;
+    
+    for (set<int>::const_iterator ni = m_pianoRoll[width-1].begin();
+         ni != m_pianoRoll[width-1].end(); ++ni) {
+
+        int note = *ni;
+        
+        if (active.find(note) != active.end()) {
+            // the note is still playing
+            continue;
+        }
+
+        // the note was playing but just ended
+        int end = width;
+        int start = end-1;
+
+        while (m_pianoRoll[start].find(note) != m_pianoRoll[start].end()) {
+            --start;
+        }
+        ++start;
+
+        int duration = width - start;
+        cerr << "duration " << duration << " for just-ended note " << note << endl;
+        if (duration < durationThreshold) {
+            // spurious
+            continue;
+        }
+
+        Feature nf;
+        nf.hasTimestamp = true;
+        nf.timestamp = RealTime::fromSeconds(columnDuration * start);
+        nf.hasDuration = true;
+        nf.duration = RealTime::fromSeconds(columnDuration * duration);
+        nf.values.push_back(noteFrequency(note));
+        nf.values.push_back(80.f); //!!! todo: calculate velocity
+        nf.label = noteName(note);
+        noteFeatures.push_back(nf);
+    }
+
+    m_pianoRoll.push_back(active);
+
+    cerr << "returning " << noteFeatures.size() << " complete notes" << endl;
+
+    return noteFeatures;
+}
+

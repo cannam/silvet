@@ -34,8 +34,6 @@ EM::EM() :
     m_bins(SILVET_TEMPLATE_HEIGHT),
     m_instruments(SILVET_TEMPLATE_COUNT)
 {
-    cerr << "init!" << endl;
-
     m_lowest = 0;
     m_highest = m_notes - 1;
 
@@ -65,8 +63,6 @@ EM::EM() :
 
     m_estimate = V(m_bins);
     m_q = V(m_bins);
-
-    cerr << "(init done)" << endl;
 }
 
 EM::~EM()

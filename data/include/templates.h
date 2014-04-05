@@ -16,6 +16,9 @@ typedef struct {
     float data[SILVET_TEMPLATE_NOTE_COUNT][SILVET_TEMPLATE_HEIGHT];
 } silvet_template_t;
 
+static int silvet_templates_lowest_note = 15;
+static int silvet_templates_highest_note = 72;
+
 static silvet_template_t silvet_templates[SILVET_TEMPLATE_COUNT] = {
 #include "bassoon.h"
 #include "cello.h"
