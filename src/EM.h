@@ -50,6 +50,9 @@ private:
     int m_notes;
     int m_bins;
     int m_instruments;
+    
+    double m_pitchSparsity;
+    double m_sourceSparsity;
 
     int m_lowest;
     int m_highest;

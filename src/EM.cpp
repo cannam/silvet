@@ -18,6 +18,7 @@
 #include "data/include/templates.h"
 
 #include <cstdlib>
+#include <cmath>
 
 #include <iostream>
 
@@ -32,7 +33,9 @@ static double epsilon = 1e-16;
 EM::EM() :
     m_notes(SILVET_TEMPLATE_NOTE_COUNT),
     m_bins(SILVET_TEMPLATE_HEIGHT),
-    m_instruments(SILVET_TEMPLATE_COUNT)
+    m_instruments(SILVET_TEMPLATE_COUNT),
+    m_pitchSparsity(1.1),
+    m_sourceSparsity(1.3)
 {
     m_lowest = 0;
     m_highest = m_notes - 1;
@@ -138,6 +141,9 @@ EM::maximisation(const V &column)
                 }
             }
         }
+        if (m_pitchSparsity != 1.0) {
+            newPitches[n] = pow(newPitches[n], m_pitchSparsity);
+        }
     }
     normalise(newPitches);
 
@@ -153,6 +159,9 @@ EM::maximisation(const V &column)
                 for (int j = 0; j < m_bins; ++j) {
                     newSources[i][n] += w[j] * m_q[j] * pitch * source;
                 }
+            }
+            if (m_sourceSparsity != 1.0) {
+                newSources[i][n] = pow(newSources[i][n], m_sourceSparsity);
             }
         }
         normalise(newSources[i]);
