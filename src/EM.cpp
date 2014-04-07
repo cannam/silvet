@@ -37,17 +37,8 @@ EM::EM() :
     m_pitchSparsity(1.1),
     m_sourceSparsity(1.3)
 {
-    m_lowest = 0;
-    m_highest = m_notes - 1;
-
-    for (int i = 0; i < m_instruments; ++i) {
-        if (i == 0 || silvet_templates[i].lowest < m_lowest) {
-            m_lowest = silvet_templates[i].lowest;
-        }
-        if (i == 0 || silvet_templates[i].highest > m_highest) {
-            m_highest = silvet_templates[i].highest;
-        }
-    }
+    m_lowest = silvet_templates_lowest_note;
+    m_highest = silvet_templates_highest_note;
 
     m_pitches = V(m_notes);
 
