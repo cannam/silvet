@@ -26,6 +26,7 @@
 #include <cstdio>
 
 using std::vector;
+using std::cout;
 using std::cerr;
 using std::endl;
 using Vamp::RealTime;
@@ -461,12 +462,12 @@ Silvet::postProcess(const vector<double> &pitches)
     vector<double> filtered;
 
     for (int j = 0; j < processingNotes; ++j) {
-        double noteMax = 0.0;
+        double noteSum = 0.0;
         for (int s = 0; s < processingShifts; ++s) {
             double val = pitches[j * processingShifts + s];
-            if (val > noteMax) noteMax = val;
+            noteSum += val;
         }
-        m_postFilter[j]->push(noteMax);
+        m_postFilter[j]->push(noteSum);
         filtered.push_back(m_postFilter[j]->get());
     }
 
