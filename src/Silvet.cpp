@@ -46,10 +46,6 @@ Silvet::~Silvet()
 {
     delete m_resampler;
     delete m_cq;
-    for (int i = 0; i < (int)m_filterA.size(); ++i) {
-        delete m_filterA[i];
-        delete m_filterB[i];
-    }
     for (int i = 0; i < (int)m_postFilter.size(); ++i) {
         delete m_postFilter[i];
     }
@@ -287,20 +283,10 @@ Silvet::reset()
 	(processingSampleRate, 27.5, processingSampleRate / 3, processingBPO,
          CQInterpolated::Linear);
 
-    for (int i = 0; i < (int)m_filterA.size(); ++i) {
-        delete m_filterA[i];
-        delete m_filterB[i];
-    }
     for (int i = 0; i < (int)m_postFilter.size(); ++i) {
         delete m_postFilter[i];
     }
-    m_filterA.clear();
-    m_filterB.clear();
     m_postFilter.clear();
-    for (int i = 0; i < processingHeight; ++i) {
-        m_filterA.push_back(new MedianFilter<double>(40));
-        m_filterB.push_back(new MedianFilter<double>(40));
-    }
     for (int i = 0; i < processingNotes; ++i) {
         m_postFilter.push_back(new MedianFilter<double>(3));
     }
@@ -432,21 +418,26 @@ Silvet::preProcess(const Grid &in)
             // giving us 545 bins instead of 600
 
             for (int j = 0; j < processingHeight; ++j) {
-
                 int ix = inCol.size() - j - 55;
+                outCol[j] = inCol[ix];
+            }
 
-                double val = inCol[ix];
-                m_filterA[j]->push(val);
+            vector<double> noiseLevel1 = 
+                MedianFilter<double>::filter(40, outCol);
+            for (int j = 0; j < processingHeight; ++j) {
+                noiseLevel1[j] = std::min(outCol[j], noiseLevel1[j]);
+            }
 
-                double a = m_filterA[j]->get();
-                m_filterB[j]->push(std::min(a, val));
-
-                double filtered = m_filterB[j]->get();
-                outCol[j] = filtered;
+            vector<double> noiseLevel2 = 
+                MedianFilter<double>::filter(40, noiseLevel1);
+            for (int j = 0; j < processingHeight; ++j) {
+                outCol[j] = std::max(outCol[j] - noiseLevel2[j], 0.0);
             }
 
             // then we only use every fourth filtered column, for 25
             // columns per second in the eventual grid
+            //!!! why, if we're filtering the time columns, don't we just
+            // reduce to this frame rate before filtering at all?
 
             if (m_reducedColumnCount % 4 == 0) {
                 out.push_back(outCol);

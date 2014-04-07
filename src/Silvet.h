@@ -74,8 +74,6 @@ protected:
 
     typedef vector<vector<double> > Grid;
 
-    vector<MedianFilter<double> *> m_filterA;
-    vector<MedianFilter<double> *> m_filterB;
     vector<MedianFilter<double> *> m_postFilter;
     vector<set<int> > m_pianoRoll;
 
