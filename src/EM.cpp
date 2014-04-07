@@ -47,7 +47,6 @@ EM::EM() :
     }
     
     m_sources = Grid(m_instruments);
-    
     for (int i = 0; i < m_instruments; ++i) {
         m_sources[i] = V(m_notes);
         for (int n = 0; n < m_notes; ++n) {
@@ -79,6 +78,24 @@ EM::normalise(V &column)
     }
     for (int i = 0; i < (int)column.size(); ++i) {
         column[i] /= sum;
+    }
+}
+
+void
+EM::normaliseSources(Grid &sources)
+{
+    V denominators(sources[0].size());
+
+    for (int i = 0; i < (int)sources.size(); ++i) {
+        for (int j = 0; j < (int)sources[i].size(); ++j) {
+            denominators[j] += sources[i][j];
+        }
+    }
+
+    for (int i = 0; i < (int)sources.size(); ++i) {
+        for (int j = 0; j < (int)sources[i].size(); ++j) {
+            sources[i][j] /= denominators[j];
+        }
     }
 }
 
@@ -155,8 +172,8 @@ EM::maximisation(const V &column)
                 newSources[i][n] = pow(newSources[i][n], m_sourceSparsity);
             }
         }
-        normalise(newSources[i]);
     }
+    normaliseSources(newSources);
 
     m_pitches = newPitches;
     m_sources = newSources;
