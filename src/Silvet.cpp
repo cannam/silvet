@@ -351,7 +351,6 @@ Silvet::transcribe(const Grid &cqout)
         for (int j = 0; j < processingHeight; ++j) {
             sum += filtered[i][j];
         }
-        cerr << "sum = " << sum << endl;
 
         if (sum < 1e-5) continue;
 
