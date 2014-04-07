@@ -34,6 +34,8 @@ static int processingSampleRate = 44100;
 static int processingBPO = 60;
 static int processingHeight = 545;
 static int processingNotes = 88;
+static int processingShifts = 5;
+static int processingPitches = processingNotes * processingShifts;
 
 Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
@@ -213,9 +215,9 @@ Silvet::getOutputDescriptors() const
     d.description = "The estimated pitch contribution matrix";
     d.unit = "";
     d.hasFixedBinCount = true;
-    d.binCount = processingNotes;
+    d.binCount = processingPitches;
     d.binNames.clear();
-    for (int i = 0; i < processingNotes; ++i) {
+    for (int i = 0; i < processingPitches; ++i) {
         d.binNames.push_back(noteName(i));
     }
     d.hasKnownExtents = false;
@@ -373,17 +375,18 @@ Silvet::transcribe(const Grid &cqout)
 
         vector<double> pitches = em.getPitchDistribution();
         
-        for (int j = 0; j < processingNotes; ++j) {
+        for (int j = 0; j < processingPitches; ++j) {
             pitches[j] *= sum;
         }
 
         Feature f;
-        for (int j = 0; j < processingNotes; ++j) {
+        for (int j = 0; j < processingPitches; ++j) {
             f.values.push_back(float(pitches[j]));
         }
         fs[m_pitchOutputNo].push_back(f);
 
         FeatureList noteFeatures = postProcess(pitches);
+
         for (FeatureList::const_iterator fi = noteFeatures.begin();
              fi != noteFeatures.end(); ++fi) {
             fs[m_notesOutputNo].push_back(*fi);
@@ -467,7 +470,12 @@ Silvet::postProcess(const vector<double> &pitches)
     vector<double> filtered;
 
     for (int j = 0; j < processingNotes; ++j) {
-        m_postFilter[j]->push(pitches[j]);
+        double noteMax = 0.0;
+        for (int s = 0; s < processingShifts; ++s) {
+            double val = pitches[j * processingShifts + s];
+            if (val > noteMax) noteMax = val;
+        }
+        m_postFilter[j]->push(noteMax);
         filtered.push_back(m_postFilter[j]->get());
     }
 
@@ -485,11 +493,12 @@ Silvet::postProcess(const vector<double> &pitches)
 
     set<int> active;
     ValueIndexMap::const_iterator si = strengths.end();
-    for (int j = 0; j < polyphony; ++j) {
+    while (int(active.size()) < polyphony) {
         --si;
         if (si->first < threshold) break;
         cerr << si->second << " : " << si->first << endl;
         active.insert(si->second);
+        if (si == strengths.begin()) break;
     }
 
     // Minimum duration pruning, and conversion to notes. We can only

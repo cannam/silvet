@@ -47,21 +47,25 @@ private:
     V m_estimate;
     V m_q;
     
-    int m_notes;
-    int m_bins;
-    int m_instruments;
+    int m_noteCount;
+    int m_shiftCount; // 1 + 2 * max template shift
+    int m_pitchCount; // noteCount * shiftCount
+    int m_binCount;
+    int m_instrumentCount;
     
     double m_pitchSparsity;
     double m_sourceSparsity;
 
-    int m_lowest;
-    int m_highest;
+    int m_lowestPitch;
+    int m_highestPitch;
 
     void normalise(V &column);
     void expectation(const V &column);
     void maximisation(const V &column);
 
-    bool inRange(int instrument, int note);
+    const float *templateFor(int instrument, int pitch);
+    void rangeFor(int instrument, int &minPitch, int &maxPitch);
+    bool inRange(int instrument, int pitch);
 };
 
 #endif
