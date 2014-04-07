@@ -96,6 +96,24 @@ EM::normalise(V &column)
 }
 
 void
+EM::normaliseSources(Grid &sources)
+{
+    V denominators(sources[0].size());
+
+    for (int i = 0; i < (int)sources.size(); ++i) {
+        for (int j = 0; j < (int)sources[i].size(); ++j) {
+            denominators[j] += sources[i][j];
+        }
+    }
+
+    for (int i = 0; i < (int)sources.size(); ++i) {
+        for (int j = 0; j < (int)sources[i].size(); ++j) {
+            sources[i][j] /= denominators[j];
+        }
+    }
+}
+
+void
 EM::iterate(V column)
 {
     normalise(column);
@@ -176,8 +194,8 @@ EM::maximisation(const V &column)
                 newSources[i][n] = pow(newSources[i][n], m_sourceSparsity);
             }
         }
-        normalise(newSources[i]);
     }
+    normaliseSources(newSources);
 
     m_pitches = newPitches;
     m_sources = newSources;

@@ -60,6 +60,7 @@ private:
     int m_highestPitch;
 
     void normalise(V &column);
+    void normaliseSources(Grid &grid);
     void expectation(const V &column);
     void maximisation(const V &column);
 
