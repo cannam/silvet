@@ -564,10 +564,13 @@ Silvet::postProcess(const vector<double> &pitches)
         int end = width;
         int start = end-1;
 
-        vector<double> strengths;
+        double maxStrength = 0.0;
 
         while (m_pianoRoll[start].find(note) != m_pianoRoll[start].end()) {
-            strengths.push_back(m_pianoRoll[start][note]);
+            double strength = m_pianoRoll[start][note];
+            if (strength > maxStrength) {
+                maxStrength = strength;
+            }
             --start;
         }
         ++start;
@@ -579,9 +582,7 @@ Silvet::postProcess(const vector<double> &pitches)
             continue;
         }
 
-        double medianStrength = MathUtilities::median
-            (strengths.data(), strengths.size());
-        int velocity = medianStrength * 2;
+        int velocity = maxStrength * 2;
         if (velocity > 127) velocity = 127;
 
         Feature nf;
