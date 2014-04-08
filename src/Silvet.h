@@ -27,6 +27,7 @@
 using std::string;
 using std::vector;
 using std::set;
+using std::map;
 
 class Resampler;
 class CQInterpolated;
@@ -75,7 +76,7 @@ protected:
     typedef vector<vector<double> > Grid;
 
     vector<MedianFilter<double> *> m_postFilter;
-    vector<set<int> > m_pianoRoll;
+    vector<map<int, double> > m_pianoRoll;
 
     Grid preProcess(const Grid &);
     FeatureList postProcess(const vector<double> &);
