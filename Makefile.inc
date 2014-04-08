@@ -55,8 +55,7 @@ src/EM.o: src/EM.h data/include/templates.h data/include/bassoon.h
 src/EM.o: data/include/cello.h data/include/clarinet.h data/include/flute.h
 src/EM.o: data/include/guitar.h data/include/horn.h data/include/oboe.h
 src/EM.o: data/include/tenorsax.h data/include/violin.h
-src/EM.o: data/include/piano-maps-SptkBGCl.h data/include/piano1.h
-src/EM.o: data/include/piano2.h data/include/piano3.h
+src/EM.o: data/include/piano-maps-SptkBGCl.h
 src/libmain.o: src/Silvet.h
 constant-q-cpp/cpp-qm-dsp/CQKernel.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
 constant-q-cpp/cpp-qm-dsp/ConstantQ.o: constant-q-cpp/cpp-qm-dsp/ConstantQ.h

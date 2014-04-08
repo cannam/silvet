@@ -62,17 +62,16 @@ clear('noteTemplatesBassoon','noteTemplatesCello','noteTemplatesClarinet','noteT
 %% transposed
 X = intCQT(:,round(1:7.1128:size(intCQT,2)))';
 
-%% median filter to reduce noise -- I think this is essentially the
-%% same as Xue's method for devuvuzelation
+%% median filter to remove broadband noise (i.e we filter across
+%% frequency rather than time)
 noiseLevel1 = medfilt1(X',40);
 noiseLevel2 = medfilt1(min(X',noiseLevel1),40);
 X = max(X-noiseLevel2',0);
 
 %% take every 4th row. We had 100 per second (10ms) so this is 40ms as
-%% the comment says. I am guessing we denoised at a higher resolution
-%% for better denoising, though still not at the original resolution,
-%% for speed. Y is now 1088x545 in our example and looks pretty clean
-%% as a contour plot.
+%% the comment says. It's not clear to me why we denoise before doing
+%% this rather than after? Y is now 1088x545 in our example and looks
+%% pretty clean as a contour plot.
 Y = X(1:4:size(X,1),:);  % 40ms step
 
 %% a 1x1088 array containing the sum of each column. Doesn't appear to

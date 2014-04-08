@@ -31,46 +31,62 @@ using std::endl;
 static double epsilon = 1e-16;
 
 EM::EM() :
-    m_notes(SILVET_TEMPLATE_NOTE_COUNT),
-    m_bins(SILVET_TEMPLATE_HEIGHT),
-    m_instruments(SILVET_TEMPLATE_COUNT),
+    m_noteCount(SILVET_TEMPLATE_NOTE_COUNT),
+    m_shiftCount(SILVET_TEMPLATE_MAX_SHIFT * 2 + 1),
+    m_binCount(SILVET_TEMPLATE_HEIGHT),
+    m_instrumentCount(SILVET_TEMPLATE_COUNT),
     m_pitchSparsity(1.1),
     m_sourceSparsity(1.3)
 {
-    m_lowest = silvet_templates_lowest_note;
-    m_highest = silvet_templates_highest_note;
+    m_lowestPitch = silvet_templates_lowest_note;
+    m_highestPitch = silvet_templates_highest_note;
 
-    m_pitches = V(m_notes);
-
-    for (int n = 0; n < m_notes; ++n) {
+    m_pitches = V(m_noteCount);
+    for (int n = 0; n < m_noteCount; ++n) {
         m_pitches[n] = drand48();
     }
+
+    m_shifts = Grid(m_shiftCount);
+    for (int f = 0; f < m_shiftCount; ++f) {
+        m_shifts[f] = V(m_noteCount);
+        for (int n = 0; n < m_noteCount; ++n) {
+            m_shifts[f][n] = drand48();
+        }
+    }
     
-    m_sources = Grid(m_instruments);
-    for (int i = 0; i < m_instruments; ++i) {
-        m_sources[i] = V(m_notes);
-        for (int n = 0; n < m_notes; ++n) {
+    m_sources = Grid(m_instrumentCount);
+        for (int i = 0; i < m_instrumentCount; ++i) {
+        m_sources[i] = V(m_noteCount);
+        for (int n = 0; n < m_noteCount; ++n) {
             m_sources[i][n] = (inRange(i, n) ? 1.0 : 0.0);
         }
     }
 
-    m_estimate = V(m_bins);
-    m_q = V(m_bins);
+    m_estimate = V(m_binCount);
+    m_q = V(m_binCount);
 }
 
 EM::~EM()
 {
 }
 
-bool
-EM::inRange(int instrument, int note)
+void
+EM::rangeFor(int instrument, int &minPitch, int &maxPitch)
 {
-    return (note >= silvet_templates[instrument].lowest &&
-            note <= silvet_templates[instrument].highest);
+    minPitch = silvet_templates[instrument].lowest;
+    maxPitch = silvet_templates[instrument].highest;
+}
+
+bool
+EM::inRange(int instrument, int pitch)
+{
+    int minPitch, maxPitch;
+    rangeFor(instrument, minPitch, maxPitch);
+    return (pitch >= minPitch && pitch <= maxPitch);
 }
 
 void
-EM::normalise(V &column)
+EM::normaliseColumn(V &column)
 {
     double sum = 0.0;
     for (int i = 0; i < (int)column.size(); ++i) {
@@ -82,19 +98,19 @@ EM::normalise(V &column)
 }
 
 void
-EM::normaliseSources(Grid &sources)
+EM::normaliseGrid(Grid &grid)
 {
-    V denominators(sources[0].size());
+    V denominators(grid[0].size());
 
-    for (int i = 0; i < (int)sources.size(); ++i) {
-        for (int j = 0; j < (int)sources[i].size(); ++j) {
-            denominators[j] += sources[i][j];
+    for (int i = 0; i < (int)grid.size(); ++i) {
+        for (int j = 0; j < (int)grid[i].size(); ++j) {
+            denominators[j] += grid[i][j];
         }
     }
 
-    for (int i = 0; i < (int)sources.size(); ++i) {
-        for (int j = 0; j < (int)sources[i].size(); ++j) {
-            sources[i][j] /= denominators[j];
+    for (int i = 0; i < (int)grid.size(); ++i) {
+        for (int j = 0; j < (int)grid[i].size(); ++j) {
+            grid[i][j] /= denominators[j];
         }
     }
 }
@@ -102,9 +118,15 @@ EM::normaliseSources(Grid &sources)
 void
 EM::iterate(V column)
 {
-    normalise(column);
+    normaliseColumn(column);
     expectation(column);
     maximisation(column);
+}
+
+const float *
+EM::templateFor(int instrument, int note, int shift)
+{
+    return silvet_templates[instrument].data[note] + shift;
 }
 
 void
@@ -112,22 +134,25 @@ EM::expectation(const V &column)
 {
     cerr << ".";
 
-    for (int i = 0; i < m_bins; ++i) {
+    for (int i = 0; i < m_binCount; ++i) {
         m_estimate[i] = epsilon;
     }
 
-    for (int i = 0; i < m_instruments; ++i) {
-        for (int n = 0; n < m_notes; ++n) {
-            float *w = silvet_templates[i].data[n];
-            double pitch = m_pitches[n];
-            double source = m_sources[i][n];
-            for (int j = 0; j < m_bins; ++j) {
-                m_estimate[j] += w[j] * pitch * source;
+    for (int i = 0; i < m_instrumentCount; ++i) {
+        for (int n = 0; n < m_noteCount; ++n) {
+            for (int f = 0; f < m_shiftCount; ++f) {
+                const float *w = templateFor(i, n, f);
+                double pitch = m_pitches[n];
+                double source = m_sources[i][n];
+                double shift = m_shifts[f][n];
+                for (int j = 0; j < m_binCount; ++j) {
+                    m_estimate[j] += w[j] * pitch * source * shift;
+                }
             }
         }
     }
 
-    for (int i = 0; i < m_bins; ++i) {
+    for (int i = 0; i < m_binCount; ++i) {
         m_q[i] = column[i] / m_estimate[i];
     }
 }
@@ -137,15 +162,18 @@ EM::maximisation(const V &column)
 {
     V newPitches = m_pitches;
 
-    for (int n = 0; n < m_notes; ++n) {
+    for (int n = 0; n < m_noteCount; ++n) {
         newPitches[n] = epsilon;
-        if (n >= m_lowest && n <= m_highest) {
-            for (int i = 0; i < m_instruments; ++i) {
-                float *w = silvet_templates[i].data[n];
-                double pitch = m_pitches[n];
-                double source = m_sources[i][n];
-                for (int j = 0; j < m_bins; ++j) {
-                    newPitches[n] += w[j] * m_q[j] * pitch * source;
+        if (n >= m_lowestPitch && n <= m_highestPitch) {
+            for (int i = 0; i < m_instrumentCount; ++i) {
+                for (int f = 0; f < m_shiftCount; ++f) {
+                    const float *w = templateFor(i, n, f);
+                    double pitch = m_pitches[n];
+                    double source = m_sources[i][n];
+                    double shift = m_shifts[f][n];
+                    for (int j = 0; j < m_binCount; ++j) {
+                        newPitches[n] += w[j] * m_q[j] * pitch * source * shift;
+                    }
                 }
             }
         }
@@ -153,19 +181,40 @@ EM::maximisation(const V &column)
             newPitches[n] = pow(newPitches[n], m_pitchSparsity);
         }
     }
-    normalise(newPitches);
+    normaliseColumn(newPitches);
+
+    Grid newShifts = m_shifts;
+
+    for (int f = 0; f < m_shiftCount; ++f) {
+        for (int n = 0; n < m_noteCount; ++n) {
+            newShifts[f][n] = epsilon;
+            for (int i = 0; i < m_instrumentCount; ++i) {
+                const float *w = templateFor(i, n, f);
+                double pitch = m_pitches[n];
+                double source = m_sources[i][n];
+                double shift = m_shifts[f][n];
+                for (int j = 0; j < m_binCount; ++j) {
+                    newShifts[f][n] += w[j] * m_q[j] * pitch * source * shift;
+                }
+            }
+        }
+    }
+    normaliseGrid(newShifts);
 
     Grid newSources = m_sources;
 
-    for (int i = 0; i < m_instruments; ++i) {
-        for (int n = 0; n < m_notes; ++n) {
+    for (int i = 0; i < m_instrumentCount; ++i) {
+        for (int n = 0; n < m_noteCount; ++n) {
             newSources[i][n] = epsilon;
             if (inRange(i, n)) {
-                float *w = silvet_templates[i].data[n];
-                double pitch = m_pitches[n];
-                double source = m_sources[i][n];
-                for (int j = 0; j < m_bins; ++j) {
-                    newSources[i][n] += w[j] * m_q[j] * pitch * source;
+                for (int f = 0; f < m_shiftCount; ++f) {
+                    const float *w = templateFor(i, n, f);
+                    double pitch = m_pitches[n];
+                    double source = m_sources[i][n];
+                    double shift = m_shifts[f][n];
+                    for (int j = 0; j < m_binCount; ++j) {
+                        newSources[i][n] += w[j] * m_q[j] * pitch * source * shift;
+                    }
                 }
             }
             if (m_sourceSparsity != 1.0) {
@@ -173,34 +222,11 @@ EM::maximisation(const V &column)
             }
         }
     }
-    normaliseSources(newSources);
+    normaliseGrid(newSources);
 
     m_pitches = newPitches;
+    m_shifts = newShifts;
     m_sources = newSources;
 }
 
-void
-EM::report()
-{
-    vector<int> sounding;
-    for (int n = 0; n < m_notes; ++n) {
-        if (m_pitches[n] > 0.05) {
-            sounding.push_back(n);
-        }
-    }
-    cerr << " sounding: ";
-    for (int i = 0; i < (int)sounding.size(); ++i) {
-        cerr << sounding[i] << " ";
-        int maxj = -1;
-        double maxs = 0.0;
-        for (int j = 0; j < m_instruments; ++j) {
-            if (j == 0 || m_sources[j][sounding[i]] > maxs) {
-                maxj = j;
-                maxs = m_sources[j][sounding[i]];
-            }
-        }
-        cerr << silvet_templates[maxj].name << " ";
-    }
-    cerr << endl;
-}
 

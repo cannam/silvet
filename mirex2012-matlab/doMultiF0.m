@@ -5,8 +5,17 @@ function  []  = doMultiF0(inputFile,outputFile)
 fprintf('%s',['Preprocessing............']);
 [ph pz sumY] = transcriptionMultipleTemplates(inputFile,12,1.1,1.3);
 fprintf('\n');
+
 fprintf('%s',['Postprocessing...........']);
 pianoRoll = repmat(sumY,88,1).*pz(1:88,:);
+
+pfid = fopen('pitchmatrix.lab','w');
+for i=1:size(pianoRoll,2)
+    fprintf(pfid, '%.2f ', pianoRoll(1:88,i));
+    fprintf(pfid, '\n');
+end;
+fclose(pfid);
+
 pianoRoll = pianoRoll';
 for j=[1:15 74:88] pianoRoll(:,j)=0; end;
 pianoRoll = medfilt1(pianoRoll,3);

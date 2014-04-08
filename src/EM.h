@@ -25,7 +25,6 @@ public:
     ~EM();
 
     void iterate(std::vector<double> column);
-    void report();
 
     const std::vector<double> &getEstimate() const { 
 	return m_estimate;
@@ -42,27 +41,31 @@ private:
     typedef std::vector<std::vector<double> > Grid;
 
     V m_pitches;
+    Grid m_shifts;
     Grid m_sources;
 
     V m_estimate;
     V m_q;
     
-    int m_notes;
-    int m_bins;
-    int m_instruments;
+    int m_noteCount;
+    int m_shiftCount; // 1 + 2 * max template shift
+    int m_binCount;
+    int m_instrumentCount;
     
     double m_pitchSparsity;
     double m_sourceSparsity;
 
-    int m_lowest;
-    int m_highest;
+    int m_lowestPitch;
+    int m_highestPitch;
 
-    void normalise(V &column);
-    void normaliseSources(Grid &grid);
+    void normaliseColumn(V &column);
+    void normaliseGrid(Grid &grid);
     void expectation(const V &column);
     void maximisation(const V &column);
 
-    bool inRange(int instrument, int note);
+    const float *templateFor(int instrument, int note, int shift);
+    void rangeFor(int instrument, int &minPitch, int &maxPitch);
+    bool inRange(int instrument, int pitch);
 };
 
 #endif

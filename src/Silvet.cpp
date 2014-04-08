@@ -17,6 +17,7 @@
 #include "EM.h"
 
 #include "maths/MedianFilter.h"
+#include "maths/MathUtilities.h"
 #include "dsp/rateconversion/Resampler.h"
 
 #include "constant-q-cpp/cpp-qm-dsp/CQInterpolated.h"
@@ -26,6 +27,7 @@
 #include <cstdio>
 
 using std::vector;
+using std::cout;
 using std::cerr;
 using std::endl;
 using Vamp::RealTime;
@@ -412,6 +414,7 @@ Silvet::transcribe(const Grid &cqout)
         fs[m_pitchOutputNo].push_back(f);
 
         FeatureList noteFeatures = postProcess(pitches);
+
         for (FeatureList::const_iterator fi = noteFeatures.begin();
              fi != noteFeatures.end(); ++fi) {
             fs[m_notesOutputNo].push_back(*fi);
@@ -516,13 +519,14 @@ Silvet::postProcess(const vector<double> &pitches)
         strengths.insert(ValueIndexMap::value_type(filtered[j], j));
     }
 
-    set<int> active;
+    map<int, double> active;
     ValueIndexMap::const_iterator si = strengths.end();
-    for (int j = 0; j < polyphony; ++j) {
+    while (int(active.size()) < polyphony) {
         --si;
         if (si->first < threshold) break;
         cerr << si->second << " : " << si->first << endl;
-        active.insert(si->second);
+        active[si->second] = si->first;
+        if (si == strengths.begin()) break;
     }
 
     // Minimum duration pruning, and conversion to notes. We can only
@@ -546,10 +550,10 @@ Silvet::postProcess(const vector<double> &pitches)
     // we have 25 columns per second
     double columnDuration = 1.0 / 25.0;
     
-    for (set<int>::const_iterator ni = m_pianoRoll[width-1].begin();
+    for (map<int, double>::const_iterator ni = m_pianoRoll[width-1].begin();
          ni != m_pianoRoll[width-1].end(); ++ni) {
 
-        int note = *ni;
+        int note = ni->first;
         
         if (active.find(note) != active.end()) {
             // the note is still playing
@@ -560,7 +564,10 @@ Silvet::postProcess(const vector<double> &pitches)
         int end = width;
         int start = end-1;
 
+        vector<double> strengths;
+
         while (m_pianoRoll[start].find(note) != m_pianoRoll[start].end()) {
+            strengths.push_back(m_pianoRoll[start][note]);
             --start;
         }
         ++start;
@@ -572,13 +579,18 @@ Silvet::postProcess(const vector<double> &pitches)
             continue;
         }
 
+        double medianStrength = MathUtilities::median
+            (strengths.data(), strengths.size());
+        int velocity = medianStrength * 2;
+        if (velocity > 127) velocity = 127;
+
         Feature nf;
         nf.hasTimestamp = true;
         nf.timestamp = RealTime::fromSeconds(columnDuration * start);
         nf.hasDuration = true;
         nf.duration = RealTime::fromSeconds(columnDuration * duration);
         nf.values.push_back(noteFrequency(note));
-        nf.values.push_back(80.f); //!!! todo: calculate velocity
+        nf.values.push_back(velocity);
         nf.label = noteName(note);
         noteFeatures.push_back(nf);
     }
