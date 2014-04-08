@@ -435,9 +435,11 @@ Silvet::preProcess(const Grid &in)
 
     Grid out;
 
-    //!!! nb we count the CQ latency in terms of processing hops, but
-    //!!! actually it isn't guaranteed to be an exact number (in fact
-    //!!! it probably isn't) so this is imprecise -- fix
+    // We count the CQ latency in terms of processing hops, but
+    // actually it probably isn't an exact number of hops so this
+    // isn't quite accurate. But the small constant offset is
+    // practically irrelevant compared to the jitter from the 40ms
+    // frame size we reduce to in a moment
     int latentColumns = m_cq->getLatency() / m_cq->getColumnHop();
 
     for (int i = 0; i < width; ++i) {
@@ -481,8 +483,6 @@ Silvet::preProcess(const Grid &in)
 
             // then we only use every fourth filtered column, for 25
             // columns per second in the eventual grid
-            //!!! why, if we're filtering the time columns, don't we just
-            // reduce to this frame rate before filtering at all?
 
             if (m_reducedColumnCount % 4 == 0) {
                 out.push_back(outCol);
