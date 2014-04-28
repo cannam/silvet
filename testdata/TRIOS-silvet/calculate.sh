@@ -42,6 +42,7 @@ for d in brahms lussier mozart schubert take_five; do
 	    end=`echo "$start $duration + p" | dc`
 	    echo -e "$start\t$end\t$frequency"
 	done > "$outdir/$cbase.lab"
+	rm "$csv"
     done
 done
 
