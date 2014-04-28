@@ -132,7 +132,7 @@ EM::templateFor(int instrument, int note, int shift)
 void
 EM::expectation(const V &column)
 {
-    cerr << ".";
+//    cerr << ".";
 
     for (int i = 0; i < m_binCount; ++i) {
         m_estimate[i] = epsilon;

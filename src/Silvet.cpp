@@ -576,7 +576,7 @@ Silvet::postProcess(const vector<double> &pitches)
         ++start;
 
         int duration = width - start;
-        cerr << "duration " << duration << " for just-ended note " << note << endl;
+//        cerr << "duration " << duration << " for just-ended note " << note << endl;
         if (duration < durationThreshold) {
             // spurious
             continue;
@@ -584,6 +584,8 @@ Silvet::postProcess(const vector<double> &pitches)
 
         int velocity = maxStrength * 2;
         if (velocity > 127) velocity = 127;
+
+        cerr << "Found a genuine note, starting at " << columnDuration * start << " with duration " << columnDuration * duration << endl;
 
         Feature nf;
         nf.hasTimestamp = true;
@@ -598,7 +600,7 @@ Silvet::postProcess(const vector<double> &pitches)
 
     m_pianoRoll.push_back(active);
 
-    cerr << "returning " << noteFeatures.size() << " complete notes" << endl;
+//    cerr << "returning " << noteFeatures.size() << " complete note(s) " << endl;
 
     return noteFeatures;
 }
