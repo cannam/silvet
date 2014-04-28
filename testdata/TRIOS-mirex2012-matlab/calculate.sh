@@ -39,7 +39,7 @@ for d in brahms lussier mozart schubert take_five; do
             wbase=`basename "$w" .wav`
             out="$outdir/$wbase.lab"
             echo "Processing wav file $w, writing to lab file $out"
-            ( cd "$matlab_path" ; echo "doMultiF0('$w','$out')" | matlab -nojvm )
+            time ( cd "$matlab_path" ; echo "doMultiF0('$w','$out')" | matlab -nojvm )
             echo "Done"
         done
     fi
