@@ -1,0 +1,1258 @@
+Will read TRIOS files from /import/c4dm-datasets/TRIOS_dataset
+Will write output files below /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab
+If either of these is incorrect, hit ctrl-C now!
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> 
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/brahms/horn_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/horn_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	13m27.777s
+user	77m18.590s
+sys	7m30.446s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/brahms/horn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/horn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	13m23.429s
+user	76m1.114s
+sys	7m26.800s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/brahms/mix.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/mix.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	13m23.497s
+user	75m58.696s
+sys	7m32.291s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/brahms/piano_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/piano_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	13m17.790s
+user	75m22.638s
+sys	7m28.495s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/brahms/piano.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/piano.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	13m9.743s
+user	75m0.943s
+sys	7m24.338s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/brahms/violin_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/violin_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	13m23.600s
+user	76m10.263s
+sys	7m28.065s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/brahms/violin.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/violin.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	13m14.888s
+user	75m41.737s
+sys	7m22.150s
+Done
+
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/lussier/bassoon_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/bassoon_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+20.00% complete
+40.00% complete
+60.00% complete
+80.00% complete
+100% complete
+Postprocessing...........done
+
+real	5m43.370s
+user	31m9.736s
+sys	3m15.092s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/lussier/bassoon.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/bassoon.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+20.00% complete
+40.00% complete
+60.00% complete
+80.00% complete
+100% complete
+Postprocessing...........done
+
+real	5m49.097s
+user	31m39.795s
+sys	3m17.390s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/lussier/mix.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/mix.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+20.00% complete
+40.00% complete
+60.00% complete
+80.00% complete
+100% complete
+Postprocessing...........done
+
+real	5m42.835s
+user	31m0.660s
+sys	3m17.390s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/lussier/piano_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/piano_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+20.00% complete
+40.00% complete
+60.00% complete
+80.00% complete
+100% complete
+Postprocessing...........done
+
+real	5m51.206s
+user	31m53.063s
+sys	3m18.066s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/lussier/piano.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/piano.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+20.00% complete
+40.00% complete
+60.00% complete
+80.00% complete
+100% complete
+Postprocessing...........done
+
+real	5m43.267s
+user	31m0.100s
+sys	3m17.599s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/lussier/trumpet_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/trumpet_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+20.00% complete
+40.00% complete
+60.00% complete
+80.00% complete
+100% complete
+Postprocessing...........done
+
+real	5m40.494s
+user	31m3.025s
+sys	3m15.231s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/lussier/trumpet.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/trumpet.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+20.00% complete
+40.00% complete
+60.00% complete
+80.00% complete
+100% complete
+Postprocessing...........done
+
+real	5m46.261s
+user	31m34.744s
+sys	3m16.464s
+Done
+
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/mozart/clarinet_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/clarinet_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+11.11% complete
+22.22% complete
+33.33% complete
+44.44% complete
+55.56% complete
+66.67% complete
+77.78% complete
+88.89% complete
+100% complete
+Postprocessing...........done
+
+real	10m24.833s
+user	58m17.050s
+sys	6m1.270s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/mozart/clarinet.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/clarinet.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+11.11% complete
+22.22% complete
+33.33% complete
+44.44% complete
+55.56% complete
+66.67% complete
+77.78% complete
+88.89% complete
+100% complete
+Postprocessing...........done
+
+real	10m24.452s
+user	57m47.241s
+sys	6m1.519s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/mozart/mix.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/mix.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+11.11% complete
+22.22% complete
+33.33% complete
+44.44% complete
+55.56% complete
+66.67% complete
+77.78% complete
+88.89% complete
+100% complete
+Postprocessing...........done
+
+real	10m26.050s
+user	58m13.154s
+sys	6m2.941s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/mozart/piano_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/piano_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+11.11% complete
+22.22% complete
+33.33% complete
+44.44% complete
+55.56% complete
+66.67% complete
+77.78% complete
+88.89% complete
+100% complete
+Postprocessing...........done
+
+real	10m34.334s
+user	59m19.217s
+sys	6m5.070s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/mozart/piano.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/piano.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+11.11% complete
+22.22% complete
+33.33% complete
+44.44% complete
+55.56% complete
+66.67% complete
+77.78% complete
+88.89% complete
+100% complete
+Postprocessing...........done
+
+real	10m42.106s
+user	60m9.037s
+sys	6m5.105s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/mozart/viola_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/viola_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+11.11% complete
+22.22% complete
+33.33% complete
+44.44% complete
+55.56% complete
+66.67% complete
+77.78% complete
+88.89% complete
+100% complete
+Postprocessing...........done
+
+real	10m28.264s
+user	59m18.395s
+sys	5m55.932s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/mozart/viola.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/viola.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+11.11% complete
+22.22% complete
+33.33% complete
+44.44% complete
+55.56% complete
+66.67% complete
+77.78% complete
+88.89% complete
+100% complete
+Postprocessing...........done
+
+real	10m45.818s
+user	61m6.290s
+sys	6m1.742s
+Done
+
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/schubert/cello_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/cello_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+7.14% complete
+14.29% complete
+21.43% complete
+28.57% complete
+35.71% complete
+42.86% complete
+50.00% complete
+57.14% complete
+64.29% complete
+71.43% complete
+78.57% complete
+85.71% complete
+92.86% complete
+100% complete
+Postprocessing...........done
+
+real	16m38.231s
+user	93m20.195s
+sys	9m36.568s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/schubert/cello.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/cello.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+7.14% complete
+14.29% complete
+21.43% complete
+28.57% complete
+35.71% complete
+42.86% complete
+50.00% complete
+57.14% complete
+64.29% complete
+71.43% complete
+78.57% complete
+85.71% complete
+92.86% complete
+100% complete
+Postprocessing...........done
+
+real	16m55.515s
+user	95m5.072s
+sys	9m35.178s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/schubert/mix.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/mix.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+7.14% complete
+14.29% complete
+21.43% complete
+28.57% complete
+35.71% complete
+42.86% complete
+50.00% complete
+57.14% complete
+64.29% complete
+71.43% complete
+78.57% complete
+85.71% complete
+92.86% complete
+100% complete
+Postprocessing...........done
+
+real	16m32.619s
+user	92m12.573s
+sys	9m33.902s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/schubert/piano_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/piano_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+7.14% complete
+14.29% complete
+21.43% complete
+28.57% complete
+35.71% complete
+42.86% complete
+50.00% complete
+57.14% complete
+64.29% complete
+71.43% complete
+78.57% complete
+85.71% complete
+92.86% complete
+100% complete
+Postprocessing...........done
+
+real	16m34.228s
+user	92m50.015s
+sys	9m29.268s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/schubert/piano.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/piano.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+7.14% complete
+14.29% complete
+21.43% complete
+28.57% complete
+35.71% complete
+42.86% complete
+50.00% complete
+57.14% complete
+64.29% complete
+71.43% complete
+78.57% complete
+85.71% complete
+92.86% complete
+100% complete
+Postprocessing...........done
+
+real	16m31.821s
+user	92m47.710s
+sys	9m26.082s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/schubert/violin_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/violin_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+7.14% complete
+14.29% complete
+21.43% complete
+28.57% complete
+35.71% complete
+42.86% complete
+50.00% complete
+57.14% complete
+64.29% complete
+71.43% complete
+78.57% complete
+85.71% complete
+92.86% complete
+100% complete
+Postprocessing...........done
+
+real	16m28.656s
+user	92m8.794s
+sys	9m23.119s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/schubert/violin.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/violin.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+7.14% complete
+14.29% complete
+21.43% complete
+28.57% complete
+35.71% complete
+42.86% complete
+50.00% complete
+57.14% complete
+64.29% complete
+71.43% complete
+78.57% complete
+85.71% complete
+92.86% complete
+100% complete
+Postprocessing...........done
+
+real	16m36.133s
+user	93m20.369s
+sys	9m22.675s
+Done
+
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/take_five/kick_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/kick_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	13m14.738s
+user	75m13.168s
+sys	7m23.584s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/take_five/kick.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/kick.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	13m6.145s
+user	73m56.100s
+sys	7m25.271s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/take_five/mix.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/mix.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	13m29.267s
+user	76m6.703s
+sys	7m36.187s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/take_five/piano_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/piano_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	13m20.569s
+user	75m16.572s
+sys	7m30.803s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/take_five/piano.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/piano.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	13m9.470s
+user	73m57.355s
+sys	7m27.933s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/take_five/ride_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/ride_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............Will read TRIOS files from /import/c4dm-datasets/TRIOS_dataset
+Will write output files below /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab
+If either of these is incorrect, hit ctrl-C now!
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> 
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/horn_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/brahms/horn_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/horn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/brahms/horn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/mix.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/brahms/mix.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/piano_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/brahms/piano_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/piano.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/brahms/piano.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/violin_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/brahms/violin_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/brahms/violin.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/brahms/violin.wav) already exists, skipping
+
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/bassoon_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/lussier/bassoon_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/bassoon.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/lussier/bassoon.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/mix.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/lussier/mix.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/piano_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/lussier/piano_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/piano.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/lussier/piano.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/trumpet_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/lussier/trumpet_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/lussier/trumpet.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/lussier/trumpet.wav) already exists, skipping
+
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/clarinet_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/mozart/clarinet_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/clarinet.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/mozart/clarinet.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/mix.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/mozart/mix.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/piano_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/mozart/piano_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/piano.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/mozart/piano.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/viola_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/mozart/viola_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/mozart/viola.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/mozart/viola.wav) already exists, skipping
+
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/cello_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/schubert/cello_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/cello.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/schubert/cello.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/mix.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/schubert/mix.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/piano_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/schubert/piano_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/piano.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/schubert/piano.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/violin_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/schubert/violin_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/schubert/violin.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/schubert/violin.wav) already exists, skipping
+
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/kick_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/take_five/kick_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/kick.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/take_five/kick.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/mix.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/take_five/mix.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/piano_syn.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/take_five/piano_syn.wav) already exists, skipping
+Output file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/piano.lab (for wav file /import/c4dm-datasets/TRIOS_dataset/take_five/piano.wav) already exists, skipping
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/take_five/ride_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/ride_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+8.33% complete
+16.67% complete
+25.00% complete
+33.33% complete
+41.67% complete
+50.00% complete
+58.33% complete
+66.67% complete
+75.00% complete
+83.33% complete
+91.67% complete
+Postprocessing...........done
+
+real	15m5.905s
+user	87m32.412s
+sys	7m52.942s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/take_five/ride.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/ride.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	14m3.613s
+user	78m55.252s
+sys	7m26.799s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/take_five/saxophone_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/saxophone_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	14m6.713s
+user	80m52.638s
+sys	7m38.434s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/take_five/saxophone.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/saxophone.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	14m29.443s
+user	85m35.615s
+sys	7m50.125s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/take_five/snare_syn.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/snare_syn.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	14m37.634s
+user	86m40.447s
+sys	7m57.026s
+Done
+Processing wav file /import/c4dm-datasets/TRIOS_dataset/take_five/snare.wav, writing to lab file /homes/chrisca/silvet/testdata/TRIOS-mirex2012-matlab/take_five/snare.lab
+Warning: No display specified.  You will not be able to display graphics on the screen.
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2013 The MathWorks, Inc.
+                    R2013b (8.2.0.701) 64-bit (glnxa64)
+                              August 13, 2013
+
+ 
+To get started, type one of these: helpwin, helpdesk, or demo.
+For product information, visit www.mathworks.com.
+ 
+>> Preprocessing............done
+Estimating F0s...........
+9.09% complete
+18.18% complete
+27.27% complete
+36.36% complete
+45.45% complete
+54.55% complete
+63.64% complete
+72.73% complete
+81.82% complete
+90.91% complete
+100% complete
+Postprocessing...........done
+
+real	14m40.762s
+user	86m47.973s
+sys	7m57.315s
+Done
+

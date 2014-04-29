@@ -38,9 +38,13 @@ for d in brahms lussier mozart schubert take_five; do
         for w in "$dir"/*.wav; do
             wbase=`basename "$w" .wav`
             out="$outdir/$wbase.lab"
-            echo "Processing wav file $w, writing to lab file $out"
-            time ( cd "$matlab_path" ; echo "doMultiF0('$w','$out')" | matlab -nojvm )
-            echo "Done"
+            if [ -f "$out" ]; then
+                echo "Output file $out (for wav file $w) already exists, skipping"
+            else
+                echo "Processing wav file $w, writing to lab file $out"
+                time ( cd "$matlab_path" ; echo "doMultiF0('$w','$out')" | matlab -nojvm )
+                echo "Done"
+            fi
         done
     fi
     echo
