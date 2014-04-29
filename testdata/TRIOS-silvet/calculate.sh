@@ -20,6 +20,11 @@ if ! sonic-annotator -v ; then
     exit 1
 fi
 
+if ! sox --version ; then
+    echo "Failed to run sox (not in PATH?), giving up"
+    exit 1
+fi
+
 for d in brahms lussier mozart schubert take_five; do
     dir="$trios_path/$d"
     outdir="$outbase/$d"
@@ -27,22 +32,27 @@ for d in brahms lussier mozart schubert take_five; do
         echo "TRIOS subdir $dir not found, skipping it"
     else 
         mkdir -p "$outdir"
-	VAMP_PATH=../.. sonic-annotator \
-	    --writer csv \
-	    --csv-basedir "$outdir" \
-	    --csv-force \
-	    --default vamp:silvet:silvet:notes \
-	    --recursive \
-	    "$dir"
+        for w in "$dir"/*.wav; do
+            wbase=`basename "$w" .wav`
+            outlab="$outdir/$wbase.lab"
+            echo "Processing wav file $w, writing to lab file $outlab"
+	    # The MATLAB method starts by normalising to a peak 0.5
+	    # (approx -3dBFS amplitude or -6dB power). We can't do
+	    # that in the plugin, so must do it here
+	    tmpwav="$outdir/$wbase.norm.wav"
+	    sox "$w" "$tmpwav" gain -n -6.020599913279624
+	    VAMP_PATH=../.. sonic-annotator \
+		--writer csv \
+		--csv-stdout \
+		--csv-force \
+		--default vamp:silvet:silvet:notes \
+		"$tmpwav" | \
+		while IFS=, read start duration frequency level label; do
+		end=`echo "$start $duration + p" | dc`
+		echo -e "$start\t$end\t$frequency"
+	    done > "$outlab"
+	    rm "$tmpwav"
+	done
     fi
-    echo "Converting to lab files..."
-    for csv in "$outdir"/*.csv; do
-	cbase=`basename "$csv" .csv`
-	cat "$csv" | while IFS=, read start duration frequency level label; do
-	    end=`echo "$start $duration + p" | dc`
-	    echo -e "$start\t$end\t$frequency"
-	done > "$outdir/$cbase.lab"
-	rm "$csv"
-    done
 done
 
