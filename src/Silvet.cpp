@@ -507,6 +507,8 @@ Silvet::postProcess(const vector<double> &pitches)
         filtered.push_back(m_postFilter[j]->get());
     }
 
+    int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
+
     // Threshold for level and reduce number of candidate pitches
 
     int polyphony = 5;
@@ -589,9 +591,11 @@ Silvet::postProcess(const vector<double> &pitches)
 
         Feature nf;
         nf.hasTimestamp = true;
-        nf.timestamp = RealTime::fromSeconds(columnDuration * start);
+        nf.timestamp = RealTime::fromSeconds
+            (columnDuration * (start - postFilterLatency));
         nf.hasDuration = true;
-        nf.duration = RealTime::fromSeconds(columnDuration * duration);
+        nf.duration = RealTime::fromSeconds
+            (columnDuration * duration);
         nf.values.push_back(noteFrequency(note));
         nf.values.push_back(velocity);
         nf.label = noteName(note);

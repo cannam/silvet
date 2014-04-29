@@ -44,9 +44,9 @@ for d in brahms lussier mozart schubert take_five; do
 	    VAMP_PATH=../.. sonic-annotator \
 		--writer csv \
 		--csv-stdout \
-		--csv-force \
 		--default vamp:silvet:silvet:notes \
 		"$tmpwav" | \
+		sed 's/^[^,]*,//' | \
 		while IFS=, read start duration frequency level label; do
 		end=`echo "$start $duration + p" | dc`
 		echo -e "$start\t$end\t$frequency"
