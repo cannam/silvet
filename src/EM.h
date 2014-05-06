@@ -28,7 +28,7 @@ public:
     int getNoteCount() const { return m_noteCount; } // size of pitch column
     int getSourceCount() const { return m_sourceCount; }
 
-    void iterate(double *column);
+    void iterate(const double *column);
 
     const double *getEstimate() const { // bin count
 	return m_estimate;
@@ -36,7 +36,7 @@ public:
     const double *getPitchDistribution() const { // note count
 	return m_pitches;
     }
-    const double **getSources() const { // source count * note count
+    const double *const *getSources() const { // source count * note count
 	return m_sources; 
     }
 
@@ -60,10 +60,10 @@ private:
     const int m_highestPitch;
 
     void normaliseColumn(double *column, int size);
-    void normaliseGrid(double **grid, int width, int height);
+    void normaliseGrid(double **grid, int size1, int size2);
 
-    void expectation(double *column); // size is m_binCount
-    void maximisation(double *column); // size is m_binCount
+    void expectation(const double *column); // size is m_binCount
+    void maximisation(const double *column); // size is m_binCount
 
     const double *templateFor(int instrument, int note, int shift);
     void rangeFor(int instrument, int &minPitch, int &maxPitch);

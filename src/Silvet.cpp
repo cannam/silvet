@@ -398,10 +398,11 @@ Silvet::transcribe(const Grid &cqout)
 
         EM em;
         for (int j = 0; j < iterations; ++j) {
-            em.iterate(filtered[i]);
+            em.iterate(filtered[i].data());
         }
 
-        vector<double> pitches = em.getPitchDistribution();
+        const double *pd = em.getPitchDistribution();
+        vector<double> pitches(pd, pd + processingNotes);
         
         for (int j = 0; j < processingNotes; ++j) {
             pitches[j] *= sum;

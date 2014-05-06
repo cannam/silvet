@@ -68,6 +68,11 @@ EM::EM() :
 
 EM::~EM()
 {
+    deallocate(m_q);
+    deallocate(m_estimate);
+    deallocate_channels(m_sources, m_sourceCount);
+    deallocate_channels(m_shifts, m_shiftCount);
+    deallocate(m_pitches);
 }
 
 void
@@ -86,41 +91,38 @@ EM::inRange(int instrument, int pitch)
 }
 
 void
-EM::normaliseColumn(V &column)
+EM::normaliseColumn(double *column, int size)
 {
-    double sum = 0.0;
-    for (int i = 0; i < (int)column.size(); ++i) {
-        sum += column[i];
-    }
-    for (int i = 0; i < (int)column.size(); ++i) {
-        column[i] /= sum;
-    }
+    double sum = v_sum(column, size);
+    v_scale(column, 1.0 / sum, size);
 }
 
 void
-EM::normaliseGrid(Grid &grid)
+EM::normaliseGrid(double **grid, int size1, int size2)
 {
-    V denominators(grid[0].size());
+    double *denominators = allocate_and_zero<double>(size2);
 
-    for (int i = 0; i < (int)grid.size(); ++i) {
-        for (int j = 0; j < (int)grid[i].size(); ++j) {
+    for (int i = 0; i < size1; ++i) {
+        for (int j = 0; j < size2; ++j) {
             denominators[j] += grid[i][j];
         }
     }
 
-    for (int i = 0; i < (int)grid.size(); ++i) {
-        for (int j = 0; j < (int)grid[i].size(); ++j) {
-            grid[i][j] /= denominators[j];
-        }
+    for (int i = 0; i < size1; ++i) {
+        v_divide(grid[i], denominators, size2);
     }
+
+    deallocate(denominators);
 }
 
 void
-EM::iterate(V column)
+EM::iterate(const double *column)
 {
-    normaliseColumn(column);
-    expectation(column);
-    maximisation(column);
+    double *norm = allocate<double>(m_binCount);
+    v_copy(norm, column, m_binCount);
+    normaliseColumn(norm, m_binCount);
+    expectation(norm);
+    maximisation(norm);
 }
 
 const double *
@@ -130,7 +132,7 @@ EM::templateFor(int instrument, int note, int shift)
 }
 
 void
-EM::expectation(const V &column)
+EM::expectation(const double *column)
 {
 //    cerr << ".";
 
@@ -159,11 +161,20 @@ EM::expectation(const V &column)
 }
 
 void
-EM::maximisation(const V &column)
+EM::maximisation(const double *column)
 {
-    V newPitches(m_noteCount, epsilon);
-    Grid newShifts(m_shiftCount, V(m_noteCount, epsilon));
-    Grid newSources(m_sourceCount, V(m_noteCount, epsilon));
+    double *newPitches = allocate<double>(m_noteCount);
+    v_set(newPitches, epsilon, m_noteCount);
+
+    double **newShifts = allocate_channels<double>(m_shiftCount, m_noteCount);
+    for (int i = 0; i < m_shiftCount; ++i) {
+        v_set(newShifts[i], epsilon, m_noteCount);
+    }
+
+    double **newSources = allocate_channels<double>(m_sourceCount, m_noteCount);
+    for (int i = 0; i < m_sourceCount; ++i) {
+        v_set(newSources[i], epsilon, m_noteCount);
+    }
 
     for (int n = 0; n < m_noteCount; ++n) {
 
@@ -210,9 +221,13 @@ EM::maximisation(const V &column)
         }
     }
 
-    normaliseColumn(newPitches);
-    normaliseGrid(newShifts);
-    normaliseGrid(newSources);
+    normaliseColumn(newPitches, m_noteCount);
+    normaliseGrid(newShifts, m_shiftCount, m_noteCount);
+    normaliseGrid(newSources, m_sourceCount, m_noteCount);
+
+    deallocate(m_pitches);
+    deallocate_channels(m_shifts, m_shiftCount);
+    deallocate_channels(m_sources, m_sourceCount);
 
     m_pitches = newPitches;
     m_shifts = newShifts;
