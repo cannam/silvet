@@ -90,3 +90,122 @@ sys	0m0.190s
 
 conclusion: supports the previous test
 
+
+
+OPENMP:
+
+commit:62b7be1226d5, as commit:ce64d11ef336 but with OpenMP parallel
+"for" in the main EM iteration loop (4 cores)
+
+real	0m56.400s
+user	2m59.740s
+sys	0m0.237s
+
+
+EM TWEAKS:
+
+commit:a0dedcbfa628, as commit:ce64d11ef336 but with variables hoisted
+out of loops and consts added wherever applicable
+
+real	1m44.548s
+user	1m44.460s
+sys	0m0.183s
+
+conclusion: compiler already knows this stuff
+
+commit:64b08cc12da0, as commit:ce64d11ef336 but with loops merged so
+as theoretically to reduce intermediate calculations
+
+real	3m46.969s
+user	3m46.850s
+sys	0m0.220s
+
+commit:6075e92d63ab, as commit:64b08cc12da0 but with innermost loop
+reverted to three loops with simple bodies instead of one with a more
+complex body
+
+real	1m44.767s
+user	1m44.490s
+sys	0m0.190s
+
+commit:97b77e7cb94c, as commit:6075e92d63ab but with templates stored
+as doubles instead of floats (doubling the size of the plugin binary)
+
+real	1m40.135s
+user	1m39.820s
+sys	0m0.230s
+
+commit:a6e136aaa202, as commit:97b77e7cb94c but with target vectors &
+grids initialised to epsilon instead of copied & then overwritten
+(this one also makes the intention clearer I think so is worth doing)
+
+real	1m39.277s
+user	1m39.000s
+sys	0m0.183s
+
+commit:840c0d703bbb, as commit:a6e136aaa202 but using single-precision
+floats for all EM code (and templates). This is probably not wise
+without separately testing the quality of the results but it's
+interesting to compare
+
+real	1m29.003s
+user	1m28.697s
+sys	0m0.197s
+
+
+BQVEC:
+
+commit:81eaba98985b, as commit:a6e136aaa202 but converted to use bqvec
+for basic allocation etc; processing logic unchanged
+
+real	1m37.320s
+user	1m36.863s
+sys	0m0.240s
+
+commit:891cbcf1e4d2, as commit:81eaba98985b but with some calculations
+vectorised [note: has silly bug]
+
+real	1m24.961s
+user	1m24.663s
+sys	0m0.177s
+
+commit:853b2d750688, as commit:891cbcf1e4d2 but with silly bug fixed
+
+real	1m26.876s
+user	1m26.387s
+sys	0m0.267s
+
+commit:9ecad4c9c2a2, as commit:853b2d750688 but using a couple of
+bqvec calls in expectation function
+
+real	1m9.153s
+user	1m8.837s
+sys	0m0.187s
+
+(this seems unlikely -- what have I broken?)
+
+commit:8259193b3b16, as commit:9ecad4c9c2a2 but avoiding some
+allocations
+
+real	1m10.631s
+user	1m10.327s
+sys	0m0.180s
+
+(still broken?)
+
+commit:19f6832fdc8a, as commit:9ecad4c9c2a2 but with the arguments to
+v_add_with_gain supplied in the right order (that's what I'd broken!)
+
+real	1m28.957s
+user	1m28.437s
+sys	0m0.213s
+
+
+BQVEC and OPENMP
+
+commit:ac750e222ad3, result of merging openmp branch
+commit:62b7be1226d into bqvec branch commit:19f6832fdc8a
+
+real	0m44.650s
+user	2m19.997s
+sys	0m0.343s
