@@ -190,3 +190,12 @@ real	1m28.957s
 user	1m28.437s
 sys	0m0.213s
 
+
+BQVEC and OPENMP
+
+commit:ac750e222ad3, result of merging openmp branch
+commit:62b7be1226d into bqvec branch commit:19f6832fdc8a
+
+real	0m44.650s
+user	2m19.997s
+sys	0m0.343s
