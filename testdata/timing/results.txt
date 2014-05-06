@@ -171,3 +171,12 @@ real	1m10.631s
 user	1m10.327s
 sys	0m0.180s
 
+(still broken?)
+
+commit:19f6832fdc8a, as commit:9ecad4c9c2a2 but with the arguments to
+v_add_with_gain supplied in the right order (that's what I'd broken!)
+
+real	1m28.957s
+user	1m28.437s
+sys	0m0.213s
+

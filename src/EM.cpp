@@ -210,13 +210,18 @@ EM::maximisation(const double *column)
         }
     }
 
-    for (int n = 0; n < m_noteCount; ++n) {
-        if (m_pitchSparsity != 1.0) {
-            m_updatePitches[n] = pow(m_updatePitches[n], m_pitchSparsity);
+    if (m_pitchSparsity != 1.0) {
+        for (int n = 0; n < m_noteCount; ++n) {
+            m_updatePitches[n] = 
+                pow(m_updatePitches[n], m_pitchSparsity);
         }
-        if (m_sourceSparsity != 1.0) {
+    }
+
+    if (m_sourceSparsity != 1.0) {
+        for (int n = 0; n < m_noteCount; ++n) {
             for (int i = 0; i < m_sourceCount; ++i) {
-                m_updateSources[i][n] = pow(m_updateSources[i][n], m_sourceSparsity);
+                m_updateSources[i][n] =
+                    pow(m_updateSources[i][n], m_sourceSparsity);
             }
         }
     }
