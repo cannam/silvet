@@ -65,3 +65,15 @@ sys	0m0.203s
 conclusion: obviously we want to remove these eventually but might as
 well keep in during testing
 
+
+EM ITERATIONS:
+
+commit:5314d3361dfb, as commit:ce64d11ef336 but with only 6 EM
+iterations instead of 12
+
+real	0m59.055s
+user	0m58.897s
+sys	0m0.193s
+
+conclusion: EM dominates the time taken, not CQ or note forming
+

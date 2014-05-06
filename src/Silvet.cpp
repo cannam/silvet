@@ -385,7 +385,7 @@ Silvet::transcribe(const Grid &cqout)
 
     int width = filtered.size();
 
-    int iterations = 6;
+    int iterations = 12;
 
     for (int i = 0; i < width; ++i) {
 
