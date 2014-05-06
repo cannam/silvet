@@ -45,6 +45,10 @@ private:
     double **m_shifts;
     double **m_sources;
 
+    double *m_updatePitches;
+    double **m_updateShifts;
+    double **m_updateSources;
+
     double *m_estimate;
     double *m_q;
     

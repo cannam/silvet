@@ -44,11 +44,13 @@ EM::EM() :
     m_highestPitch(silvet_templates_highest_note)
 {
     m_pitches = allocate<double>(m_noteCount);
+    m_updatePitches = allocate<double>(m_noteCount);
     for (int n = 0; n < m_noteCount; ++n) {
         m_pitches[n] = drand48();
     }
 
     m_shifts = allocate_channels<double>(m_shiftCount, m_noteCount);
+    m_updateShifts = allocate_channels<double>(m_shiftCount, m_noteCount);
     for (int f = 0; f < m_shiftCount; ++f) {
         for (int n = 0; n < m_noteCount; ++n) {
             m_shifts[f][n] = drand48();
@@ -56,6 +58,7 @@ EM::EM() :
     }
     
     m_sources = allocate_channels<double>(m_sourceCount, m_noteCount);
+    m_updateSources = allocate_channels<double>(m_sourceCount, m_noteCount);
     for (int i = 0; i < m_sourceCount; ++i) {
         for (int n = 0; n < m_noteCount; ++n) {
             m_sources[i][n] = (inRange(i, n) ? 1.0 : 0.0);
@@ -71,8 +74,11 @@ EM::~EM()
     deallocate(m_q);
     deallocate(m_estimate);
     deallocate_channels(m_sources, m_sourceCount);
+    deallocate_channels(m_updateSources, m_sourceCount);
     deallocate_channels(m_shifts, m_shiftCount);
+    deallocate_channels(m_updateShifts, m_shiftCount);
     deallocate(m_pitches);
+    deallocate(m_updatePitches);
 }
 
 void
@@ -160,17 +166,12 @@ EM::expectation(const double *column)
 void
 EM::maximisation(const double *column)
 {
-    double *newPitches = allocate<double>(m_noteCount);
-    v_set(newPitches, epsilon, m_noteCount);
-
-    double **newShifts = allocate_channels<double>(m_shiftCount, m_noteCount);
+    v_set(m_updatePitches, epsilon, m_noteCount);
     for (int i = 0; i < m_shiftCount; ++i) {
-        v_set(newShifts[i], epsilon, m_noteCount);
+        v_set(m_updateShifts[i], epsilon, m_noteCount);
     }
-
-    double **newSources = allocate_channels<double>(m_sourceCount, m_noteCount);
     for (int i = 0; i < m_sourceCount; ++i) {
-        v_set(newSources[i], epsilon, m_noteCount);
+        v_set(m_updateSources[i], epsilon, m_noteCount);
     }
 
     double *contributions = allocate<double>(m_binCount);
@@ -197,40 +198,36 @@ EM::maximisation(const double *column)
 
                 if (n >= m_lowestPitch && n <= m_highestPitch) {
 
-                    newPitches[n] += total;
+                    m_updatePitches[n] += total;
 
                     if (inRange(i, n)) {
-                        newSources[i][n] += total;
+                        m_updateSources[i][n] += total;
                     }
                 }
 
-                newShifts[f][n] += total;
+                m_updateShifts[f][n] += total;
             }
         }
     }
 
     for (int n = 0; n < m_noteCount; ++n) {
         if (m_pitchSparsity != 1.0) {
-            newPitches[n] = pow(newPitches[n], m_pitchSparsity);
+            m_updatePitches[n] = pow(m_updatePitches[n], m_pitchSparsity);
         }
         if (m_sourceSparsity != 1.0) {
             for (int i = 0; i < m_sourceCount; ++i) {
-                newSources[i][n] = pow(newSources[i][n], m_sourceSparsity);
+                m_updateSources[i][n] = pow(m_updateSources[i][n], m_sourceSparsity);
             }
         }
     }
 
-    normaliseColumn(newPitches, m_noteCount);
-    normaliseGrid(newShifts, m_shiftCount, m_noteCount);
-    normaliseGrid(newSources, m_sourceCount, m_noteCount);
+    normaliseColumn(m_updatePitches, m_noteCount);
+    normaliseGrid(m_updateShifts, m_shiftCount, m_noteCount);
+    normaliseGrid(m_updateSources, m_sourceCount, m_noteCount);
 
-    deallocate(m_pitches);
-    deallocate_channels(m_shifts, m_shiftCount);
-    deallocate_channels(m_sources, m_sourceCount);
-
-    m_pitches = newPitches;
-    m_shifts = newShifts;
-    m_sources = newSources;
+    std::swap(m_pitches, m_updatePitches);
+    std::swap(m_shifts, m_updateShifts);
+    std::swap(m_sources, m_updateSources);
 }
 
 
