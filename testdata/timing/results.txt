@@ -124,3 +124,11 @@ real	1m40.135s
 user	1m39.820s
 sys	0m0.230s
 
+commit:a6e136aaa202, as commit:97b77e7cb94c but with target vectors &
+grids initialised to epsilon instead of copied & then overwritten
+(this one also makes the intention clearer I think so is worth doing)
+
+real	1m39.277s
+user	1m39.000s
+sys	0m0.183s
+
