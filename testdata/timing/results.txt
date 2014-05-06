@@ -132,3 +132,13 @@ real	1m39.277s
 user	1m39.000s
 sys	0m0.183s
 
+
+BQVEC:
+
+commit:81eaba98985b, as commit:a6e136aaa202 but converted to use bqvec
+for basic allocation etc; processing logic unchanged
+
+real	1m37.320s
+user	1m36.863s
+sys	0m0.240s
+
