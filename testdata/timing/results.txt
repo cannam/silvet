@@ -90,3 +90,13 @@ sys	0m0.190s
 
 conclusion: supports the previous test
 
+
+OPENMP:
+
+commit:62b7be1226d5, as commit:ce64d11ef336 but with OpenMP parallel
+"for" in the main EM iteration loop (4 cores)
+
+real	0m56.400s
+user	2m59.740s
+sys	0m0.237s
+
