@@ -137,9 +137,7 @@ EM::expectation(const double *column)
 {
 //    cerr << ".";
 
-    for (int i = 0; i < m_binCount; ++i) {
-        m_estimate[i] = epsilon;
-    }
+    v_set(m_estimate, epsilon, m_binCount);
 
     for (int i = 0; i < m_sourceCount; ++i) {
         for (int n = 0; n < m_noteCount; ++n) {
@@ -149,9 +147,7 @@ EM::expectation(const double *column)
                 const double *w = templateFor(i, n, f);
                 const double shift = m_shifts[f][n];
                 const double factor = pitch * source * shift;
-                for (int j = 0; j < m_binCount; ++j) {
-                    m_estimate[j] += w[j] * factor;
-                }
+                v_add_with_gain(m_estimate, w, factor, m_binCount);
             }
         }
     }
