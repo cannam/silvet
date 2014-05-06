@@ -155,3 +155,19 @@ real	1m26.876s
 user	1m26.387s
 sys	0m0.267s
 
+commit:9ecad4c9c2a2, as commit:853b2d750688 but using a couple of
+bqvec calls in expectation function
+
+real	1m9.153s
+user	1m8.837s
+sys	0m0.187s
+
+(this seems unlikely -- what have I broken?)
+
+commit:8259193b3b16, as commit:9ecad4c9c2a2 but avoiding some
+allocations
+
+real	1m10.631s
+user	1m10.327s
+sys	0m0.180s
+
