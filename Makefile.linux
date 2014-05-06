@@ -1,11 +1,12 @@
 
-CFLAGS := -Wall -O3 -ffast-math -msse -mfpmath=sse -ftree-vectorize -ftree-vectorizer-verbose=1 -fPIC -I../vamp-plugin-sdk/
+CFLAGS := -Wall -O3 -fopenmp -ffast-math -msse -mfpmath=sse -ftree-vectorize -fPIC -I../vamp-plugin-sdk/
+
 #CFLAGS := -g -fPIC -I../vamp-plugin-sdk
 
 CXXFLAGS := $(CFLAGS)
 
 VAMPSDK_DIR := ../vamp-plugin-sdk
-PLUGIN_LDFLAGS := -shared -Wl,--version-script=vamp-plugin.map
+PLUGIN_LDFLAGS := -lgomp -shared -Wl,--version-script=vamp-plugin.map
 
 PLUGIN_EXT := .so
 
