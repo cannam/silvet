@@ -160,27 +160,23 @@ EM::expectation(const V &column)
 void
 EM::maximisation(const V &column)
 {
-    V newPitches = m_pitches;
-    Grid newShifts = m_shifts;
-    Grid newSources = m_sources;
+    V newPitches(m_noteCount, epsilon);
+    Grid newShifts(m_shiftCount, V(m_noteCount, epsilon));
+    Grid newSources(m_instrumentCount, V(m_noteCount, epsilon));
 
     for (int n = 0; n < m_noteCount; ++n) {
 
         const double pitch = m_pitches[n];
-        newPitches[n] = epsilon;
 
         for (int f = 0; f < m_shiftCount; ++f) {
 
             const double shift = m_shifts[f][n];
-            newShifts[f][n] = epsilon;
 
             for (int i = 0; i < m_instrumentCount; ++i) {
 
                 const double source = m_sources[i][n];
-                newSources[i][n] = epsilon;
-
-                const double *w = templateFor(i, n, f);
                 const double factor = pitch * source * shift;
+                const double *w = templateFor(i, n, f);
 
                 if (n >= m_lowestPitch && n <= m_highestPitch) {
 

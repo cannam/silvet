@@ -117,3 +117,10 @@ real	1m44.767s
 user	1m44.490s
 sys	0m0.190s
 
+commit:97b77e7cb94c, as commit:6075e92d63ab but with templates stored
+as doubles instead of floats (doubling the size of the plugin binary)
+
+real	1m40.135s
+user	1m39.820s
+sys	0m0.230s
+
