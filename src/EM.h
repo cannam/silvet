@@ -24,33 +24,34 @@ public:
     EM();
     ~EM();
 
-    void iterate(std::vector<double> column);
+    int getBinCount() const { return m_binCount; } // size of input column
+    int getNoteCount() const { return m_noteCount; } // size of pitch column
+    int getSourceCount() const { return m_sourceCount; }
 
-    const std::vector<double> &getEstimate() const { 
+    void iterate(double *column);
+
+    const double *getEstimate() const { // bin count
 	return m_estimate;
     }
-    const std::vector<double> &getPitchDistribution() const {
+    const double *getPitchDistribution() const { // note count
 	return m_pitches;
     }
-    const std::vector<std::vector<double> > &getSources() const {
+    const double **getSources() const { // source count * note count
 	return m_sources; 
     }
 
 private:
-    typedef std::vector<double> V;
-    typedef std::vector<std::vector<double> > Grid;
+    double *m_pitches;
+    double **m_shifts;
+    double **m_sources;
 
-    V m_pitches;
-    Grid m_shifts;
-    Grid m_sources;
-
-    V m_estimate;
-    V m_q;
+    double *m_estimate;
+    double *m_q;
     
     const int m_noteCount;
     const int m_shiftCount; // 1 + 2 * max template shift
     const int m_binCount;
-    const int m_instrumentCount;
+    const int m_sourceCount;
     
     const double m_pitchSparsity;
     const double m_sourceSparsity;
@@ -58,10 +59,11 @@ private:
     const int m_lowestPitch;
     const int m_highestPitch;
 
-    void normaliseColumn(V &column);
-    void normaliseGrid(Grid &grid);
-    void expectation(const V &column);
-    void maximisation(const V &column);
+    void normaliseColumn(double *column, int size);
+    void normaliseGrid(double **grid, int width, int height);
+
+    void expectation(double *column); // size is m_binCount
+    void maximisation(double *column); // size is m_binCount
 
     const double *templateFor(int instrument, int note, int shift);
     void rangeFor(int instrument, int &minPitch, int &maxPitch);

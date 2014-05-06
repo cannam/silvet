@@ -22,11 +22,14 @@
 
 #include <iostream>
 
-#include <vector>
+#include "VectorOps.h"
+#include "Allocators.h"
 
 using std::vector;
 using std::cerr;
 using std::endl;
+
+using namespace breakfastquay;
 
 static double epsilon = 1e-16;
 
@@ -34,35 +37,33 @@ EM::EM() :
     m_noteCount(SILVET_TEMPLATE_NOTE_COUNT),
     m_shiftCount(SILVET_TEMPLATE_MAX_SHIFT * 2 + 1),
     m_binCount(SILVET_TEMPLATE_HEIGHT),
-    m_instrumentCount(SILVET_TEMPLATE_COUNT),
+    m_sourceCount(SILVET_TEMPLATE_COUNT),
     m_pitchSparsity(1.1),
     m_sourceSparsity(1.3),
     m_lowestPitch(silvet_templates_lowest_note),
     m_highestPitch(silvet_templates_highest_note)
 {
-    m_pitches = V(m_noteCount);
+    m_pitches = allocate<double>(m_noteCount);
     for (int n = 0; n < m_noteCount; ++n) {
         m_pitches[n] = drand48();
     }
 
-    m_shifts = Grid(m_shiftCount);
+    m_shifts = allocate_channels<double>(m_shiftCount, m_noteCount);
     for (int f = 0; f < m_shiftCount; ++f) {
-        m_shifts[f] = V(m_noteCount);
         for (int n = 0; n < m_noteCount; ++n) {
             m_shifts[f][n] = drand48();
         }
     }
     
-    m_sources = Grid(m_instrumentCount);
-        for (int i = 0; i < m_instrumentCount; ++i) {
-        m_sources[i] = V(m_noteCount);
+    m_sources = allocate_channels<double>(m_sourceCount, m_noteCount);
+    for (int i = 0; i < m_sourceCount; ++i) {
         for (int n = 0; n < m_noteCount; ++n) {
             m_sources[i][n] = (inRange(i, n) ? 1.0 : 0.0);
         }
     }
 
-    m_estimate = V(m_binCount);
-    m_q = V(m_binCount);
+    m_estimate = allocate<double>(m_binCount);
+    m_q = allocate<double>(m_binCount);
 }
 
 EM::~EM()
@@ -137,7 +138,7 @@ EM::expectation(const V &column)
         m_estimate[i] = epsilon;
     }
 
-    for (int i = 0; i < m_instrumentCount; ++i) {
+    for (int i = 0; i < m_sourceCount; ++i) {
         for (int n = 0; n < m_noteCount; ++n) {
             const double pitch = m_pitches[n];
             const double source = m_sources[i][n];
@@ -162,7 +163,7 @@ EM::maximisation(const V &column)
 {
     V newPitches(m_noteCount, epsilon);
     Grid newShifts(m_shiftCount, V(m_noteCount, epsilon));
-    Grid newSources(m_instrumentCount, V(m_noteCount, epsilon));
+    Grid newSources(m_sourceCount, V(m_noteCount, epsilon));
 
     for (int n = 0; n < m_noteCount; ++n) {
 
@@ -172,7 +173,7 @@ EM::maximisation(const V &column)
 
             const double shift = m_shifts[f][n];
 
-            for (int i = 0; i < m_instrumentCount; ++i) {
+            for (int i = 0; i < m_sourceCount; ++i) {
 
                 const double source = m_sources[i][n];
                 const double factor = pitch * source * shift;
@@ -203,7 +204,7 @@ EM::maximisation(const V &column)
             newPitches[n] = pow(newPitches[n], m_pitchSparsity);
         }
         if (m_sourceSparsity != 1.0) {
-            for (int i = 0; i < m_instrumentCount; ++i) {
+            for (int i = 0; i < m_sourceCount; ++i) {
                 newSources[i][n] = pow(newSources[i][n], m_sourceSparsity);
             }
         }

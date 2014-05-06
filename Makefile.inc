@@ -3,6 +3,7 @@ SRC_DIR  := src
 
 QMDSP_DIR ?= ../qm-dsp
 VAMPSDK_DIR  ?= ../vamp-plugin-sdk
+BQVEC_DIR ?= ../bqvec
 
 CQ_DIR	     ?= constant-q-cpp/cpp-qm-dsp
 
@@ -12,7 +13,7 @@ CXX	?= g++
 CC	?= gcc
 
 CFLAGS := $(CFLAGS) 
-CXXFLAGS := -I. -I$(VAMPSDK_DIR) -I$(QMDSP_DIR) $(CXXFLAGS)
+CXXFLAGS := -I. -I$(VAMPSDK_DIR) -I$(QMDSP_DIR) -I$(BQVEC_DIR) $(CXXFLAGS)
 
 LDFLAGS := $(LDFLAGS) 
 PLUGIN_LDFLAGS := $(LDFLAGS) $(PLUGIN_LDFLAGS)
