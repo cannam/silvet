@@ -143,9 +143,15 @@ user	1m36.863s
 sys	0m0.240s
 
 commit:891cbcf1e4d2, as commit:81eaba98985b but with some calculations
-vectorised
+vectorised [note: has silly bug]
 
 real	1m24.961s
 user	1m24.663s
 sys	0m0.177s
+
+commit:853b2d750688, as commit:891cbcf1e4d2 but with silly bug fixed
+
+real	1m26.876s
+user	1m26.387s
+sys	0m0.267s
 
