@@ -122,7 +122,7 @@ EM::iterate(V column)
     maximisation(column);
 }
 
-const float *
+const double *
 EM::templateFor(int instrument, int note, int shift)
 {
     return silvet_templates[instrument].data[note] + shift;
@@ -142,7 +142,7 @@ EM::expectation(const V &column)
             const double pitch = m_pitches[n];
             const double source = m_sources[i][n];
             for (int f = 0; f < m_shiftCount; ++f) {
-                const float *w = templateFor(i, n, f);
+                const double *w = templateFor(i, n, f);
                 const double shift = m_shifts[f][n];
                 const double factor = pitch * source * shift;
                 for (int j = 0; j < m_binCount; ++j) {
@@ -179,7 +179,7 @@ EM::maximisation(const V &column)
                 const double source = m_sources[i][n];
                 newSources[i][n] = epsilon;
 
-                const float *w = templateFor(i, n, f);
+                const double *w = templateFor(i, n, f);
                 const double factor = pitch * source * shift;
 
                 if (n >= m_lowestPitch && n <= m_highestPitch) {

@@ -63,7 +63,7 @@ private:
     void expectation(const V &column);
     void maximisation(const V &column);
 
-    const float *templateFor(int instrument, int note, int shift);
+    const double *templateFor(int instrument, int note, int shift);
     void rangeFor(int instrument, int &minPitch, int &maxPitch);
     bool inRange(int instrument, int pitch);
 };
