@@ -339,7 +339,7 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 
     Grid cqout = m_cq->process(data);
     FeatureSet fs = transcribe(cqout);
-/*
+
     for (int i = 0; i < (int)cqout.size(); ++i) {
         Feature f;
         for (int j = 0; j < (int)cqout[i].size(); ++j) {
@@ -347,7 +347,7 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
         }
         fs[m_cqOutputNo].push_back(f);
     }
-*/
+
     return fs;
 }
 
@@ -356,7 +356,7 @@ Silvet::getRemainingFeatures()
 {
     Grid cqout = m_cq->getRemainingBlocks();
     FeatureSet fs = transcribe(cqout);
-/*
+
     for (int i = 0; i < (int)cqout.size(); ++i) {
         Feature f;
         for (int j = 0; j < (int)cqout[i].size(); ++j) {
@@ -364,7 +364,7 @@ Silvet::getRemainingFeatures()
         }
         fs[m_cqOutputNo].push_back(f);
     }
-*/
+
     return fs;
 }
 
@@ -374,7 +374,7 @@ Silvet::transcribe(const Grid &cqout)
     Grid filtered = preProcess(cqout);
 
     FeatureSet fs;
-/*
+
     for (int i = 0; i < (int)filtered.size(); ++i) {
         Feature f;
         for (int j = 0; j < processingHeight; ++j) {
@@ -382,7 +382,6 @@ Silvet::transcribe(const Grid &cqout)
         }
         fs[m_fcqOutputNo].push_back(f);
     }
-*/
 
     int width = filtered.size();
 
@@ -527,7 +526,7 @@ Silvet::postProcess(const vector<double> &pitches)
     while (int(active.size()) < polyphony) {
         --si;
         if (si->first < threshold) break;
-        cerr << si->second << " : " << si->first << endl;
+//        cerr << si->second << " : " << si->first << endl;
         active[si->second] = si->first;
         if (si == strengths.begin()) break;
     }
@@ -588,7 +587,7 @@ Silvet::postProcess(const vector<double> &pitches)
         int velocity = maxStrength * 2;
         if (velocity > 127) velocity = 127;
 
-        cerr << "Found a genuine note, starting at " << columnDuration * start << " with duration " << columnDuration * duration << endl;
+//        cerr << "Found a genuine note, starting at " << columnDuration * start << " with duration " << columnDuration * duration << endl;
 
         Feature nf;
         nf.hasTimestamp = true;
