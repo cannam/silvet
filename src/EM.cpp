@@ -161,70 +161,58 @@ void
 EM::maximisation(const V &column)
 {
     V newPitches = m_pitches;
+    Grid newShifts = m_shifts;
+    Grid newSources = m_sources;
 
     for (int n = 0; n < m_noteCount; ++n) {
+
+        const double pitch = m_pitches[n];
         newPitches[n] = epsilon;
-        if (n >= m_lowestPitch && n <= m_highestPitch) {
-            const double pitch = m_pitches[n];
+
+        for (int f = 0; f < m_shiftCount; ++f) {
+
+            const double shift = m_shifts[f][n];
+            newShifts[f][n] = epsilon;
+
             for (int i = 0; i < m_instrumentCount; ++i) {
+
                 const double source = m_sources[i][n];
-                for (int f = 0; f < m_shiftCount; ++f) {
-                    const float *w = templateFor(i, n, f);
-                    const double shift = m_shifts[f][n];
-                    const double factor = pitch * source * shift;
-                    for (int j = 0; j < m_binCount; ++j) {
-                        newPitches[n] += w[j] * m_q[j] * factor;
+                newSources[i][n] = epsilon;
+
+                const float *w = templateFor(i, n, f);
+                const double factor = pitch * source * shift;
+
+                for (int j = 0; j < m_binCount; ++j) {
+
+                    const double contribution = w[j] * m_q[j] * factor;
+
+                    if (n >= m_lowestPitch && n <= m_highestPitch) {
+                        newPitches[n] += contribution;
+                    }
+
+                    newShifts[f][n] += contribution;
+        
+                    if (inRange(i, n)) {
+                        newSources[i][n] += contribution;
                     }
                 }
             }
         }
+    }
+
+    for (int n = 0; n < m_noteCount; ++n) {
         if (m_pitchSparsity != 1.0) {
             newPitches[n] = pow(newPitches[n], m_pitchSparsity);
         }
-    }
-    normaliseColumn(newPitches);
-
-    Grid newShifts = m_shifts;
-
-    for (int f = 0; f < m_shiftCount; ++f) {
-        for (int n = 0; n < m_noteCount; ++n) {
-            const double pitch = m_pitches[n];
-            const double shift = m_shifts[f][n];
-            newShifts[f][n] = epsilon;
+        if (m_sourceSparsity != 1.0) {
             for (int i = 0; i < m_instrumentCount; ++i) {
-                const float *w = templateFor(i, n, f);
-                const double source = m_sources[i][n];
-                const double factor = pitch * source * shift;
-                for (int j = 0; j < m_binCount; ++j) {
-                    newShifts[f][n] += w[j] * m_q[j] * factor;
-                }
-            }
-        }
-    }
-    normaliseGrid(newShifts);
-
-    Grid newSources = m_sources;
-
-    for (int i = 0; i < m_instrumentCount; ++i) {
-        for (int n = 0; n < m_noteCount; ++n) {
-            const double pitch = m_pitches[n];
-            const double source = m_sources[i][n];
-            newSources[i][n] = epsilon;
-            if (inRange(i, n)) {
-                for (int f = 0; f < m_shiftCount; ++f) {
-                    const float *w = templateFor(i, n, f);
-                    const double shift = m_shifts[f][n];
-                    const double factor = pitch * source * shift;
-                    for (int j = 0; j < m_binCount; ++j) {
-                        newSources[i][n] += w[j] * m_q[j] * factor;
-                    }
-                }
-            }
-            if (m_sourceSparsity != 1.0) {
                 newSources[i][n] = pow(newSources[i][n], m_sourceSparsity);
             }
         }
     }
+
+    normaliseColumn(newPitches);
+    normaliseGrid(newShifts);
     normaliseGrid(newSources);
 
     m_pitches = newPitches;
