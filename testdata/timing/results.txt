@@ -36,3 +36,32 @@ Subsequent tests use release builds of both.
 
 VAMP FEATURE SUPPRESSION:
 
+commit:7133f78ccbf6, as commit:ce64d11ef336 but with CQ output feature
+return commented out
+
+real	1m46.162s
+user	1m46.093s
+sys	0m0.157s
+
+commit:78a7bf247016, as commit:ce64d11ef336 but with CQ output and FCQ
+output feature return commented out
+
+real	1m45.206s
+user	1m45.153s
+sys	0m0.147s
+
+conclusion: no advantage in removing these
+
+
+DEBUG PRINTOUTS:
+
+commit:f3bf6503e6c6, as commit:ce64d11ef336 but with debug printouts
+removed
+
+real	1m43.744s
+user	1m43.657s
+sys	0m0.203s
+
+conclusion: obviously we want to remove these eventually but might as
+well keep in during testing
+
