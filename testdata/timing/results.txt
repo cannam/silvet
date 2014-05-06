@@ -90,3 +90,15 @@ sys	0m0.190s
 
 conclusion: supports the previous test
 
+
+EM TWEAKS:
+
+commit:a0dedcbfa628, as commit:ce64d11ef336 but with variables hoisted
+out of loops and consts added wherever applicable
+
+real	1m44.548s
+user	1m44.460s
+sys	0m0.183s
+
+conclusion: compiler already knows this stuff
+
