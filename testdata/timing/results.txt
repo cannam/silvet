@@ -1,0 +1,32 @@
+
+Thinkpad T540p i5-4330M @2.80GHz with 16GB RAM, plugged in
+Arch Linux, gcc 4.8.2
+Using sonic-annotator v1.0 (commit:41c4de1e05d8), release build
+
+Debug flags: -g -fPIC
+Release flags: -O3 -ffast-math -msse -mfpmath=sse -ftree-vectorize -fPIC
+
+Note that the input file is single-channel 16-bit PCM at 44100Hz,
+duration 0m43.5s.
+
+
+DEBUG/RELEASE:
+
+commit:ce64d11ef336, release build of Silvet, release build of qm-dsp
+
+real	1m47.676s
+user	1m47.580s
+sys	0m0.193s
+
+commit:ce64d11ef336, debug build of Silvet, release build of qm-dsp
+
+
+commit:ce64d11ef336, release build of Silvet, debug build of qm-dsp
+
+
+commit:ce64d11ef336, debug build of Silvet, debug build of qm-dsp
+
+
+Subsequent tests use release builds of both.
+
+
