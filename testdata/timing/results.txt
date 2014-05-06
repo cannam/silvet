@@ -109,3 +109,10 @@ real	3m46.969s
 user	3m46.850s
 sys	0m0.220s
 
+commit:6075e92d63ab, as commit:64b08cc12da0 but with innermost loop
+reverted to three loops with simple bodies instead of one with a more
+complex body
+
+real	1m44.767s
+user	1m44.490s
+sys	0m0.190s
