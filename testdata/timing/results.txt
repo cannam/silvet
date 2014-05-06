@@ -62,7 +62,7 @@ real	1m43.744s
 user	1m43.657s
 sys	0m0.203s
 
-conclusion: obviously we want to remove these eventually but might as
+conclusion: obviously we want to remove these eventually, but might as
 well keep in during testing
 
 
@@ -76,4 +76,17 @@ user	0m58.897s
 sys	0m0.193s
 
 conclusion: EM dominates the time taken, not CQ or note forming
+
+
+CQ DECIMATOR CONFIGURATION:
+
+Uncommitted revision (because changes are in CQ subrepo) that is as
+commit:ce64d11ef336 but with resampler SNR=30 and BW=0.04 instead of
+SNR=60 and BW=0.02
+
+real	1m43.176s
+user	1m43.067s
+sys	0m0.190s
+
+conclusion: supports the previous test
 
