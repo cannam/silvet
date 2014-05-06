@@ -339,7 +339,7 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 
     Grid cqout = m_cq->process(data);
     FeatureSet fs = transcribe(cqout);
-
+/*
     for (int i = 0; i < (int)cqout.size(); ++i) {
         Feature f;
         for (int j = 0; j < (int)cqout[i].size(); ++j) {
@@ -347,7 +347,7 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
         }
         fs[m_cqOutputNo].push_back(f);
     }
-
+*/
     return fs;
 }
 
@@ -356,7 +356,7 @@ Silvet::getRemainingFeatures()
 {
     Grid cqout = m_cq->getRemainingBlocks();
     FeatureSet fs = transcribe(cqout);
-
+/*
     for (int i = 0; i < (int)cqout.size(); ++i) {
         Feature f;
         for (int j = 0; j < (int)cqout[i].size(); ++j) {
@@ -364,7 +364,7 @@ Silvet::getRemainingFeatures()
         }
         fs[m_cqOutputNo].push_back(f);
     }
-
+*/
     return fs;
 }
 
