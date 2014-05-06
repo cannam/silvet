@@ -47,16 +47,16 @@ private:
     V m_estimate;
     V m_q;
     
-    int m_noteCount;
-    int m_shiftCount; // 1 + 2 * max template shift
-    int m_binCount;
-    int m_instrumentCount;
+    const int m_noteCount;
+    const int m_shiftCount; // 1 + 2 * max template shift
+    const int m_binCount;
+    const int m_instrumentCount;
     
-    double m_pitchSparsity;
-    double m_sourceSparsity;
+    const double m_pitchSparsity;
+    const double m_sourceSparsity;
 
-    int m_lowestPitch;
-    int m_highestPitch;
+    const int m_lowestPitch;
+    const int m_highestPitch;
 
     void normaliseColumn(V &column);
     void normaliseGrid(Grid &grid);

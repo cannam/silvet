@@ -36,11 +36,10 @@ EM::EM() :
     m_binCount(SILVET_TEMPLATE_HEIGHT),
     m_instrumentCount(SILVET_TEMPLATE_COUNT),
     m_pitchSparsity(1.1),
-    m_sourceSparsity(1.3)
+    m_sourceSparsity(1.3),
+    m_lowestPitch(silvet_templates_lowest_note),
+    m_highestPitch(silvet_templates_highest_note)
 {
-    m_lowestPitch = silvet_templates_lowest_note;
-    m_highestPitch = silvet_templates_highest_note;
-
     m_pitches = V(m_noteCount);
     for (int n = 0; n < m_noteCount; ++n) {
         m_pitches[n] = drand48();
@@ -140,13 +139,14 @@ EM::expectation(const V &column)
 
     for (int i = 0; i < m_instrumentCount; ++i) {
         for (int n = 0; n < m_noteCount; ++n) {
+            const double pitch = m_pitches[n];
+            const double source = m_sources[i][n];
             for (int f = 0; f < m_shiftCount; ++f) {
                 const float *w = templateFor(i, n, f);
-                double pitch = m_pitches[n];
-                double source = m_sources[i][n];
-                double shift = m_shifts[f][n];
+                const double shift = m_shifts[f][n];
+                const double factor = pitch * source * shift;
                 for (int j = 0; j < m_binCount; ++j) {
-                    m_estimate[j] += w[j] * pitch * source * shift;
+                    m_estimate[j] += w[j] * factor;
                 }
             }
         }
@@ -165,14 +165,15 @@ EM::maximisation(const V &column)
     for (int n = 0; n < m_noteCount; ++n) {
         newPitches[n] = epsilon;
         if (n >= m_lowestPitch && n <= m_highestPitch) {
+            const double pitch = m_pitches[n];
             for (int i = 0; i < m_instrumentCount; ++i) {
+                const double source = m_sources[i][n];
                 for (int f = 0; f < m_shiftCount; ++f) {
                     const float *w = templateFor(i, n, f);
-                    double pitch = m_pitches[n];
-                    double source = m_sources[i][n];
-                    double shift = m_shifts[f][n];
+                    const double shift = m_shifts[f][n];
+                    const double factor = pitch * source * shift;
                     for (int j = 0; j < m_binCount; ++j) {
-                        newPitches[n] += w[j] * m_q[j] * pitch * source * shift;
+                        newPitches[n] += w[j] * m_q[j] * factor;
                     }
                 }
             }
@@ -187,14 +188,15 @@ EM::maximisation(const V &column)
 
     for (int f = 0; f < m_shiftCount; ++f) {
         for (int n = 0; n < m_noteCount; ++n) {
+            const double pitch = m_pitches[n];
+            const double shift = m_shifts[f][n];
             newShifts[f][n] = epsilon;
             for (int i = 0; i < m_instrumentCount; ++i) {
                 const float *w = templateFor(i, n, f);
-                double pitch = m_pitches[n];
-                double source = m_sources[i][n];
-                double shift = m_shifts[f][n];
+                const double source = m_sources[i][n];
+                const double factor = pitch * source * shift;
                 for (int j = 0; j < m_binCount; ++j) {
-                    newShifts[f][n] += w[j] * m_q[j] * pitch * source * shift;
+                    newShifts[f][n] += w[j] * m_q[j] * factor;
                 }
             }
         }
@@ -205,15 +207,16 @@ EM::maximisation(const V &column)
 
     for (int i = 0; i < m_instrumentCount; ++i) {
         for (int n = 0; n < m_noteCount; ++n) {
+            const double pitch = m_pitches[n];
+            const double source = m_sources[i][n];
             newSources[i][n] = epsilon;
             if (inRange(i, n)) {
                 for (int f = 0; f < m_shiftCount; ++f) {
                     const float *w = templateFor(i, n, f);
-                    double pitch = m_pitches[n];
-                    double source = m_sources[i][n];
-                    double shift = m_shifts[f][n];
+                    const double shift = m_shifts[f][n];
+                    const double factor = pitch * source * shift;
                     for (int j = 0; j < m_binCount; ++j) {
-                        newSources[i][n] += w[j] * m_q[j] * pitch * source * shift;
+                        newSources[i][n] += w[j] * m_q[j] * factor;
                     }
                 }
             }
