@@ -123,6 +123,7 @@ EM::iterate(const double *column)
     normaliseColumn(norm, m_binCount);
     expectation(norm);
     maximisation(norm);
+    deallocate(norm);
 }
 
 const double *
@@ -193,7 +194,7 @@ EM::maximisation(const double *column)
                 const double *w = templateFor(i, n, f);
 
                 v_copy(contributions, w, m_binCount);
-                v_add(contributions, m_q, m_binCount);
+                v_multiply(contributions, m_q, m_binCount);
                 v_scale(contributions, factor, m_binCount);
 
                 double total = v_sum(contributions, m_binCount);

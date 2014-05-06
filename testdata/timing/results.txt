@@ -142,3 +142,10 @@ real	1m37.320s
 user	1m36.863s
 sys	0m0.240s
 
+commit:891cbcf1e4d2, as commit:81eaba98985b but with some calculations
+vectorised
+
+real	1m24.961s
+user	1m24.663s
+sys	0m0.177s
+
