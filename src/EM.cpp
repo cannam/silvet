@@ -176,6 +176,8 @@ EM::maximisation(const double *column)
         v_set(newSources[i], epsilon, m_noteCount);
     }
 
+    double *contributions = allocate<double>(m_binCount);
+
     for (int n = 0; n < m_noteCount; ++n) {
 
         const double pitch = m_pitches[n];
@@ -190,22 +192,22 @@ EM::maximisation(const double *column)
                 const double factor = pitch * source * shift;
                 const double *w = templateFor(i, n, f);
 
+                v_copy(contributions, w, m_binCount);
+                v_add(contributions, m_q, m_binCount);
+                v_scale(contributions, factor, m_binCount);
+
+                double total = v_sum(contributions, m_binCount);
+
                 if (n >= m_lowestPitch && n <= m_highestPitch) {
 
-                    for (int j = 0; j < m_binCount; ++j) {
-                        newPitches[n] += w[j] * m_q[j] * factor;
-                    }
+                    newPitches[n] += total;
 
                     if (inRange(i, n)) {
-                        for (int j = 0; j < m_binCount; ++j) {
-                            newSources[i][n] += w[j] * m_q[j] * factor;
-                        }
+                        newSources[i][n] += total;
                     }
                 }
 
-                for (int j = 0; j < m_binCount; ++j) {
-                    newShifts[f][n] += w[j] * m_q[j] * factor;
-                }
+                newShifts[f][n] += total;
             }
         }
     }

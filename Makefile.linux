@@ -1,5 +1,5 @@
 
-CFLAGS := -Wall -O3 -ffast-math -msse -mfpmath=sse -ftree-vectorize -ftree-vectorizer-verbose=2 -fPIC -I../vamp-plugin-sdk/
+CFLAGS := -Wall -O3 -ffast-math -msse -mfpmath=sse -ftree-vectorize -ftree-vectorizer-verbose=1 -fPIC -I../vamp-plugin-sdk/
 #CFLAGS := -g -fPIC -I../vamp-plugin-sdk
 
 CXXFLAGS := $(CFLAGS)
