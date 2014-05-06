@@ -182,19 +182,21 @@ EM::maximisation(const V &column)
                 const float *w = templateFor(i, n, f);
                 const double factor = pitch * source * shift;
 
-                for (int j = 0; j < m_binCount; ++j) {
+                if (n >= m_lowestPitch && n <= m_highestPitch) {
 
-                    const double contribution = w[j] * m_q[j] * factor;
-
-                    if (n >= m_lowestPitch && n <= m_highestPitch) {
-                        newPitches[n] += contribution;
+                    for (int j = 0; j < m_binCount; ++j) {
+                        newPitches[n] += w[j] * m_q[j] * factor;
                     }
 
-                    newShifts[f][n] += contribution;
-        
                     if (inRange(i, n)) {
-                        newSources[i][n] += contribution;
+                        for (int j = 0; j < m_binCount; ++j) {
+                            newSources[i][n] += w[j] * m_q[j] * factor;
+                        }
                     }
+                }
+
+                for (int j = 0; j < m_binCount; ++j) {
+                    newShifts[f][n] += w[j] * m_q[j] * factor;
                 }
             }
         }

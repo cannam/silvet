@@ -102,3 +102,10 @@ sys	0m0.183s
 
 conclusion: compiler already knows this stuff
 
+commit:64b08cc12da0, as commit:ce64d11ef336 but with loops merged so
+as theoretically to reduce intermediate calculations
+
+real	3m46.969s
+user	3m46.850s
+sys	0m0.220s
+
