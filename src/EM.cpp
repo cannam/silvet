@@ -30,9 +30,10 @@ using std::endl;
 
 static double epsilon = 1e-16;
 
-EM::EM() :
+EM::EM(bool useShifts) :
+    m_useShifts(useShifts),
     m_noteCount(SILVET_TEMPLATE_NOTE_COUNT),
-    m_shiftCount(SILVET_TEMPLATE_MAX_SHIFT * 2 + 1),
+    m_shiftCount(useShifts ? SILVET_TEMPLATE_MAX_SHIFT * 2 + 1 : 1),
     m_binCount(SILVET_TEMPLATE_HEIGHT),
     m_instrumentCount(SILVET_TEMPLATE_COUNT),
     m_pitchSparsity(1.1),
@@ -50,7 +51,11 @@ EM::EM() :
     for (int f = 0; f < m_shiftCount; ++f) {
         m_shifts[f] = V(m_noteCount);
         for (int n = 0; n < m_noteCount; ++n) {
-            m_shifts[f][n] = drand48();
+            if (m_useShifts) {
+                m_shifts[f][n] = drand48();
+            } else {
+                m_shifts[f][n] = 1.0;
+            }
         }
     }
     
@@ -126,7 +131,12 @@ EM::iterate(V column)
 const float *
 EM::templateFor(int instrument, int note, int shift)
 {
-    return silvet_templates[instrument].data[note] + shift;
+    if (m_useShifts) {
+        return silvet_templates[instrument].data[note] + shift;
+    } else {
+        return silvet_templates[instrument].data[note] + 
+            SILVET_TEMPLATE_MAX_SHIFT;
+    }
 }
 
 void
@@ -185,21 +195,23 @@ EM::maximisation(const V &column)
 
     Grid newShifts = m_shifts;
 
-    for (int f = 0; f < m_shiftCount; ++f) {
-        for (int n = 0; n < m_noteCount; ++n) {
-            newShifts[f][n] = epsilon;
-            for (int i = 0; i < m_instrumentCount; ++i) {
-                const float *w = templateFor(i, n, f);
-                double pitch = m_pitches[n];
-                double source = m_sources[i][n];
-                double shift = m_shifts[f][n];
-                for (int j = 0; j < m_binCount; ++j) {
-                    newShifts[f][n] += w[j] * m_q[j] * pitch * source * shift;
+    if (m_useShifts) {
+        for (int f = 0; f < m_shiftCount; ++f) {
+            for (int n = 0; n < m_noteCount; ++n) {
+                newShifts[f][n] = epsilon;
+                for (int i = 0; i < m_instrumentCount; ++i) {
+                    const float *w = templateFor(i, n, f);
+                    double pitch = m_pitches[n];
+                    double source = m_sources[i][n];
+                    double shift = m_shifts[f][n];
+                    for (int j = 0; j < m_binCount; ++j) {
+                        newShifts[f][n] += w[j] * m_q[j] * pitch * source * shift;
+                    }
                 }
             }
         }
+        normaliseGrid(newShifts);
     }
-    normaliseGrid(newShifts);
 
     Grid newSources = m_sources;
 

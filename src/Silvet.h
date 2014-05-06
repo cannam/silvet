@@ -73,6 +73,8 @@ protected:
     Resampler *m_resampler;
     CQInterpolated *m_cq;
 
+    bool m_hqMode;
+
     typedef vector<vector<double> > Grid;
 
     vector<MedianFilter<double> *> m_postFilter;

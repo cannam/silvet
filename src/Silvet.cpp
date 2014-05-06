@@ -40,7 +40,8 @@ static int processingNotes = 88;
 Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
     m_resampler(0),
-    m_cq(0)
+    m_cq(0),
+    m_hqMode(false)
 {
 }
 
@@ -129,18 +130,39 @@ Silvet::ParameterList
 Silvet::getParameterDescriptors() const
 {
     ParameterList list;
+
+    ParameterDescriptor desc;
+    desc.identifier = "mode";
+    desc.name = "Processing mode";
+    desc.unit = "";
+    desc.description = "Determines the tradeoff of processing speed against transcription quality";
+    desc.minValue = 0;
+    desc.maxValue = 1;
+    desc.defaultValue = 0;
+    desc.isQuantized = true;
+    desc.quantizeStep = 1;
+    desc.valueNames.push_back("Draft (faster)");
+    desc.valueNames.push_back("Intensive (higher quality)");
+    list.push_back(desc);
+
     return list;
 }
 
 float
 Silvet::getParameter(string identifier) const
 {
+    if (identifier == "mode") {
+        return m_hqMode ? 1.f : 0.f;
+    }
     return 0;
 }
 
 void
 Silvet::setParameter(string identifier, float value) 
 {
+    if (identifier == "mode") {
+        m_hqMode = (value > 0.5);
+    }
 }
 
 Silvet::ProgramList
@@ -396,7 +418,7 @@ Silvet::transcribe(const Grid &cqout)
 
         if (sum < 1e-5) continue;
 
-        EM em;
+        EM em(m_hqMode);
         for (int j = 0; j < iterations; ++j) {
             em.iterate(filtered[i]);
         }

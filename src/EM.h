@@ -21,7 +21,7 @@
 class EM
 {
 public:
-    EM();
+    EM(bool useShifts);
     ~EM();
 
     void iterate(std::vector<double> column);
@@ -39,6 +39,8 @@ public:
 private:
     typedef std::vector<double> V;
     typedef std::vector<std::vector<double> > Grid;
+
+    bool m_useShifts;
 
     V m_pitches;
     Grid m_shifts;
