@@ -153,7 +153,7 @@ EM::expectation(const double *column)
                 const double *w = templateFor(i, n, f);
                 const double shift = m_shifts[f][n];
                 const double factor = pitch * source * shift;
-                v_add_with_gain(m_estimate, w, factor, m_binCount);
+                v_add_with_gain(m_estimate, w, m_binCount, factor);
             }
         }
     }
