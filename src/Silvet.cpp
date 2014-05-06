@@ -374,7 +374,7 @@ Silvet::transcribe(const Grid &cqout)
     Grid filtered = preProcess(cqout);
 
     FeatureSet fs;
-
+/*
     for (int i = 0; i < (int)filtered.size(); ++i) {
         Feature f;
         for (int j = 0; j < processingHeight; ++j) {
@@ -382,6 +382,7 @@ Silvet::transcribe(const Grid &cqout)
         }
         fs[m_fcqOutputNo].push_back(f);
     }
+*/
 
     int width = filtered.size();
 
