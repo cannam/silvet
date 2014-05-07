@@ -24,48 +24,71 @@ public:
     EM(bool useShifts);
     ~EM();
 
-    void iterate(std::vector<double> column);
+    int getBinCount() const { return m_binCount; }
+    int getNoteCount() const { return m_noteCount; }
+    int getSourceCount() const { return m_sourceCount; }
 
-    const std::vector<double> &getEstimate() const { 
+    /**
+     * Carry out one iteration using the given column as input. The
+     * column must have getBinCount() values.
+     */
+    void iterate(const double *column);
+
+    /**
+     * Return the estimated distribution after the current iteration.
+     * Like the input, this will have getBinCount() values.
+     */
+    const double *getEstimate() const {
 	return m_estimate;
     }
-    const std::vector<double> &getPitchDistribution() const {
+
+    /**
+     * Return the pitch distribution for the current estimate.  The
+     * returned array has getNoteCount() values.
+     */
+    const double *getPitchDistribution() const {
 	return m_pitches;
     }
-    const std::vector<std::vector<double> > &getSources() const {
+    
+    /** 
+     * Return the source distribution for the current estimate. The
+     * returned pointer refers to getSourceCount() arrays of
+     * getNoteCount() values.
+     */
+    const double *const *getSources() const {
 	return m_sources; 
     }
 
 private:
-    typedef std::vector<double> V;
-    typedef std::vector<std::vector<double> > Grid;
+    double *m_pitches;
+    double **m_shifts;
+    double **m_sources;
 
-    bool m_useShifts;
+    double *m_updatePitches;
+    double **m_updateShifts;
+    double **m_updateSources;
 
-    V m_pitches;
-    Grid m_shifts;
-    Grid m_sources;
-
-    V m_estimate;
-    V m_q;
+    double *m_estimate;
+    double *m_q;
     
-    int m_noteCount;
-    int m_shiftCount; // 1 + 2 * max template shift
-    int m_binCount;
-    int m_instrumentCount;
+    const int m_noteCount;
+    const int m_shiftCount; // 1 + 2 * max template shift
+    const int m_binCount;
+    const int m_sourceCount;
     
-    double m_pitchSparsity;
-    double m_sourceSparsity;
+    const double m_pitchSparsity;
+    const double m_sourceSparsity;
 
-    int m_lowestPitch;
-    int m_highestPitch;
+    const int m_lowestPitch;
+    const int m_highestPitch;
 
-    void normaliseColumn(V &column);
-    void normaliseGrid(Grid &grid);
-    void expectation(const V &column);
-    void maximisation(const V &column);
+    void normaliseColumn(double *column, int size);
+    void normaliseGrid(double **grid, int size1, int size2);
 
-    const float *templateFor(int instrument, int note, int shift);
+    void expectation(const double *column); // size is m_binCount
+    void maximisation(const double *column); // size is m_binCount
+
+    const double *templateFor(int instrument, int note, int shift);
     void rangeFor(int instrument, int &minPitch, int &maxPitch);
     bool inRange(int instrument, int pitch);
 };

@@ -41,7 +41,7 @@ Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
     m_resampler(0),
     m_cq(0),
-    m_hqMode(false)
+    m_hqMode(true)
 {
 }
 
@@ -138,7 +138,7 @@ Silvet::getParameterDescriptors() const
     desc.description = "Determines the tradeoff of processing speed against transcription quality";
     desc.minValue = 0;
     desc.maxValue = 1;
-    desc.defaultValue = 0;
+    desc.defaultValue = 1;
     desc.isQuantized = true;
     desc.quantizeStep = 1;
     desc.valueNames.push_back("Draft (faster)");
@@ -397,6 +397,8 @@ Silvet::transcribe(const Grid &cqout)
 
     FeatureSet fs;
 
+    if (filtered.empty()) return fs;
+
     for (int i = 0; i < (int)filtered.size(); ++i) {
         Feature f;
         for (int j = 0; j < processingHeight; ++j) {
@@ -409,33 +411,40 @@ Silvet::transcribe(const Grid &cqout)
 
     int iterations = 12;
 
+    Grid pitchMatrix(width, vector<double>(processingNotes));
+
+#pragma omp parallel for
     for (int i = 0; i < width; ++i) {
 
         double sum = 0.0;
         for (int j = 0; j < processingHeight; ++j) {
-            sum += filtered[i][j];
+            sum += filtered.at(i).at(j);
         }
 
         if (sum < 1e-5) continue;
 
         EM em(m_hqMode);
-        for (int j = 0; j < iterations; ++j) {
-            em.iterate(filtered[i]);
-        }
 
-        vector<double> pitches = em.getPitchDistribution();
+        for (int j = 0; j < iterations; ++j) {
+            em.iterate(filtered.at(i).data());
+        }
+        
+        const double *pitches = em.getPitchDistribution();
         
         for (int j = 0; j < processingNotes; ++j) {
-            pitches[j] *= sum;
+            pitchMatrix[i][j] = pitches[j] * sum;
         }
+    }
 
+    for (int i = 0; i < width; ++i) {
+        
         Feature f;
         for (int j = 0; j < processingNotes; ++j) {
-            f.values.push_back(float(pitches[j]));
+            f.values.push_back(float(pitchMatrix[i][j]));
         }
         fs[m_pitchOutputNo].push_back(f);
 
-        FeatureList noteFeatures = postProcess(pitches);
+        FeatureList noteFeatures = postProcess(pitchMatrix[i]);
 
         for (FeatureList::const_iterator fi = noteFeatures.begin();
              fi != noteFeatures.end(); ++fi) {
