@@ -243,3 +243,9 @@ real	0m40.565s
 user	2m3.883s
 sys	0m0.307s
 
+commit:230920148ee5, as commit:6890dea115c3 with a simpler openmp loop
+
+real	0m39.761s
+user	2m3.093s
+sys	0m0.347s
+
