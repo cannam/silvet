@@ -237,3 +237,9 @@ real	0m50.856s
 user	2m44.937s
 sys	0m0.463s
 
+commit:6890dea115c3, as commit:c4eae816bdb3 with a loop factored out
+
+real	0m40.565s
+user	2m3.883s
+sys	0m0.307s
+
