@@ -411,56 +411,44 @@ Silvet::transcribe(const Grid &cqout)
 
     int iterations = 12;
 
-    int stride = 8;
-
-    for (int i = 0; i < width; i += stride) {
-
-        int chunk = stride;
-        if (i + chunk > width) {
-            chunk = width - i;
-        }
-
-        vector<vector<double> > pitchSubMatrix
-            (chunk, vector<double>(processingNotes));
+    Grid pitchMatrix(width, vector<double>(processingNotes));
 
 #pragma omp parallel for
-        for (int k = 0; k < chunk; ++k) {
+    for (int i = 0; i < width; ++i) {
 
-            double sum = 0.0;
-            for (int j = 0; j < processingHeight; ++j) {
-                sum += filtered[i + k][j];
-            }
+        double sum = 0.0;
+        for (int j = 0; j < processingHeight; ++j) {
+            sum += filtered.at(i).at(j);
+        }
 
-            if (sum < 1e-5) continue;
+        if (sum < 1e-5) continue;
 
-            EM em(m_hqMode);
-            for (int j = 0; j < iterations; ++j) {
-                em.iterate(filtered[i + k].data());
-            }
+        EM em(m_hqMode);
 
-            const double *pitches = em.getPitchDistribution();
-        
-            for (int j = 0; j < processingNotes; ++j) {
-                pitchSubMatrix[k][j] = pitches[j] * sum;
-            }
+        for (int j = 0; j < iterations; ++j) {
+            em.iterate(filtered.at(i).data());
         }
         
-        for (int k = 0; k < chunk; ++k) {
+        const double *pitches = em.getPitchDistribution();
+        
+        for (int j = 0; j < processingNotes; ++j) {
+            pitchMatrix[i][j] = pitches[j] * sum;
+        }
+    }
 
-            const vector<double> &pitches = pitchSubMatrix[k];
+    for (int i = 0; i < width; ++i) {
+        
+        Feature f;
+        for (int j = 0; j < processingNotes; ++j) {
+            f.values.push_back(float(pitchMatrix[i][j]));
+        }
+        fs[m_pitchOutputNo].push_back(f);
 
-            Feature f;
-            for (int j = 0; j < processingNotes; ++j) {
-                f.values.push_back(float(pitches[j]));
-            }
-            fs[m_pitchOutputNo].push_back(f);
+        FeatureList noteFeatures = postProcess(pitchMatrix[i]);
 
-            FeatureList noteFeatures = postProcess(pitches);
-
-            for (FeatureList::const_iterator fi = noteFeatures.begin();
-                 fi != noteFeatures.end(); ++fi) {
-                fs[m_notesOutputNo].push_back(*fi);
-            }
+        for (FeatureList::const_iterator fi = noteFeatures.begin();
+             fi != noteFeatures.end(); ++fi) {
+            fs[m_notesOutputNo].push_back(*fi);
         }
     }
 
