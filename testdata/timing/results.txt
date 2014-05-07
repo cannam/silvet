@@ -142,6 +142,15 @@ real	1m39.277s
 user	1m39.000s
 sys	0m0.183s
 
+commit:840c0d703bbb, as commit:a6e136aaa202 but using single-precision
+floats for all EM code (and templates). This is probably not wise
+without separately testing the quality of the results but it's
+interesting to compare
+
+real	1m29.003s
+user	1m28.697s
+sys	0m0.197s
+
 
 BQVEC:
 

@@ -33,9 +33,10 @@ using namespace breakfastquay;
 
 static double epsilon = 1e-16;
 
-EM::EM() :
+EM::EM(bool useShifts) :
+    m_useShifts(useShifts),
     m_noteCount(SILVET_TEMPLATE_NOTE_COUNT),
-    m_shiftCount(SILVET_TEMPLATE_MAX_SHIFT * 2 + 1),
+    m_shiftCount(useShifts ? SILVET_TEMPLATE_MAX_SHIFT * 2 + 1 : 1),
     m_binCount(SILVET_TEMPLATE_HEIGHT),
     m_sourceCount(SILVET_TEMPLATE_COUNT),
     m_pitchSparsity(1.1),
@@ -53,7 +54,11 @@ EM::EM() :
     m_updateShifts = allocate_channels<double>(m_shiftCount, m_noteCount);
     for (int f = 0; f < m_shiftCount; ++f) {
         for (int n = 0; n < m_noteCount; ++n) {
-            m_shifts[f][n] = drand48();
+            if (m_useShifts) {
+                m_shifts[f][n] = drand48();
+            } else {
+                m_shifts[f][n] = 1.0;
+            }
         }
     }
     
@@ -135,7 +140,12 @@ EM::iterate(const double *column)
 const double *
 EM::templateFor(int instrument, int note, int shift)
 {
-    return silvet_templates[instrument].data[note] + shift;
+    if (m_useShifts) {
+        return silvet_templates[instrument].data[note] + shift;
+    } else {
+        return silvet_templates[instrument].data[note] + 
+            SILVET_TEMPLATE_MAX_SHIFT;
+    }
 }
 
 void
@@ -227,11 +237,14 @@ EM::maximisation(const double *column)
     }
 
     normaliseColumn(m_updatePitches, m_noteCount);
-    normaliseGrid(m_updateShifts, m_shiftCount, m_noteCount);
-    normaliseGrid(m_updateSources, m_sourceCount, m_noteCount);
-
     std::swap(m_pitches, m_updatePitches);
-    std::swap(m_shifts, m_updateShifts);
+
+    if (m_useShifts) {
+        normaliseGrid(m_updateShifts, m_shiftCount, m_noteCount);
+        std::swap(m_shifts, m_updateShifts);
+    }
+
+    normaliseGrid(m_updateSources, m_sourceCount, m_noteCount);
     std::swap(m_sources, m_updateSources);
 }
 

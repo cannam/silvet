@@ -21,7 +21,7 @@
 class EM
 {
 public:
-    EM();
+    EM(bool useShifts);
     ~EM();
 
     int getBinCount() const { return m_binCount; } // size of input column
@@ -48,6 +48,8 @@ private:
     double *m_updatePitches;
     double **m_updateShifts;
     double **m_updateSources;
+
+    bool m_useShifts;
 
     double *m_estimate;
     double *m_q;
