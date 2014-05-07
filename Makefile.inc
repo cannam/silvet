@@ -3,9 +3,9 @@ SRC_DIR  := src
 
 QMDSP_DIR ?= ../qm-dsp
 VAMPSDK_DIR  ?= ../vamp-plugin-sdk
-BQVEC_DIR ?= ../bqvec
 
 CQ_DIR	     ?= constant-q-cpp/cpp-qm-dsp
+BQVEC_DIR    ?= bqvec/src
 
 PLUGIN_EXT	?= .so
 
@@ -26,8 +26,11 @@ VAMP_SOURCES := $(SRC_DIR)/Silvet.cpp $(SRC_DIR)/EM.cpp $(SRC_DIR)/libmain.cpp
 CQ_HEADERS   := $(CQ_DIR)/CQKernel.h $(CQ_DIR)/ConstantQ.h $(CQ_DIR)/CQInterpolated.h
 CQ_SOURCES   := $(CQ_DIR)/CQKernel.cpp $(CQ_DIR)/ConstantQ.cpp $(CQ_DIR)/CQInterpolated.cpp
 
-HEADERS	     := $(VAMP_HEADERS) $(CQ_HEADERS)
-SOURCES	     := $(VAMP_SOURCES) $(CQ_SOURCES)
+BQVEC_HEADERS	:= $(BQVEC_DIR)/Allocators.h $(BQVEC_DIR)/Restrict.h $(BQVEC_DIR)/VectorOps.h
+BQVEC_SOURCES	:= $(BQVEC_DIR)/Allocators.cpp
+
+HEADERS	     := $(VAMP_HEADERS) $(CQ_HEADERS) $(BQVEC_HEADERS)
+SOURCES	     := $(VAMP_SOURCES) $(CQ_SOURCES) $(BQVEC_SOURCES)
 OBJECTS	     := $(SOURCES:.cpp=.o)
 
 LIBS	:= $(QMDSP_DIR)/libqm-dsp.a $(VAMPSDK_DIR)/libvamp-sdk.a -lpthread
@@ -64,6 +67,10 @@ constant-q-cpp/cpp-qm-dsp/ConstantQ.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
 constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/CQInterpolated.h
 constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/ConstantQ.h
 constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
+bqvec/src/Allocators.o: bqvec/src/Allocators.h bqvec/src/VectorOps.h
+bqvec/src/Allocators.o: bqvec/src/Restrict.h
 constant-q-cpp/cpp-qm-dsp/ConstantQ.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
 constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/ConstantQ.h
 constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
+bqvec/src/Allocators.o: bqvec/src/VectorOps.h bqvec/src/Restrict.h
+bqvec/src/VectorOps.o: bqvec/src/Restrict.h
