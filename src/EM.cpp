@@ -206,9 +206,8 @@ EM::maximisation(const double *column)
 
                 v_copy(contributions, w, m_binCount);
                 v_multiply(contributions, m_q, m_binCount);
-                v_scale(contributions, factor, m_binCount);
 
-                double total = v_sum(contributions, m_binCount);
+                double total = factor * v_sum(contributions, m_binCount);
 
                 if (n >= m_lowestPitch && n <= m_highestPitch) {
 
