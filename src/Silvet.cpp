@@ -41,7 +41,7 @@ Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
     m_resampler(0),
     m_cq(0),
-    m_hqMode(false)
+    m_hqMode(true)
 {
 }
 
@@ -138,7 +138,7 @@ Silvet::getParameterDescriptors() const
     desc.description = "Determines the tradeoff of processing speed against transcription quality";
     desc.minValue = 0;
     desc.maxValue = 1;
-    desc.defaultValue = 0;
+    desc.defaultValue = 1;
     desc.isQuantized = true;
     desc.quantizeStep = 1;
     desc.valueNames.push_back("Draft (faster)");

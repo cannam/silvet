@@ -49,8 +49,6 @@ private:
     double **m_updateShifts;
     double **m_updateSources;
 
-    bool m_useShifts;
-
     double *m_estimate;
     double *m_q;
     

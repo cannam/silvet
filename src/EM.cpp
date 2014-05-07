@@ -34,7 +34,6 @@ using namespace breakfastquay;
 static double epsilon = 1e-16;
 
 EM::EM(bool useShifts) :
-    m_useShifts(useShifts),
     m_noteCount(SILVET_TEMPLATE_NOTE_COUNT),
     m_shiftCount(useShifts ? SILVET_TEMPLATE_MAX_SHIFT * 2 + 1 : 1),
     m_binCount(SILVET_TEMPLATE_HEIGHT),
@@ -50,16 +49,17 @@ EM::EM(bool useShifts) :
         m_pitches[n] = drand48();
     }
 
-    m_shifts = allocate_channels<double>(m_shiftCount, m_noteCount);
-    m_updateShifts = allocate_channels<double>(m_shiftCount, m_noteCount);
-    for (int f = 0; f < m_shiftCount; ++f) {
-        for (int n = 0; n < m_noteCount; ++n) {
-            if (m_useShifts) {
+    if (useShifts) {
+        m_shifts = allocate_channels<double>(m_shiftCount, m_noteCount);
+        m_updateShifts = allocate_channels<double>(m_shiftCount, m_noteCount);
+        for (int f = 0; f < m_shiftCount; ++f) {
+            for (int n = 0; n < m_noteCount; ++n) {
                 m_shifts[f][n] = drand48();
-            } else {
-                m_shifts[f][n] = 1.0;
             }
         }
+    } else {
+        m_shifts = 0;
+        m_updateShifts = 0;
     }
     
     m_sources = allocate_channels<double>(m_sourceCount, m_noteCount);
@@ -140,7 +140,7 @@ EM::iterate(const double *column)
 const double *
 EM::templateFor(int instrument, int note, int shift)
 {
-    if (m_useShifts) {
+    if (m_shifts) {
         return silvet_templates[instrument].data[note] + shift;
     } else {
         return silvet_templates[instrument].data[note] + 
@@ -161,7 +161,7 @@ EM::expectation(const double *column)
             const double source = m_sources[i][n];
             for (int f = 0; f < m_shiftCount; ++f) {
                 const double *w = templateFor(i, n, f);
-                const double shift = m_shifts[f][n];
+                const double shift = m_shifts ? m_shifts[f][n] : 1.0;
                 const double factor = pitch * source * shift;
                 v_add_with_gain(m_estimate, w, factor, m_binCount);
             }
@@ -177,11 +177,15 @@ void
 EM::maximisation(const double *column)
 {
     v_set(m_updatePitches, epsilon, m_noteCount);
-    for (int i = 0; i < m_shiftCount; ++i) {
-        v_set(m_updateShifts[i], epsilon, m_noteCount);
-    }
+
     for (int i = 0; i < m_sourceCount; ++i) {
         v_set(m_updateSources[i], epsilon, m_noteCount);
+    }
+
+    if (m_shifts) {
+        for (int i = 0; i < m_shiftCount; ++i) {
+            v_set(m_updateShifts[i], epsilon, m_noteCount);
+        }
     }
 
     double *contributions = allocate<double>(m_binCount);
@@ -192,7 +196,7 @@ EM::maximisation(const double *column)
 
         for (int f = 0; f < m_shiftCount; ++f) {
 
-            const double shift = m_shifts[f][n];
+            const double shift = m_shifts ? m_shifts[f][n] : 1.0;
 
             for (int i = 0; i < m_sourceCount; ++i) {
 
@@ -215,7 +219,9 @@ EM::maximisation(const double *column)
                     }
                 }
 
-                m_updateShifts[f][n] += total;
+                if (m_shifts) {
+                    m_updateShifts[f][n] += total;
+                }
             }
         }
     }
@@ -239,13 +245,13 @@ EM::maximisation(const double *column)
     normaliseColumn(m_updatePitches, m_noteCount);
     std::swap(m_pitches, m_updatePitches);
 
-    if (m_useShifts) {
+    normaliseGrid(m_updateSources, m_sourceCount, m_noteCount);
+    std::swap(m_sources, m_updateSources);
+
+    if (m_shifts) {
         normaliseGrid(m_updateShifts, m_shiftCount, m_noteCount);
         std::swap(m_shifts, m_updateShifts);
     }
-
-    normaliseGrid(m_updateSources, m_sourceCount, m_noteCount);
-    std::swap(m_sources, m_updateSources);
 }
 
 
