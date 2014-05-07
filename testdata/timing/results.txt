@@ -151,6 +151,16 @@ real	1m29.003s
 user	1m28.697s
 sys	0m0.197s
 
+commit:91bb029a847a, as commit:a6e136aaa202 but with the series of
+calculations reordered to match that in the recent bqvec code
+commit:b2f0967cb8d1. Just testing whether it is the replacement of
+std::vector or the reordering of vector operations that was saving the
+time in bqvec branch.
+
+real	2m52.922s
+user	2m52.480s
+sys	0m0.263s
+
 
 BQVEC:
 
@@ -208,3 +218,22 @@ commit:62b7be1226d into bqvec branch commit:19f6832fdc8a
 real	0m44.650s
 user	2m19.997s
 sys	0m0.343s
+
+commit:c4eae816bdb3, as commit:ac750e222ad3 but with some logic to
+make using the shifts optional (though on by default). Performance
+*should* be unchanged here.
+
+real	0m43.979s
+user	2m19.297s
+sys	0m0.360s
+
+commit:b2f0967cb8d1, as commit:c4eae816bdb3 but storing the templates
+as float arrays and then pulling them out into individual
+one-per-shift-factor double arrays each of which is explicitly
+allocated with the proper alignment. Uses more memory, and the code is
+ugly, but gets aligned starts for slightly more of the vector ops.
+
+real	0m50.856s
+user	2m44.937s
+sys	0m0.463s
+
