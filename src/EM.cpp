@@ -164,6 +164,8 @@ EM::maximisation(const V &column)
     Grid newShifts(m_shiftCount, V(m_noteCount, epsilon));
     Grid newSources(m_instrumentCount, V(m_noteCount, epsilon));
 
+    V contributions(m_binCount);
+
     for (int n = 0; n < m_noteCount; ++n) {
 
         const double pitch = m_pitches[n];
@@ -178,22 +180,31 @@ EM::maximisation(const V &column)
                 const double factor = pitch * source * shift;
                 const double *w = templateFor(i, n, f);
 
+                for (int j = 0; j < m_binCount; ++j) {
+                    contributions[j] = w[j];
+                }
+                for (int j = 0; j < m_binCount; ++j) {
+                    contributions[j] *= m_q.at(j);
+                }
+                for (int j = 0; j < m_binCount; ++j) {
+                    contributions[j] *= factor;
+                }
+
+                double total = 0.0;
+                for (int j = 0; j < m_binCount; ++j) {
+                    total += contributions.at(j);
+                }
+
                 if (n >= m_lowestPitch && n <= m_highestPitch) {
 
-                    for (int j = 0; j < m_binCount; ++j) {
-                        newPitches[n] += w[j] * m_q[j] * factor;
-                    }
-
+                    newPitches[n] += total;
+                    
                     if (inRange(i, n)) {
-                        for (int j = 0; j < m_binCount; ++j) {
-                            newSources[i][n] += w[j] * m_q[j] * factor;
-                        }
+                        newSources[i][n] += total;
                     }
                 }
 
-                for (int j = 0; j < m_binCount; ++j) {
-                    newShifts[f][n] += w[j] * m_q[j] * factor;
-                }
+                newShifts[f][n] += total;
             }
         }
     }
