@@ -24,19 +24,38 @@ public:
     EM(bool useShifts);
     ~EM();
 
-    int getBinCount() const { return m_binCount; } // size of input column
-    int getNoteCount() const { return m_noteCount; } // size of pitch column
+    int getBinCount() const { return m_binCount; }
+    int getNoteCount() const { return m_noteCount; }
     int getSourceCount() const { return m_sourceCount; }
 
+    /**
+     * Carry out one iteration using the given column as input. The
+     * column must have getBinCount() values.
+     */
     void iterate(const double *column);
 
-    const double *getEstimate() const { // bin count
+    /**
+     * Return the estimated distribution after the current iteration.
+     * Like the input, this will have getBinCount() values.
+     */
+    const double *getEstimate() const {
 	return m_estimate;
     }
-    const double *getPitchDistribution() const { // note count
+
+    /**
+     * Return the pitch distribution for the current estimate.  The
+     * returned array has getNoteCount() values.
+     */
+    const double *getPitchDistribution() const {
 	return m_pitches;
     }
-    const double *const *getSources() const { // source count * note count
+    
+    /** 
+     * Return the source distribution for the current estimate. The
+     * returned pointer refers to getSourceCount() arrays of
+     * getNoteCount() values.
+     */
+    const double *const *getSources() const {
 	return m_sources; 
     }
 
