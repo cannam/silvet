@@ -111,19 +111,9 @@ EM::normaliseColumn(double *column, int size)
 void
 EM::normaliseGrid(double **grid, int size1, int size2)
 {
-    double *denominators = allocate_and_zero<double>(size2);
-
     for (int i = 0; i < size1; ++i) {
-        for (int j = 0; j < size2; ++j) {
-            denominators[j] += grid[i][j];
-        }
+        normaliseColumn(grid[i], size2);
     }
-
-    for (int i = 0; i < size1; ++i) {
-        v_divide(grid[i], denominators, size2);
-    }
-
-    deallocate(denominators);
 }
 
 void
