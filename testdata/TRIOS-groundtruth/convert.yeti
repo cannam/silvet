@@ -1,0 +1,34 @@
+
+// Convert CSV file exported by Sonic Visualiser:
+// 
+// onset,midinote,duration,level,label
+//
+// into lab file like those output from the test scripts:
+//
+// onset offset frequency
+
+program convert;
+
+usage () =
+    eprintln "\nUsage: convert file.csv\n";
+
+toFrequency m = 
+    440 * Math#pow(2.0, (m - 69) / 12.0);
+
+convert f =
+   (str = openInFile f "UTF-8";
+    for (str.lines ()) do line:
+        case list (strSplit "," line) of
+        onset::midinote::duration::_: 
+            println "\(onset)\t\((number onset) + (number duration))\t\(toFrequency (number midinote))";
+        _:
+            failWith "badly formed line: \(line)";
+        esac;
+    done;
+    str.close ());
+
+case (list _argv) of
+file::[]: convert file;
+_: usage ();
+esac;
+
