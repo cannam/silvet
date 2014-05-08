@@ -43,6 +43,9 @@ for ms in 50 100 150; do
     echo
     echo "Validating against MIREX submission at $ms ms:"
     "$yc" ../evaluation/evaluate_lab.yeti "$ms" "../TRIOS-mirex2012-matlab/take_five/mix.lab" "$outfile.lab"
+    echo
+    echo "Validating MIREX against ground truth at $ms ms":
+    "$yc" ../evaluation/evaluate_lab.yeti "$ms" "../TRIOS-groundtruth/take_five.lab" "../TRIOS-mirex2012-matlab/take_five/mix.lab"
 done;
 
 echo
