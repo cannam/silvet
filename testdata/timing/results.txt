@@ -273,3 +273,36 @@ real	0m23.640s
 user	0m59.903s
 sys	0m0.277s
 
+
+COMPARATIVE TIMINGS from OTHER COMPUTERS
+
+Thinkpad T40p Pentium-M (Centrino) @1.6GHz with 1.5GB RAM, plugged in
+Arch Linux, gcc 4.8.2
+Using sonic-annotator v0.8, release build
+
+Release flags: -O3 -ffast-math -msse -mfpmath=sse -ftree-vectorize -fPIC
+
+commit:f25b8e7de0ed
+
+real	6m54.670s
+user	6m31.817s
+sys	0m14.753s
+
+commit:ce64d11ef336
+
+real	9m0.637s
+user	8m16.800s
+sys	0m25.877s
+
+commit:f25b8e7de0ed with -msse2 -march=pentium-m added to compiler flags:
+
+real	7m4.231s
+user	6m41.760s
+sys	0m13.807s
+
+commit:f25b8e7de0ed in draft mode (no shifts):
+
+real	3m30.218s
+user	3m10.527s
+sys	0m15.887s
+
