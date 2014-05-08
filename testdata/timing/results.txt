@@ -273,6 +273,12 @@ real	0m23.640s
 user	0m59.903s
 sys	0m0.277s
 
+commit:f25b8e7de0ed in draft mode (no shifts):
+
+real	0m13.970s
+user	0m21.670s
+sys	0m0.260s
+
 
 COMPARATIVE TIMINGS from OTHER COMPUTERS
 
