@@ -249,3 +249,16 @@ real	0m39.761s
 user	2m3.093s
 sys	0m0.347s
 
+commit:df05f855f63b, same code as commit:230920148ee5 but with bqvec
+as subrepo (just checking)
+
+real	0m40.799s
+user	2m2.603s
+sys	0m0.313s
+
+commit:df05f855f63b again, with OMP_NUM_THREADS=1
+
+real	1m18.265s
+user	1m17.707s
+sys	0m0.223s
+
