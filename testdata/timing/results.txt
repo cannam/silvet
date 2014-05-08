@@ -262,3 +262,14 @@ real	1m18.265s
 user	1m17.707s
 sys	0m0.223s
 
+
+FURTHER WORK FOLLOWING BQVEC and OPENMP MERGE
+
+commit:f25b8e7de0ed, as commit:df05f855f63b but not processing
+templates that are out of range for an instrument (since they should
+be all zeros anyway)
+
+real	0m23.640s
+user	0m59.903s
+sys	0m0.277s
+
