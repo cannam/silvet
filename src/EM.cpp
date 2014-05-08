@@ -155,14 +155,26 @@ EM::expectation(const double *column)
 
     v_set(m_estimate, epsilon, m_binCount);
 
-    for (int i = 0; i < m_sourceCount; ++i) {
-        for (int n = 0; n < m_noteCount; ++n) {
-            const double pitch = m_pitches[n];
-            const double source = m_sources[i][n];
-            for (int f = 0; f < m_shiftCount; ++f) {
-                const double *w = templateFor(i, n, f);
-                const double shift = m_shifts ? m_shifts[f][n] : 1.0;
+    for (int f = 0; f < m_shiftCount; ++f) {
+
+        const double *shiftIn = m_shifts ? m_shifts[f] : 0;
+
+        for (int i = 0; i < m_sourceCount; ++i) {
+
+            const double *sourceIn = m_sources[i];
+
+            int lowest, highest;
+            rangeFor(i, lowest, highest);
+
+            for (int n = lowest; n <= highest; ++n) {
+
+                const double source = sourceIn[n];
+                const double shift = shiftIn ? shiftIn[n] : 1.0;
+                const double pitch = m_pitches[n];
+
                 const double factor = pitch * source * shift;
+                const double *w = templateFor(i, n, f);
+
                 v_add_with_gain(m_estimate, w, factor, m_binCount);
             }
         }
@@ -190,17 +202,25 @@ EM::maximisation(const double *column)
 
     double *contributions = allocate<double>(m_binCount);
 
-    for (int n = 0; n < m_noteCount; ++n) {
+    for (int f = 0; f < m_shiftCount; ++f) {
 
-        const double pitch = m_pitches[n];
+        const double *shiftIn = m_shifts ? m_shifts[f] : 0;
+        double *shiftOut = m_shifts ? m_updateShifts[f] : 0;
 
-        for (int f = 0; f < m_shiftCount; ++f) {
+        for (int i = 0; i < m_sourceCount; ++i) {
 
-            const double shift = m_shifts ? m_shifts[f][n] : 1.0;
+            const double *sourceIn = m_sources[i];
+            double *sourceOut = m_updateSources[i];
 
-            for (int i = 0; i < m_sourceCount; ++i) {
+            int lowest, highest;
+            rangeFor(i, lowest, highest);
 
-                const double source = m_sources[i][n];
+            for (int n = lowest; n <= highest; ++n) {
+
+                const double shift = shiftIn ? shiftIn[n] : 1.0;
+                const double source = sourceIn[n];
+                const double pitch = m_pitches[n];
+
                 const double factor = pitch * source * shift;
                 const double *w = templateFor(i, n, f);
 
@@ -209,17 +229,11 @@ EM::maximisation(const double *column)
 
                 double total = factor * v_sum(contributions, m_binCount);
 
-                if (n >= m_lowestPitch && n <= m_highestPitch) {
+                m_updatePitches[n] += total;
+                sourceOut[n] += total;
 
-                    m_updatePitches[n] += total;
-
-                    if (inRange(i, n)) {
-                        m_updateSources[i][n] += total;
-                    }
-                }
-
-                if (m_shifts) {
-                    m_updateShifts[f][n] += total;
+                if (shiftOut) {
+                    shiftOut[n] += total;
                 }
             }
         }
@@ -233,8 +247,8 @@ EM::maximisation(const double *column)
     }
 
     if (m_sourceSparsity != 1.0) {
-        for (int n = 0; n < m_noteCount; ++n) {
-            for (int i = 0; i < m_sourceCount; ++i) {
+        for (int i = 0; i < m_sourceCount; ++i) {
+            for (int n = 0; n < m_noteCount; ++n) {
                 m_updateSources[i][n] =
                     pow(m_updateSources[i][n], m_sourceSparsity);
             }
