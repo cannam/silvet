@@ -22,6 +22,8 @@ export VAMP_PATH
 
 outfile="/tmp/$$"
 
+trap 'rm -f "$outfile" "$outfile.lab"' 0
+
 time sonic-annotator \
     --writer csv \
     --csv-one-file "$outfile" \
@@ -50,4 +52,3 @@ done;
 
 echo
 
-rm "$outfile" "$outfile.lab"
