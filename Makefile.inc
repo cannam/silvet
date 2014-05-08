@@ -1,11 +1,11 @@
 
 SRC_DIR  := src
 
-QMDSP_DIR ?= ../qm-dsp
 VAMPSDK_DIR  ?= ../vamp-plugin-sdk
 
 CQ_DIR	     ?= constant-q-cpp/cpp-qm-dsp
 BQVEC_DIR    ?= bqvec/src
+QMDSP_DIR    ?= qm-dsp
 
 PLUGIN_EXT	?= .so
 
@@ -20,8 +20,8 @@ PLUGIN_LDFLAGS := $(LDFLAGS) $(PLUGIN_LDFLAGS)
 
 PLUGIN	:= silvet$(PLUGIN_EXT)
 
-VAMP_HEADERS := $(SRC_DIR)/Silvet.h $(SRC_DIR)/EM.h
-VAMP_SOURCES := $(SRC_DIR)/Silvet.cpp $(SRC_DIR)/EM.cpp $(SRC_DIR)/libmain.cpp
+PLUGIN_HEADERS := $(SRC_DIR)/Silvet.h $(SRC_DIR)/EM.h
+PLUGIN_SOURCES := $(SRC_DIR)/Silvet.cpp $(SRC_DIR)/EM.cpp $(SRC_DIR)/libmain.cpp
 
 CQ_HEADERS   := $(CQ_DIR)/CQKernel.h $(CQ_DIR)/ConstantQ.h $(CQ_DIR)/CQInterpolated.h
 CQ_SOURCES   := $(CQ_DIR)/CQKernel.cpp $(CQ_DIR)/ConstantQ.cpp $(CQ_DIR)/CQInterpolated.cpp
@@ -29,8 +29,8 @@ CQ_SOURCES   := $(CQ_DIR)/CQKernel.cpp $(CQ_DIR)/ConstantQ.cpp $(CQ_DIR)/CQInter
 BQVEC_HEADERS	:= $(BQVEC_DIR)/Allocators.h $(BQVEC_DIR)/Restrict.h $(BQVEC_DIR)/VectorOps.h
 BQVEC_SOURCES	:= $(BQVEC_DIR)/Allocators.cpp
 
-HEADERS	     := $(VAMP_HEADERS) $(CQ_HEADERS) $(BQVEC_HEADERS)
-SOURCES	     := $(VAMP_SOURCES) $(CQ_SOURCES) $(BQVEC_SOURCES)
+HEADERS	     := $(PLUGIN_HEADERS) $(CQ_HEADERS) $(BQVEC_HEADERS)
+SOURCES	     := $(PLUGIN_SOURCES) $(CQ_SOURCES) $(BQVEC_SOURCES)
 OBJECTS	     := $(SOURCES:.cpp=.o)
 
 LIBS	:= $(QMDSP_DIR)/libqm-dsp.a $(VAMPSDK_DIR)/libvamp-sdk.a -lpthread
