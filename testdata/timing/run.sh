@@ -45,4 +45,6 @@ for ms in 50 100 150; do
     "$yc" ../evaluation/evaluate_lab.yeti "$ms" "../TRIOS-mirex2012-matlab/take_five/mix.lab" "$outfile.lab"
 done;
 
+echo
+
 rm "$outfile" "$outfile.lab"
