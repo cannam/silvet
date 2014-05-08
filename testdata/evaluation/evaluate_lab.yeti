@@ -1,0 +1,64 @@
+
+// Take two lab files of the form
+//
+// onset offset frequency
+//
+// and report their onset-only note-level accuracy F-measure.
+
+program evaluate_lab;
+
+usage () =
+   (eprintln "\nUsage: evaluate_lab reqd reference.lab transcribed.lab\n";
+    eprintln "where reqd is the number of milliseconds allowed for timing error (+/-)\n");
+
+toMIDIPitch f = 
+    round (12 * (Math#log(f / 220) / Math#log(2)) + 57);
+
+suck f =
+   (str = openInFile f "UTF-8"; // better to use readFile here, oh well
+    d = map do line:
+        case list (strSplit "\t" line) of
+        onset::offset::frequency::_:
+            { onset = number onset, midi = toMIDIPitch (number frequency) };
+        _:
+            failWith "badly formed line: \(line)";
+        esac;
+    done (str.lines ());
+    str.close ();
+    d);
+
+select f = fold do r x: if f x then x::r else r fi done [];
+
+evaluate permitted ref trans =
+   (reference = suck ref;
+    transcribed = suck trans;
+    accurate = 
+        select do here :
+            any do other:
+                here.midi == other.midi and
+                    abs (here.onset - other.onset) < permitted
+            done reference
+        done transcribed;
+    {
+        ntot = length transcribed,
+        nref = length reference,
+        ncorr = length accurate,
+    });
+
+pc n =
+    int (n * 1000) / 10;
+
+report { ntot, nref, ncorr } =
+   (nfp = ntot - ncorr;
+    nfn = nref - ncorr;
+    rec = ncorr / nref;
+    pre = ncorr / ntot;
+    f = 2 * ((pre * rec) / (pre + rec));
+    acc = ncorr / (ncorr + nfp + nfn);
+    println "precision \(pc pre), recall \(pc rec), accuracy \(pc acc), F \(pc f)");
+
+case (list _argv) of
+reqd::ref::trans::[]: report (evaluate (number reqd / 1000) ref trans);
+_: usage ();
+esac;
+

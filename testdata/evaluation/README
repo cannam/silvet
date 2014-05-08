@@ -1,0 +1,9 @@
+
+batchProcessingEvaluate.m evaluates a set of .lab output files against
+MIDI "ground truth".
+
+The MIDI files can be found in ../TRIOS-groundtruth, and some examples
+of the .lab files in ../TRIOS-mirex2012-matlab and ../TRIOS-silvet.
+
+evaluate_lab.yeti evaluates one lab file against another, onsets only,
+to a given timing tolerance.
