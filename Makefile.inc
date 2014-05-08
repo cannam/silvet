@@ -12,8 +12,8 @@ PLUGIN_EXT	?= .so
 CXX	?= g++
 CC	?= gcc
 
-CFLAGS := $(CFLAGS) 
-CXXFLAGS := -I. -I$(VAMPSDK_DIR) -I$(QMDSP_DIR) -I$(BQVEC_DIR) $(CXXFLAGS)
+CFLAGS := $(CFLAGS) -I$(QMDSP_DIR)/ext/kissfft -I$(QMDSP_DIR)/ext/kissfft/tools -Dkiss_fft_scalar=double
+CXXFLAGS := $(CFLAGS) -I. -I$(VAMPSDK_DIR) -I$(QMDSP_DIR) -I$(BQVEC_DIR) $(CXXFLAGS)
 
 LDFLAGS := $(LDFLAGS) 
 PLUGIN_LDFLAGS := $(LDFLAGS) $(PLUGIN_LDFLAGS)
@@ -29,11 +29,15 @@ CQ_SOURCES   := $(CQ_DIR)/CQKernel.cpp $(CQ_DIR)/ConstantQ.cpp $(CQ_DIR)/CQInter
 BQVEC_HEADERS	:= $(BQVEC_DIR)/Allocators.h $(BQVEC_DIR)/Restrict.h $(BQVEC_DIR)/VectorOps.h
 BQVEC_SOURCES	:= $(BQVEC_DIR)/Allocators.cpp
 
-HEADERS	     := $(PLUGIN_HEADERS) $(CQ_HEADERS) $(BQVEC_HEADERS)
-SOURCES	     := $(PLUGIN_SOURCES) $(CQ_SOURCES) $(BQVEC_SOURCES)
-OBJECTS	     := $(SOURCES:.cpp=.o)
+QMDSP_HEADERS	:= 
+QMDSP_SOURCES	:= $(QMDSP_DIR)/dsp/rateconversion/Resampler.cpp $(QMDSP_DIR)/base/KaiserWindow.cpp $(QMDSP_DIR)/base/SincWindow.cpp $(QMDSP_DIR)/thread/Thread.cpp $(QMDSP_DIR)/dsp/transforms/FFT.cpp $(QMDSP_DIR)/maths/MathUtilities.cpp $(QMDSP_DIR)/ext/kissfft/kiss_fft.c $(QMDSP_DIR)/ext/kissfft/tools/kiss_fftr.c
 
-LIBS	:= $(QMDSP_DIR)/libqm-dsp.a $(VAMPSDK_DIR)/libvamp-sdk.a -lpthread
+HEADERS	     := $(PLUGIN_HEADERS) $(CQ_HEADERS) $(BQVEC_HEADERS)
+SOURCES	     := $(PLUGIN_SOURCES) $(CQ_SOURCES) $(BQVEC_SOURCES) $(QMDSP_SOURCES)
+OBJECTS	     := $(SOURCES:.cpp=.o)
+OBJECTS	     := $(OBJECTS:.c=.o)
+
+LIBS	:= $(VAMPSDK_DIR)/libvamp-sdk.a -lpthread
 
 all: $(PLUGIN)
 
