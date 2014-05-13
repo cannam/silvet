@@ -20,7 +20,7 @@
 #include "maths/MathUtilities.h"
 #include "dsp/rateconversion/Resampler.h"
 
-#include "constant-q-cpp/cpp-qm-dsp/CQInterpolated.h"
+#include "constant-q-cpp/cpp-qm-dsp/CQSpectrogram.h"
 
 #include <vector>
 
@@ -326,9 +326,9 @@ Silvet::reset()
 	m_resampler = 0;
     }
 
-    m_cq = new CQInterpolated
+    m_cq = new CQSpectrogram
 	(processingSampleRate, 27.5, processingSampleRate / 3, processingBPO,
-         CQInterpolated::Linear);
+         CQSpectrogram::InterpolateLinear);
 
     for (int i = 0; i < (int)m_postFilter.size(); ++i) {
         delete m_postFilter[i];
@@ -376,7 +376,7 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 Silvet::FeatureSet
 Silvet::getRemainingFeatures()
 {
-    Grid cqout = m_cq->getRemainingBlocks();
+    Grid cqout = m_cq->getRemainingOutput();
     FeatureSet fs = transcribe(cqout);
 
     for (int i = 0; i < (int)cqout.size(); ++i) {

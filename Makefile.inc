@@ -23,8 +23,8 @@ PLUGIN	:= silvet$(PLUGIN_EXT)
 PLUGIN_HEADERS := $(SRC_DIR)/Silvet.h $(SRC_DIR)/EM.h
 PLUGIN_SOURCES := $(SRC_DIR)/Silvet.cpp $(SRC_DIR)/EM.cpp $(SRC_DIR)/libmain.cpp
 
-CQ_HEADERS   := $(CQ_DIR)/CQKernel.h $(CQ_DIR)/ConstantQ.h $(CQ_DIR)/CQInterpolated.h
-CQ_SOURCES   := $(CQ_DIR)/CQKernel.cpp $(CQ_DIR)/ConstantQ.cpp $(CQ_DIR)/CQInterpolated.cpp
+CQ_HEADERS   := $(CQ_DIR)/CQKernel.h $(CQ_DIR)/ConstantQ.h $(CQ_DIR)/CQSpectrogram.h
+CQ_SOURCES   := $(CQ_DIR)/CQKernel.cpp $(CQ_DIR)/ConstantQ.cpp $(CQ_DIR)/CQSpectrogram.cpp
 
 BQVEC_HEADERS	:= $(BQVEC_DIR)/Allocators.h $(BQVEC_DIR)/Restrict.h $(BQVEC_DIR)/VectorOps.h
 BQVEC_SOURCES	:= $(BQVEC_DIR)/Allocators.cpp
@@ -56,9 +56,6 @@ depend:
 # DO NOT DELETE
 
 src/Silvet.o: src/Silvet.h src/EM.h
-src/Silvet.o: constant-q-cpp/cpp-qm-dsp/CQInterpolated.h
-src/Silvet.o: constant-q-cpp/cpp-qm-dsp/ConstantQ.h
-src/Silvet.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
 src/EM.o: src/EM.h data/include/templates.h data/include/bassoon.h
 src/EM.o: data/include/cello.h data/include/clarinet.h data/include/flute.h
 src/EM.o: data/include/guitar.h data/include/horn.h data/include/oboe.h
@@ -67,14 +64,30 @@ src/EM.o: data/include/piano-maps-SptkBGCl.h
 src/libmain.o: src/Silvet.h
 constant-q-cpp/cpp-qm-dsp/CQKernel.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
 constant-q-cpp/cpp-qm-dsp/ConstantQ.o: constant-q-cpp/cpp-qm-dsp/ConstantQ.h
+constant-q-cpp/cpp-qm-dsp/ConstantQ.o: constant-q-cpp/cpp-qm-dsp/CQBase.h
 constant-q-cpp/cpp-qm-dsp/ConstantQ.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
-constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/CQInterpolated.h
-constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/ConstantQ.h
-constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
+constant-q-cpp/cpp-qm-dsp/CQSpectrogram.o: constant-q-cpp/cpp-qm-dsp/CQSpectrogram.h
+constant-q-cpp/cpp-qm-dsp/CQSpectrogram.o: constant-q-cpp/cpp-qm-dsp/ConstantQ.h
+constant-q-cpp/cpp-qm-dsp/CQSpectrogram.o: constant-q-cpp/cpp-qm-dsp/CQBase.h
+constant-q-cpp/cpp-qm-dsp/CQSpectrogram.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
 bqvec/src/Allocators.o: bqvec/src/Allocators.h bqvec/src/VectorOps.h
 bqvec/src/Allocators.o: bqvec/src/Restrict.h
+qm-dsp/dsp/rateconversion/Resampler.o: qm-dsp/dsp/rateconversion/Resampler.h
+qm-dsp/base/KaiserWindow.o: qm-dsp/base/KaiserWindow.h
+qm-dsp/base/SincWindow.o: qm-dsp/base/SincWindow.h
+qm-dsp/thread/Thread.o: qm-dsp/thread/Thread.h
+qm-dsp/dsp/transforms/FFT.o: qm-dsp/dsp/transforms/FFT.h
+qm-dsp/maths/MathUtilities.o: qm-dsp/maths/MathUtilities.h
+qm-dsp/maths/MathUtilities.o: qm-dsp/maths/nan-inf.h
+qm-dsp/ext/kissfft/kiss_fft.o: qm-dsp/ext/kissfft/_kiss_fft_guts.h
+qm-dsp/ext/kissfft/kiss_fft.o: qm-dsp/ext/kissfft/kiss_fft.h
+qm-dsp/ext/kissfft/tools/kiss_fftr.o: qm-dsp/ext/kissfft/tools/kiss_fftr.h
+qm-dsp/ext/kissfft/tools/kiss_fftr.o: qm-dsp/ext/kissfft/kiss_fft.h
+qm-dsp/ext/kissfft/tools/kiss_fftr.o: qm-dsp/ext/kissfft/_kiss_fft_guts.h
+constant-q-cpp/cpp-qm-dsp/ConstantQ.o: constant-q-cpp/cpp-qm-dsp/CQBase.h
 constant-q-cpp/cpp-qm-dsp/ConstantQ.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
-constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/ConstantQ.h
-constant-q-cpp/cpp-qm-dsp/CQInterpolated.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
+constant-q-cpp/cpp-qm-dsp/CQSpectrogram.o: constant-q-cpp/cpp-qm-dsp/ConstantQ.h
+constant-q-cpp/cpp-qm-dsp/CQSpectrogram.o: constant-q-cpp/cpp-qm-dsp/CQBase.h
+constant-q-cpp/cpp-qm-dsp/CQSpectrogram.o: constant-q-cpp/cpp-qm-dsp/CQKernel.h
 bqvec/src/Allocators.o: bqvec/src/VectorOps.h bqvec/src/Restrict.h
 bqvec/src/VectorOps.o: bqvec/src/Restrict.h

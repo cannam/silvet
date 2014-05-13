@@ -30,7 +30,7 @@ using std::set;
 using std::map;
 
 class Resampler;
-class CQInterpolated;
+class CQSpectrogram;
 
 class Silvet : public Vamp::Plugin
 {
@@ -71,7 +71,7 @@ public:
 
 protected:
     Resampler *m_resampler;
-    CQInterpolated *m_cq;
+    CQSpectrogram *m_cq;
 
     bool m_hqMode;
 
