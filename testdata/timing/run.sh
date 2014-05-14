@@ -22,14 +22,18 @@ export VAMP_PATH
 
 outfile="/tmp/$$"
 
-trap 'rm -f "$outfile" "$outfile.lab"' 0
+tmpwav="/tmp/$$norm.wav"
+
+trap 'rm -f "$outfile" "$tmpwav" "$outfile.lab"' 0
+
+sox "$trios_path/take_five/mix.wav" "$tmpwav" gain -n -6.020599913279624
 
 time sonic-annotator \
     --writer csv \
     --csv-one-file "$outfile" \
     --csv-force \
     --default vamp:silvet:silvet:notes \
-    "$trios_path/take_five/mix.wav"
+    "$tmpwav"
 
 cat "$outfile" | \
     sed 's/^[^,]*,//' | \
