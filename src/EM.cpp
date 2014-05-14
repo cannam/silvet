@@ -39,6 +39,8 @@ EM::EM(bool useShifts) :
     m_binCount(SILVET_TEMPLATE_HEIGHT),
     m_sourceCount(SILVET_TEMPLATE_COUNT),
     m_pitchSparsity(1.1),
+    //!!! note: slightly less source sparsity might help; also
+    //!!! consider a modest shift sparsity e.g. 1.1
     m_sourceSparsity(1.3),
     m_lowestPitch(silvet_templates_lowest_note),
     m_highestPitch(silvet_templates_highest_note)
@@ -179,6 +181,9 @@ EM::expectation(const double *column)
             }
         }
     }
+
+    //!!! try normalising so as to sum to unity and then taking L2
+    //!!! norm of the two (for measure of how close they are)
 
     for (int i = 0; i < m_binCount; ++i) {
         m_q[i] = column[i] / m_estimate[i];

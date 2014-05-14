@@ -409,7 +409,7 @@ Silvet::transcribe(const Grid &cqout)
 
     int width = filtered.size();
 
-    int iterations = 12;
+    int iterations = 12; //!!! more might be good?
 
     Grid pitchMatrix(width, vector<double>(processingNotes));
 
@@ -430,6 +430,8 @@ Silvet::transcribe(const Grid &cqout)
         }
         
         const double *pitches = em.getPitchDistribution();
+
+        //!!! note: check the CQ output (and most immediately, the sum values here) against the MATLAB implementation
         
         for (int j = 0; j < processingNotes; ++j) {
             pitchMatrix[i][j] = pitches[j] * sum;
@@ -543,7 +545,9 @@ Silvet::postProcess(const vector<double> &pitches)
     // Threshold for level and reduce number of candidate pitches
 
     int polyphony = 5;
-    double threshold = 4.8;
+
+    //!!! make this a parameter (was 4.8, try adjusting, compare levels against matlab code)
+    double threshold = 6;
 
     typedef std::multimap<double, int> ValueIndexMap;
 
@@ -571,6 +575,7 @@ Silvet::postProcess(const vector<double> &pitches)
 
     int width = m_pianoRoll.size();
 
+    //!!! adjust to only keep notes >= 100ms? or so
     int durationThreshold = 2; // columns
 
     FeatureList noteFeatures;
@@ -583,6 +588,9 @@ Silvet::postProcess(const vector<double> &pitches)
     // we have 25 columns per second
     double columnDuration = 1.0 / 25.0;
     
+    //!!! try: 20ms intervals in intensive mode
+    //!!! try: repeated note detection? (look for change in first derivative of the pitch matrix)
+
     for (map<int, double>::const_iterator ni = m_pianoRoll[width-1].begin();
          ni != m_pianoRoll[width-1].end(); ++ni) {
 
@@ -623,7 +631,7 @@ Silvet::postProcess(const vector<double> &pitches)
         Feature nf;
         nf.hasTimestamp = true;
         nf.timestamp = RealTime::fromSeconds
-            (columnDuration * (start - postFilterLatency));
+            (columnDuration * (start - postFilterLatency) + 0.02);
         nf.hasDuration = true;
         nf.duration = RealTime::fromSeconds
             (columnDuration * duration);
