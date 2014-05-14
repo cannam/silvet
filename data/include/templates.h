@@ -15,7 +15,7 @@ typedef struct {
     const char *name;
     int lowest;
     int highest;
-    double data[SILVET_TEMPLATE_NOTE_COUNT][SILVET_TEMPLATE_SIZE];
+    float data[SILVET_TEMPLATE_NOTE_COUNT][SILVET_TEMPLATE_SIZE];
 } silvet_template_t;
 
 static int silvet_templates_lowest_note = 15;

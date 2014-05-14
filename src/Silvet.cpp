@@ -429,7 +429,7 @@ Silvet::transcribe(const Grid &cqout)
             em.iterate(filtered.at(i).data());
         }
         
-        const double *pitches = em.getPitchDistribution();
+        const float *pitches = em.getPitchDistribution();
 
         //!!! note: check the CQ output (and most immediately, the sum values here) against the MATLAB implementation
         

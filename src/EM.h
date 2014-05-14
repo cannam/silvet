@@ -38,7 +38,7 @@ public:
      * Return the estimated distribution after the current iteration.
      * Like the input, this will have getBinCount() values.
      */
-    const double *getEstimate() const {
+    const float *getEstimate() const {
 	return m_estimate;
     }
 
@@ -46,7 +46,7 @@ public:
      * Return the pitch distribution for the current estimate.  The
      * returned array has getNoteCount() values.
      */
-    const double *getPitchDistribution() const {
+    const float *getPitchDistribution() const {
 	return m_pitches;
     }
     
@@ -55,40 +55,40 @@ public:
      * returned pointer refers to getSourceCount() arrays of
      * getNoteCount() values.
      */
-    const double *const *getSources() const {
+    const float *const *getSources() const {
 	return m_sources; 
     }
 
 private:
-    double *m_pitches;
-    double **m_shifts;
-    double **m_sources;
+    float *m_pitches;
+    float **m_shifts;
+    float **m_sources;
 
-    double *m_updatePitches;
-    double **m_updateShifts;
-    double **m_updateSources;
+    float *m_updatePitches;
+    float **m_updateShifts;
+    float **m_updateSources;
 
-    double *m_estimate;
-    double *m_q;
+    float *m_estimate;
+    float *m_q;
     
     const int m_noteCount;
     const int m_shiftCount; // 1 + 2 * max template shift
     const int m_binCount;
     const int m_sourceCount;
     
-    const double m_pitchSparsity;
-    const double m_sourceSparsity;
+    const float m_pitchSparsity;
+    const float m_sourceSparsity;
 
     const int m_lowestPitch;
     const int m_highestPitch;
 
-    void normaliseColumn(double *column, int size);
-    void normaliseGrid(double **grid, int size1, int size2);
+    void normaliseColumn(float *column, int size);
+    void normaliseGrid(float **grid, int size1, int size2);
 
-    void expectation(const double *column); // size is m_binCount
-    void maximisation(const double *column); // size is m_binCount
+    void expectation(const float *column); // size is m_binCount
+    void maximisation(const float *column); // size is m_binCount
 
-    const double *templateFor(int instrument, int note, int shift);
+    const float *templateFor(int instrument, int note, int shift);
     void rangeFor(int instrument, int &minPitch, int &maxPitch);
     bool inRange(int instrument, int pitch);
 };
