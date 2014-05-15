@@ -12,3 +12,5 @@ PLUGIN_EXT := .so
 
 include Makefile.inc
 
+constant-q-cpp/libcq.a:
+	$(MAKE) -C constant-q-cpp -f Makefile.linux libcq.a

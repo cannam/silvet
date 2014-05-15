@@ -16,11 +16,10 @@
 #include "Silvet.h"
 #include "EM.h"
 
-#include "maths/MedianFilter.h"
-#include "maths/MathUtilities.h"
-#include "dsp/rateconversion/Resampler.h"
+#include <cq/CQSpectrogram.h>
 
-#include "constant-q-cpp/cpp-qm-dsp/CQSpectrogram.h"
+#include "MedianFilter.h"
+#include "constant-q-cpp/src/dsp/Resampler.h"
 
 #include <vector>
 
@@ -421,6 +420,8 @@ Silvet::transcribe(const Grid &cqout)
             sum += filtered.at(i).at(j);
         }
 
+//        cerr << "sum: " << sum << endl;
+
         if (sum < 1e-5) continue;
 
         EM em(m_hqMode);
@@ -561,7 +562,7 @@ Silvet::postProcess(const vector<double> &pitches)
     while (int(active.size()) < polyphony) {
         --si;
         if (si->first < threshold) break;
-        cerr << si->second << " : " << si->first << endl;
+//        cerr << si->second << " : " << si->first << endl;
         active[si->second] = si->first;
         if (si == strengths.begin()) break;
     }
@@ -576,7 +577,7 @@ Silvet::postProcess(const vector<double> &pitches)
     int width = m_pianoRoll.size();
 
     //!!! adjust to only keep notes >= 100ms? or so
-    int durationThreshold = 2; // columns
+    int durationThreshold = 3; // columns
 
     FeatureList noteFeatures;
 
@@ -626,7 +627,7 @@ Silvet::postProcess(const vector<double> &pitches)
         int velocity = maxStrength * 2;
         if (velocity > 127) velocity = 127;
 
-        cerr << "Found a genuine note, starting at " << columnDuration * start << " with duration " << columnDuration * duration << endl;
+//        cerr << "Found a genuine note, starting at " << columnDuration * start << " with duration " << columnDuration * duration << endl;
 
         Feature nf;
         nf.hasTimestamp = true;

@@ -22,7 +22,7 @@
 #include <string>
 #include <set>
 
-#include "maths/MedianFilter.h"
+#include "MedianFilter.h"
 
 using std::string;
 using std::vector;
