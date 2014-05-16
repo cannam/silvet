@@ -30,7 +30,7 @@ SOURCES	     := $(PLUGIN_SOURCES) $(BQVEC_SOURCES)
 OBJECTS	     := $(SOURCES:.cpp=.o)
 OBJECTS	     := $(OBJECTS:.c=.o)
 
-LIBS	:= $(CQ_DIR)/libcq.a $(VAMPSDK_DIR)/libvamp-sdk.a -lpthread
+LIBS	:= $(CQ_DIR)/libcq.a $(VAMPSDK_DIR)/libvamp-sdk.a
 
 all: $(PLUGIN)
 

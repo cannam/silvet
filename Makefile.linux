@@ -6,7 +6,7 @@ CFLAGS := -Wall -O3 -fopenmp -ffast-math -msse -msse2 -mfpmath=sse -ftree-vector
 CXXFLAGS := $(CFLAGS)
 
 VAMPSDK_DIR := ../vamp-plugin-sdk
-PLUGIN_LDFLAGS := -lgomp -shared -Wl,-Bsymbolic -Wl,-z,defs -Wl,--version-script=vamp-plugin.map
+PLUGIN_LDFLAGS := -lgomp -shared -Wl,-Bsymbolic -Wl,-z,defs -Wl,--version-script=vamp-plugin.map -lpthread
 
 PLUGIN_EXT := .so
 
