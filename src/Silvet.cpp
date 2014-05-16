@@ -330,11 +330,14 @@ Silvet::reset()
                         processingSampleRate / 3,
                         processingBPO);
 
-    params.q = 1.0; // MIREX code uses 0.8, but for some reason that
-                    // makes our implementation much, much slower
+    params.q = 0.95; // MIREX code uses 0.8, but it seems 0.9 or lower
+                     // drops the FFT size to 512 from 1024 and alters
+                     // some other processing parameters, making
+                     // everything much, much slower. Could be a flaw
+                     // in the CQ parameter calculations, must check
     params.atomHopFactor = 0.3;
     params.threshold = 0.0005;
-    params.window = CQParameters::Hann;
+    params.window = CQParameters::Hann; //!!! todo: test whether it makes any difference
 
     m_cq = new CQSpectrogram(params, CQSpectrogram::InterpolateLinear);
 
