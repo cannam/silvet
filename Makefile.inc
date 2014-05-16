@@ -3,7 +3,7 @@ SRC_DIR  := src
 
 VAMPSDK_DIR  ?= ../vamp-plugin-sdk
 
-CQ_DIR	     ?= constant-q-cpp/
+CQ_DIR	     ?= constant-q-cpp
 BQVEC_DIR    ?= bqvec/src
 
 PLUGIN_EXT	?= .so
@@ -34,7 +34,7 @@ LIBS	:= $(CQ_DIR)/libcq.a $(VAMPSDK_DIR)/libvamp-sdk.a -lpthread
 
 all: $(PLUGIN)
 
-$(PLUGIN):	$(OBJECTS)
+$(PLUGIN):	$(OBJECTS) $(LIBS)
 	$(CXX) -o $@ $^ $(LIBS) $(PLUGIN_LDFLAGS)
 
 clean:		
