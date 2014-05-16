@@ -48,14 +48,16 @@ depend:
 
 # DO NOT DELETE
 
-src/Silvet.o: src/Silvet.h src/EM.h
+src/Silvet.o: src/Silvet.h src/MedianFilter.h src/EM.h
+src/Silvet.o: constant-q-cpp/src/dsp/Resampler.h
 src/EM.o: src/EM.h data/include/templates.h data/include/bassoon.h
 src/EM.o: data/include/cello.h data/include/clarinet.h data/include/flute.h
 src/EM.o: data/include/guitar.h data/include/horn.h data/include/oboe.h
 src/EM.o: data/include/tenorsax.h data/include/violin.h
 src/EM.o: data/include/piano-maps-SptkBGCl.h
-src/libmain.o: src/Silvet.h
+src/libmain.o: src/Silvet.h src/MedianFilter.h
 bqvec/src/Allocators.o: bqvec/src/Allocators.h bqvec/src/VectorOps.h
 bqvec/src/Allocators.o: bqvec/src/Restrict.h
+src/Silvet.o: src/MedianFilter.h
 bqvec/src/Allocators.o: bqvec/src/VectorOps.h bqvec/src/Restrict.h
 bqvec/src/VectorOps.o: bqvec/src/Restrict.h

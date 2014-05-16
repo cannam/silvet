@@ -325,9 +325,18 @@ Silvet::reset()
 	m_resampler = 0;
     }
 
-    m_cq = new CQSpectrogram
-	(processingSampleRate, 27.5, processingSampleRate / 3, processingBPO,
-         CQSpectrogram::InterpolateLinear);
+    CQParameters params(processingSampleRate,
+                        27.5, 
+                        processingSampleRate / 3,
+                        processingBPO);
+
+    params.q = 1.0; // MIREX code uses 0.8, but for some reason that
+                    // makes our implementation much, much slower
+    params.atomHopFactor = 0.3;
+    params.threshold = 0.0005;
+    params.window = CQParameters::Hann;
+
+    m_cq = new CQSpectrogram(params, CQSpectrogram::InterpolateLinear);
 
     for (int i = 0; i < (int)m_postFilter.size(); ++i) {
         delete m_postFilter[i];
@@ -549,6 +558,7 @@ Silvet::postProcess(const vector<double> &pitches)
 
     //!!! make this a parameter (was 4.8, try adjusting, compare levels against matlab code)
     double threshold = 6;
+//    double threshold = 4.8;
 
     typedef std::multimap<double, int> ValueIndexMap;
 
