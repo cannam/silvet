@@ -212,9 +212,10 @@ Silvet::getOutputDescriptors() const
     d.binCount = processingHeight + 55;
     d.binNames.clear();
     if (m_cq) {
+        //!!! I think this output is not working correctly, and these values may be wrong
         char name[20];
         for (int i = 0; i < processingHeight + 55; ++i) {
-            float freq = m_cq->getBinFrequency(i);
+            float freq = m_cq->getBinFrequency(processingHeight + 54 - i);
             sprintf(name, "%.1f Hz", freq);
             d.binNames.push_back(name);
         }
@@ -235,9 +236,10 @@ Silvet::getOutputDescriptors() const
     d.binCount = processingHeight;
     d.binNames.clear();
     if (m_cq) {
+        //!!! I think this output is not working correctly, and these values may be wrong
         char name[20];
         for (int i = 0; i < processingHeight; ++i) {
-            float freq = m_cq->getBinFrequency(i + 55);
+            float freq = m_cq->getBinFrequency(processingHeight + 54 - i);
             sprintf(name, "%.1f Hz", freq);
             d.binNames.push_back(name);
         }
