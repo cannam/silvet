@@ -13,11 +13,10 @@ instruments = [
     "oboe",
     "tenorsax",
     "violin",
-    "piano-maps-SptkBGCl",
-//!!! restore these?
-//    "piano1",
-//    "piano2",
-//    "piano3",
+//    "piano-maps-SptkBGCl",
+    "piano1",
+    "piano2",
+    "piano3",
 ];
 
 hardcodedRanges = [
@@ -30,7 +29,7 @@ hardcodedRanges = [
     "oboe": { lowest = 37, highest = 70 },
     "tenorsax": { lowest = 23, highest = 54 },
     "violin": { lowest = 34, highest = 72 },
-    "piano-maps-SptkBGCl": { lowest = 16, highest = 72 },
+//    "piano-maps-SptkBGCl": { lowest = 16, highest = 72 },
     "piano1": { lowest = 16, highest = 72 },
     "piano2": { lowest = 16, highest = 72 },
     "piano3": { lowest = 16, highest = 72 },

@@ -18,10 +18,12 @@
 
 #include <vector>
 
+class InstrumentPack;
+
 class EM
 {
 public:
-    EM(bool useShifts);
+    EM(const InstrumentPack *pack, bool useShifts); // pack must outlive me
     ~EM();
 
     int getBinCount() const { return m_binCount; }
@@ -60,6 +62,8 @@ public:
     }
 
 private:
+    const InstrumentPack *m_pack;
+
     float *m_pitches;
     float **m_shifts;
     float **m_sources;

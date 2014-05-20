@@ -15,8 +15,6 @@
 
 #include "EM.h"
 
-#include "data/include/templates.h"
-
 #include <cstdlib>
 #include <cmath>
 
@@ -24,6 +22,7 @@
 
 #include "VectorOps.h"
 #include "Allocators.h"
+#include "Instruments.h"
 
 using std::vector;
 using std::cerr;
@@ -33,17 +32,18 @@ using namespace breakfastquay;
 
 static float epsilon = 1e-10;
 
-EM::EM(bool useShifts) :
-    m_noteCount(SILVET_TEMPLATE_NOTE_COUNT),
-    m_shiftCount(useShifts ? SILVET_TEMPLATE_MAX_SHIFT * 2 + 1 : 1),
-    m_binCount(SILVET_TEMPLATE_HEIGHT),
-    m_sourceCount(SILVET_TEMPLATE_COUNT),
+EM::EM(const InstrumentPack *pack, bool useShifts) :
+    m_pack(pack),
+    m_noteCount(pack->templateNoteCount),
+    m_shiftCount(useShifts ? pack->templateMaxShift * 2 + 1 : 1),
+    m_binCount(pack->templateHeight),
+    m_sourceCount(pack->templates.size()),
     m_pitchSparsity(1.1),
     //!!! note: slightly less source sparsity might help; also
     //!!! consider a modest shift sparsity e.g. 1.1
     m_sourceSparsity(1.3),
-    m_lowestPitch(silvet_templates_lowest_note),
-    m_highestPitch(silvet_templates_highest_note)
+    m_lowestPitch(pack->lowestNote),
+    m_highestPitch(pack->highestNote)
 {
     m_pitches = allocate<float>(m_noteCount);
     m_updatePitches = allocate<float>(m_noteCount);
@@ -91,8 +91,8 @@ EM::~EM()
 void
 EM::rangeFor(int instrument, int &minPitch, int &maxPitch)
 {
-    minPitch = silvet_templates[instrument].lowest;
-    maxPitch = silvet_templates[instrument].highest;
+    minPitch = m_pack->templates[instrument].lowestNote;
+    maxPitch = m_pack->templates[instrument].highestNote;
 }
 
 bool
@@ -142,11 +142,11 @@ EM::iterate(const double *column)
 const float *
 EM::templateFor(int instrument, int note, int shift)
 {
+    const float *base = m_pack->templates.at(instrument).data.at(note).data();
     if (m_shifts) {
-        return silvet_templates[instrument].data[note] + shift;
+        return base + shift;
     } else {
-        return silvet_templates[instrument].data[note] + 
-            SILVET_TEMPLATE_MAX_SHIFT;
+        return base + m_pack->templateMaxShift;
     }
 }
 

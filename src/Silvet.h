@@ -23,6 +23,7 @@
 #include <set>
 
 #include "MedianFilter.h"
+#include "Instruments.h"
 
 using std::string;
 using std::vector;
@@ -70,6 +71,8 @@ public:
     FeatureSet getRemainingFeatures();
 
 protected:
+    const std::vector<InstrumentPack> m_instruments;
+
     Resampler *m_resampler;
     CQSpectrogram *m_cq;
 

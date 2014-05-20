@@ -38,6 +38,7 @@ static int processingNotes = 88;
 
 Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
+    m_instruments(InstrumentPack::listInstrumentPacks()),
     m_resampler(0),
     m_cq(0),
     m_hqMode(true)
@@ -140,8 +141,22 @@ Silvet::getParameterDescriptors() const
     desc.defaultValue = 1;
     desc.isQuantized = true;
     desc.quantizeStep = 1;
-    desc.valueNames.push_back("Draft (faster)");
-    desc.valueNames.push_back("Intensive (higher quality)");
+    desc.valueNames.push_back("Draft: faster");
+    desc.valueNames.push_back("Intensive: usually higher quality");
+    list.push_back(desc);
+
+    desc.identifier = "soloinstrument";
+    desc.name = "The recording contains";
+    desc.unit = "";
+    desc.description = "Determines the tradeoff of processing speed against transcription quality";
+    desc.minValue = 0;
+    desc.maxValue = 1;
+    desc.defaultValue = 1;
+    desc.isQuantized = true;
+    desc.quantizeStep = 1;
+    desc.valueNames.clear();
+    desc.valueNames.push_back("Multiple or unknown instruments");
+
     list.push_back(desc);
 
     return list;
@@ -346,7 +361,7 @@ Silvet::transcribe(const Grid &cqout)
 
         if (sum < 1e-5) continue;
 
-        EM em(m_hqMode);
+        EM em(&m_instruments[0], m_hqMode);
 
         for (int j = 0; j < iterations; ++j) {
             em.iterate(filtered.at(i).data());
