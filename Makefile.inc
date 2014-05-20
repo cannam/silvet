@@ -32,7 +32,7 @@ OBJECTS	     := $(OBJECTS:.c=.o)
 
 LIBS	:= $(CQ_DIR)/libcq.a $(VAMPSDK_DIR)/libvamp-sdk.a
 
-all: $(PLUGIN)
+all: constant-q-cpp $(PLUGIN)
 
 $(PLUGIN):	$(OBJECTS) $(LIBS)
 	$(CXX) -o $@ $^ $(LIBS) $(PLUGIN_LDFLAGS)
