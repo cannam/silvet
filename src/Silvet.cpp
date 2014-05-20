@@ -42,6 +42,7 @@ Silvet::Silvet(float inputSampleRate) :
     m_resampler(0),
     m_cq(0),
     m_hqMode(true),
+    m_fineTuning(false),
     m_instrument(0)
 {
 }
@@ -142,7 +143,7 @@ Silvet::getParameterDescriptors() const
     desc.defaultValue = 1;
     desc.isQuantized = true;
     desc.quantizeStep = 1;
-    desc.valueNames.push_back("Draft (faster)");
+    desc.valueNames.push_back("Draft (faster)"); 
     desc.valueNames.push_back("Intensive (higher quality)");
     list.push_back(desc);
 
@@ -159,7 +160,18 @@ Silvet::getParameterDescriptors() const
     for (int i = 0; i < int(m_instruments.size()); ++i) {
         desc.valueNames.push_back(m_instruments[i].name);
     }
+    list.push_back(desc);
 
+    desc.identifier = "finetune";
+    desc.name = "Return fine pitch estimates";
+    desc.unit = "";
+    desc.description = "Return pitch estimates at finer than semitone resolution (works only in Intensive mode)";
+    desc.minValue = 0;
+    desc.maxValue = 1;
+    desc.defaultValue = 0;
+    desc.isQuantized = true;
+    desc.quantizeStep = 1;
+    desc.valueNames.clear();
     list.push_back(desc);
 
     return list;
@@ -170,6 +182,8 @@ Silvet::getParameter(string identifier) const
 {
     if (identifier == "mode") {
         return m_hqMode ? 1.f : 0.f;
+    } else if (identifier == "finetune") {
+        return m_fineTuning ? 1.f : 0.f;
     } else if (identifier == "soloinstrument") {
         return m_instrument;
     }
@@ -181,6 +195,8 @@ Silvet::setParameter(string identifier, float value)
 {
     if (identifier == "mode") {
         m_hqMode = (value > 0.5);
+    } else if (identifier == "finetune") {
+        m_fineTuning = (value > 0.5);
     } else if (identifier == "soloinstrument") {
         m_instrument = lrintf(value);
     }
@@ -355,34 +371,40 @@ Silvet::transcribe(const Grid &cqout)
 
     int iterations = m_hqMode ? 20 : 10;
 
-    Grid pitchMatrix(width, vector<double>(processingNotes));
+    vector<EM *> em(width, (EM *)0);
+    vector<double> sums(width, 0.0);
 
 #pragma omp parallel for
     for (int i = 0; i < width; ++i) {
 
-        double sum = 0.0;
         for (int j = 0; j < processingHeight; ++j) {
-            sum += filtered.at(i).at(j);
+            sums[i] += filtered.at(i).at(j);
         }
 
-        if (sum < 1e-5) continue;
+        if (sums[i] < 1e-5) continue;
 
-        EM em(&m_instruments[m_instrument], m_hqMode);
+        em[i] = new EM(&m_instruments[m_instrument], m_hqMode);
 
         for (int j = 0; j < iterations; ++j) {
-            em.iterate(filtered.at(i).data());
-        }
-        
-        const float *pitches = em.getPitchDistribution();
-
-        for (int j = 0; j < processingNotes; ++j) {
-            pitchMatrix[i][j] = pitches[j] * sum;
+            em[i]->iterate(filtered.at(i).data());
         }
     }
-
-    for (int i = 0; i < width; ++i) {
         
-        FeatureList noteFeatures = postProcess(pitchMatrix[i]);
+    for (int i = 0; i < width; ++i) {
+
+        if (!em[i]) {
+            noteTrack(map<int, double>());
+            continue;
+        }
+
+        map<int, double> active = postProcess(em[i]->getPitchDistribution(),
+                                              em[i]->getShifts(),
+                                              em[i]->getShiftCount(),
+                                              sums[i]);
+        
+        delete em[i];
+        
+        FeatureList noteFeatures = noteTrack(active);
 
         for (FeatureList::const_iterator fi = noteFeatures.begin();
              fi != noteFeatures.end(); ++fi) {
@@ -460,17 +482,18 @@ Silvet::preProcess(const Grid &in)
     return out;
 }
     
-Vamp::Plugin::FeatureList
-Silvet::postProcess(const vector<double> &pitches)        
-{        
+map<int, double>
+Silvet::postProcess(const float *pitches,
+                    const float *const *shifts,
+                    int shiftCount,
+                    double gain)
+{
     vector<double> filtered;
 
     for (int j = 0; j < processingNotes; ++j) {
-        m_postFilter[j]->push(pitches[j]);
+        m_postFilter[j]->push(pitches[j] * gain);
         filtered.push_back(m_postFilter[j]->get());
     }
-
-    int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
 
     // Threshold for level and reduce number of candidate pitches
 
@@ -483,26 +506,40 @@ Silvet::postProcess(const vector<double> &pitches)
     typedef std::multimap<double, int> ValueIndexMap;
 
     ValueIndexMap strengths;
+
     for (int j = 0; j < processingNotes; ++j) {
-        strengths.insert(ValueIndexMap::value_type(filtered[j], j));
+
+        double strength = filtered[j];
+        if (strength < threshold) continue;
+
+        // convert note number j to a pitch value p. If we are not using fine tuning or 
+
+        strengths.insert(ValueIndexMap::value_type(strength, j));
     }
 
     map<int, double> active;
     ValueIndexMap::const_iterator si = strengths.end();
-    while (int(active.size()) < polyphony) {
+    while (int(active.size()) < polyphony && si != strengths.begin()) {
         --si;
-        if (si->first < threshold) break;
 //        cerr << si->second << " : " << si->first << endl;
         active[si->second] = si->first;
         if (si == strengths.begin()) break;
     }
 
+    return active;
+}
+
+Vamp::Plugin::FeatureList
+Silvet::noteTrack(const map<int, double> &active)
+{        
     // Minimum duration pruning, and conversion to notes. We can only
     // report notes that have just ended (i.e. that are absent in the
     // latest active set but present in the last set in the piano
     // roll) -- any notes that ended earlier will have been reported
     // already, and if they haven't ended, we don't know their
     // duration.
+
+    int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
 
     int width = m_pianoRoll.size();
 
@@ -519,7 +556,6 @@ Silvet::postProcess(const vector<double> &pitches)
         return noteFeatures;
     }
     
-    //!!! try: 20ms intervals in intensive mode
     //!!! try: repeated note detection? (look for change in first derivative of the pitch matrix)
 
     for (map<int, double>::const_iterator ni = m_pianoRoll[width-1].begin();
