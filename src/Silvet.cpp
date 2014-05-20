@@ -142,12 +142,12 @@ Silvet::getParameterDescriptors() const
     desc.defaultValue = 1;
     desc.isQuantized = true;
     desc.quantizeStep = 1;
-    desc.valueNames.push_back("Draft: faster");
-    desc.valueNames.push_back("Intensive: usually higher quality");
+    desc.valueNames.push_back("Draft (faster)");
+    desc.valueNames.push_back("Intensive (higher quality)");
     list.push_back(desc);
 
     desc.identifier = "soloinstrument";
-    desc.name = "Instrument in recording";
+    desc.name = "Solo instrument";
     desc.unit = "";
     desc.description = "The instrument known to be present in the recording, if there is only one";
     desc.minValue = 0;
@@ -299,6 +299,8 @@ Silvet::reset()
 
     m_cq = new CQSpectrogram(params, CQSpectrogram::InterpolateLinear);
 
+    m_colsPerSec = m_hqMode ? 50 : 25;
+
     for (int i = 0; i < (int)m_postFilter.size(); ++i) {
         delete m_postFilter[i];
     }
@@ -308,7 +310,6 @@ Silvet::reset()
     }
     m_pianoRoll.clear();
     m_columnCount = 0;
-    m_reducedColumnCount = 0;
     m_startTime = RealTime::zeroTime;
 }
 
@@ -397,17 +398,18 @@ Silvet::preProcess(const Grid &in)
 {
     int width = in.size();
 
-    // reduce to 100 columns per second, or one column every 441 samples
+    int spacing = processingSampleRate / m_colsPerSec;
 
-    int spacing = processingSampleRate / 100;
+    // need to be careful that col spacing is an integer number of samples!
+    assert(spacing * m_colsPerSec == processingSampleRate);
 
     Grid out;
 
     // We count the CQ latency in terms of processing hops, but
     // actually it probably isn't an exact number of hops so this
     // isn't quite accurate. But the small constant offset is
-    // practically irrelevant compared to the jitter from the 40ms
-    // frame size we reduce to in a moment
+    // practically irrelevant compared to the jitter from the frame
+    // size we reduce to in a moment
     int latentColumns = m_cq->getLatency() / m_cq->getColumnHop();
 
     for (int i = 0; i < width; ++i) {
@@ -449,14 +451,7 @@ Silvet::preProcess(const Grid &in)
                 outCol[j] = std::max(outCol[j] - noiseLevel2[j], 0.0);
             }
 
-            // then we only use every fourth filtered column, for 25
-            // columns per second in the eventual grid
-
-            if (m_reducedColumnCount % 4 == 0) {
-                out.push_back(outCol);
-            }
-
-            ++m_reducedColumnCount;
+            out.push_back(outCol);
         }
 
         ++m_columnCount;
@@ -511,8 +506,11 @@ Silvet::postProcess(const vector<double> &pitches)
 
     int width = m_pianoRoll.size();
 
-    //!!! adjust to only keep notes >= 100ms? or so
-    int durationThreshold = 3; // columns
+    double columnDuration = 1.0 / m_colsPerSec;
+
+    // only keep notes >= 100ms or thereabouts
+    int durationThreshold = floor(0.1 / columnDuration); // columns
+    if (durationThreshold < 1) durationThreshold = 1;
 
     FeatureList noteFeatures;
 
@@ -520,9 +518,6 @@ Silvet::postProcess(const vector<double> &pitches)
         m_pianoRoll.push_back(active);
         return noteFeatures;
     }
-
-    // we have 25 columns per second
-    double columnDuration = 1.0 / 25.0;
     
     //!!! try: 20ms intervals in intensive mode
     //!!! try: repeated note detection? (look for change in first derivative of the pitch matrix)

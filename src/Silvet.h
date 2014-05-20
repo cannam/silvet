@@ -78,6 +78,7 @@ protected:
 
     bool m_hqMode;
     int m_instrument;
+    int m_colsPerSec;
 
     typedef vector<vector<double> > Grid;
 
@@ -93,7 +94,6 @@ protected:
 
     int m_blockSize;
     int m_columnCount;
-    int m_reducedColumnCount;
     Vamp::RealTime m_startTime;
 
     mutable int m_notesOutputNo;
