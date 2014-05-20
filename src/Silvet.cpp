@@ -204,72 +204,6 @@ Silvet::getOutputDescriptors() const
     m_notesOutputNo = list.size();
     list.push_back(d);
 
-    d.identifier = "cq";
-    d.name = "Raw constant-Q";
-    d.description = "Unfiltered constant-Q time-frequency distribution";
-    d.unit = "";
-    d.hasFixedBinCount = true;
-    d.binCount = processingHeight + 55;
-    d.binNames.clear();
-    if (m_cq) {
-        //!!! I think this output is not working correctly, and these values may be wrong
-        char name[20];
-        for (int i = 0; i < processingHeight + 55; ++i) {
-            float freq = m_cq->getBinFrequency(processingHeight + 54 - i);
-            sprintf(name, "%.1f Hz", freq);
-            d.binNames.push_back(name);
-        }
-    }
-    d.hasKnownExtents = false;
-    d.isQuantized = false;
-    d.sampleType = OutputDescriptor::FixedSampleRate;
-    d.sampleRate = m_inputSampleRate / (m_cq ? m_cq->getColumnHop() : 62);
-    d.hasDuration = false;
-    m_cqOutputNo = list.size();
-    list.push_back(d);
-
-    d.identifier = "inputgrid";
-    d.name = "Filtered constant-Q";
-    d.description = "Filtered constant-Q time-frequency distribution used as input to the PLCA step";
-    d.unit = "";
-    d.hasFixedBinCount = true;
-    d.binCount = processingHeight;
-    d.binNames.clear();
-    if (m_cq) {
-        //!!! I think this output is not working correctly, and these values may be wrong
-        char name[20];
-        for (int i = 0; i < processingHeight; ++i) {
-            float freq = m_cq->getBinFrequency(processingHeight + 54 - i);
-            sprintf(name, "%.1f Hz", freq);
-            d.binNames.push_back(name);
-        }
-    }
-    d.hasKnownExtents = false;
-    d.isQuantized = false;
-    d.sampleType = OutputDescriptor::FixedSampleRate;
-    d.sampleRate = 25;
-    d.hasDuration = false;
-    m_fcqOutputNo = list.size();
-    list.push_back(d);
-
-    d.identifier = "pitches";
-    d.name = "Pitch activation";
-    d.description = "Estimated pitch activation matrix";
-    d.unit = "";
-    d.hasFixedBinCount = true;
-    d.binCount = processingNotes;
-    d.binNames.clear();
-    for (int i = 0; i < processingNotes; ++i) {
-        d.binNames.push_back(noteName(i));
-    }
-    d.hasKnownExtents = false;
-    d.isQuantized = false;
-    d.sampleType = OutputDescriptor::FixedSampleRate;
-    d.sampleRate = 25;
-    d.hasDuration = false;
-    m_pitchOutputNo = list.size();
-    list.push_back(d);
-
     return list;
 }
 
@@ -374,15 +308,6 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 
     Grid cqout = m_cq->process(data);
     FeatureSet fs = transcribe(cqout);
-
-    for (int i = 0; i < (int)cqout.size(); ++i) {
-        Feature f;
-        for (int j = 0; j < (int)cqout[i].size(); ++j) {
-            f.values.push_back(float(cqout[i][j]));
-        }
-        fs[m_cqOutputNo].push_back(f);
-    }
-
     return fs;
 }
 
@@ -391,15 +316,6 @@ Silvet::getRemainingFeatures()
 {
     Grid cqout = m_cq->getRemainingOutput();
     FeatureSet fs = transcribe(cqout);
-
-    for (int i = 0; i < (int)cqout.size(); ++i) {
-        Feature f;
-        for (int j = 0; j < (int)cqout[i].size(); ++j) {
-            f.values.push_back(float(cqout[i][j]));
-        }
-        fs[m_cqOutputNo].push_back(f);
-    }
-
     return fs;
 }
 
@@ -411,14 +327,6 @@ Silvet::transcribe(const Grid &cqout)
     FeatureSet fs;
 
     if (filtered.empty()) return fs;
-
-    for (int i = 0; i < (int)filtered.size(); ++i) {
-        Feature f;
-        for (int j = 0; j < processingHeight; ++j) {
-            f.values.push_back(float(filtered[i][j]));
-        }
-        fs[m_fcqOutputNo].push_back(f);
-    }
 
     int width = filtered.size();
 
@@ -455,12 +363,6 @@ Silvet::transcribe(const Grid &cqout)
 
     for (int i = 0; i < width; ++i) {
         
-        Feature f;
-        for (int j = 0; j < processingNotes; ++j) {
-            f.values.push_back(float(pitchMatrix[i][j]));
-        }
-        fs[m_pitchOutputNo].push_back(f);
-
         FeatureList noteFeatures = postProcess(pitchMatrix[i]);
 
         for (FeatureList::const_iterator fi = noteFeatures.begin();

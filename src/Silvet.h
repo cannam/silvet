@@ -93,9 +93,6 @@ protected:
     Vamp::RealTime m_startTime;
 
     mutable int m_notesOutputNo;
-    mutable int m_cqOutputNo;
-    mutable int m_fcqOutputNo;
-    mutable int m_pitchOutputNo;
 };
 
 #endif
