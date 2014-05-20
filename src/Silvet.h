@@ -77,6 +77,7 @@ protected:
     CQSpectrogram *m_cq;
 
     bool m_hqMode;
+    int m_instrument;
 
     typedef vector<vector<double> > Grid;
 

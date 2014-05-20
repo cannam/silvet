@@ -41,7 +41,8 @@ Silvet::Silvet(float inputSampleRate) :
     m_instruments(InstrumentPack::listInstrumentPacks()),
     m_resampler(0),
     m_cq(0),
-    m_hqMode(true)
+    m_hqMode(true),
+    m_instrument(0)
 {
 }
 
@@ -146,16 +147,18 @@ Silvet::getParameterDescriptors() const
     list.push_back(desc);
 
     desc.identifier = "soloinstrument";
-    desc.name = "The recording contains";
+    desc.name = "Instrument in recording";
     desc.unit = "";
-    desc.description = "Determines the tradeoff of processing speed against transcription quality";
+    desc.description = "The instrument known to be present in the recording, if there is only one";
     desc.minValue = 0;
-    desc.maxValue = 1;
-    desc.defaultValue = 1;
+    desc.maxValue = m_instruments.size()-1;
+    desc.defaultValue = 0;
     desc.isQuantized = true;
     desc.quantizeStep = 1;
     desc.valueNames.clear();
-    desc.valueNames.push_back("Multiple or unknown instruments");
+    for (int i = 0; i < int(m_instruments.size()); ++i) {
+        desc.valueNames.push_back(m_instruments[i].name);
+    }
 
     list.push_back(desc);
 
@@ -167,6 +170,8 @@ Silvet::getParameter(string identifier) const
 {
     if (identifier == "mode") {
         return m_hqMode ? 1.f : 0.f;
+    } else if (identifier == "soloinstrument") {
+        return m_instrument;
     }
     return 0;
 }
@@ -176,6 +181,8 @@ Silvet::setParameter(string identifier, float value)
 {
     if (identifier == "mode") {
         m_hqMode = (value > 0.5);
+    } else if (identifier == "soloinstrument") {
+        m_instrument = lrintf(value);
     }
 }
 
@@ -205,7 +212,7 @@ Silvet::getOutputDescriptors() const
     OutputDescriptor d;
     d.identifier = "notes";
     d.name = "Note transcription";
-    d.description = "Overall note transcription across all instruments";
+    d.description = "Overall note transcription across selected instruments";
     d.unit = "Hz";
     d.hasFixedBinCount = true;
     d.binCount = 2;
@@ -361,7 +368,7 @@ Silvet::transcribe(const Grid &cqout)
 
         if (sum < 1e-5) continue;
 
-        EM em(&m_instruments[0], m_hqMode);
+        EM em(&m_instruments[m_instrument], m_hqMode);
 
         for (int j = 0; j < iterations; ++j) {
             em.iterate(filtered.at(i).data());
