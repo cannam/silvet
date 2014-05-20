@@ -182,12 +182,20 @@ EM::expectation(const float *column)
         }
     }
 
-    //!!! try normalising so as to sum to unity and then taking L2
-    //!!! norm of the two (for measure of how close they are)
-
     for (int i = 0; i < m_binCount; ++i) {
         m_q[i] = column[i] / m_estimate[i];
     }
+
+/*
+    double l2norm = 0.0;
+    
+    for (int i = 0; i < m_binCount; ++i) {
+        l2norm += (column[i] - m_estimate[i]) * (column[i] - m_estimate[i]);
+    }
+
+    l2norm = sqrt(l2norm);
+    cerr << "l2norm = " << l2norm << endl;
+*/
 }
 
 void

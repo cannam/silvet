@@ -352,7 +352,7 @@ Silvet::transcribe(const Grid &cqout)
 
     int width = filtered.size();
 
-    int iterations = 12; //!!! more might be good?
+    int iterations = m_hqMode ? 20 : 10;
 
     Grid pitchMatrix(width, vector<double>(processingNotes));
 
