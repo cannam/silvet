@@ -364,8 +364,6 @@ Silvet::transcribe(const Grid &cqout)
             sum += filtered.at(i).at(j);
         }
 
-//        cerr << "sum: " << sum << endl;
-
         if (sum < 1e-5) continue;
 
         EM em(&m_instruments[m_instrument], m_hqMode);
@@ -376,8 +374,6 @@ Silvet::transcribe(const Grid &cqout)
         
         const float *pitches = em.getPitchDistribution();
 
-        //!!! note: check the CQ output (and most immediately, the sum values here) against the MATLAB implementation
-        
         for (int j = 0; j < processingNotes; ++j) {
             pitchMatrix[i][j] = pitches[j] * sum;
         }
