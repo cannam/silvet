@@ -263,9 +263,10 @@ Silvet::noteName(int i) const
 }
 
 float
-Silvet::noteFrequency(int note) const
+Silvet::noteFrequency(int note, int shiftCount) const
 {
-    return float(27.5 * pow(2.0, note / 12.0));
+    float fineNote = float(note) / float(shiftCount);
+    return float(27.5 * pow(2.0, fineNote / 12.0));
 }
 
 bool
@@ -389,22 +390,27 @@ Silvet::transcribe(const Grid &cqout)
             em[i]->iterate(filtered.at(i).data());
         }
     }
+
+    int shiftCount = 1;
+    if (m_hqMode && m_fineTuning) {
+        shiftCount = m_instruments[m_instrument].templateMaxShift * 2 + 1;
+    }
         
     for (int i = 0; i < width; ++i) {
 
         if (!em[i]) {
-            noteTrack(map<int, double>());
+            noteTrack(map<int, double>(), shiftCount);
             continue;
         }
 
         map<int, double> active = postProcess(em[i]->getPitchDistribution(),
                                               em[i]->getShifts(),
-                                              em[i]->getShiftCount(),
+                                              shiftCount,
                                               sums[i]);
         
         delete em[i];
         
-        FeatureList noteFeatures = noteTrack(active);
+        FeatureList noteFeatures = noteTrack(active, shiftCount);
 
         for (FeatureList::const_iterator fi = noteFeatures.begin();
              fi != noteFeatures.end(); ++fi) {
@@ -512,9 +518,26 @@ Silvet::postProcess(const float *pitches,
         double strength = filtered[j];
         if (strength < threshold) continue;
 
-        // convert note number j to a pitch value p. If we are not using fine tuning or 
+        // convert note number j to a pitch value p. If we are not
+        // using fine tuning, p is the same as j; otherwise p is j *
+        // shiftCount + preferred shift
 
-        strengths.insert(ValueIndexMap::value_type(strength, j));
+        int p = j;
+
+        if (m_hqMode && m_fineTuning && shiftCount > 1) {
+            float bestShiftValue = 0.f;
+            int bestShift = 0;
+            for (int f = 0; f < shiftCount; ++f) {
+                if (f == 0 || shifts[f][j] > bestShiftValue) {
+                    bestShiftValue = shifts[f][j];
+                    bestShift = f;
+                }
+            }
+            //!!! I think our shift array per note is actually upside down, check this
+            p = j * shiftCount + bestShift;
+        }
+
+        strengths.insert(ValueIndexMap::value_type(strength, p));
     }
 
     map<int, double> active;
@@ -530,7 +553,7 @@ Silvet::postProcess(const float *pitches,
 }
 
 Vamp::Plugin::FeatureList
-Silvet::noteTrack(const map<int, double> &active)
+Silvet::noteTrack(const map<int, double> &active, int shiftCount)
 {        
     // Minimum duration pruning, and conversion to notes. We can only
     // report notes that have just ended (i.e. that are absent in the
@@ -602,7 +625,7 @@ Silvet::noteTrack(const map<int, double> &active)
         nf.hasDuration = true;
         nf.duration = RealTime::fromSeconds
             (columnDuration * duration);
-        nf.values.push_back(noteFrequency(note));
+        nf.values.push_back(noteFrequency(note, shiftCount));
         nf.values.push_back(velocity);
         nf.label = noteName(note);
         noteFeatures.push_back(nf);

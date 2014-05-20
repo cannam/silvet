@@ -93,12 +93,13 @@ protected:
                                  int shiftCount,
                                  double gain); // -> piano roll column
 
-    FeatureList noteTrack(const map<int, double> &pianoRollColumn);
+    FeatureList noteTrack(const map<int, double> &pianoRollColumn, 
+                          int shiftCount);
 
     FeatureSet transcribe(const Grid &);
 
     string noteName(int n) const;
-    float noteFrequency(int n) const;
+    float noteFrequency(int n, int shiftCount) const;
 
     int m_blockSize;
     int m_columnCount;
