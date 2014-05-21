@@ -34,10 +34,6 @@ using Vamp::RealTime;
 static int processingSampleRate = 44100;
 static int processingBPO = 60;
 
-//!!! todo: replace these two with values from instrument pack
-static int processingHeight = 545;
-static int processingNotes = 88;
-
 Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
     m_instruments(InstrumentPack::listInstrumentPacks()),
@@ -149,8 +145,8 @@ Silvet::getParameterDescriptors() const
     desc.valueNames.push_back("Intensive (higher quality)");
     list.push_back(desc);
 
-    desc.identifier = "soloinstrument";
-    desc.name = "Solo instrument";
+    desc.identifier = "instrument";
+    desc.name = "Instrument";
     desc.unit = "";
     desc.description = "The instrument known to be present in the recording, if there is only one";
     desc.minValue = 0;
@@ -186,7 +182,7 @@ Silvet::getParameter(string identifier) const
         return m_hqMode ? 1.f : 0.f;
     } else if (identifier == "finetune") {
         return m_fineTuning ? 1.f : 0.f;
-    } else if (identifier == "soloinstrument") {
+    } else if (identifier == "instrument") {
         return m_instrument;
     }
     return 0;
@@ -199,7 +195,7 @@ Silvet::setParameter(string identifier, float value)
         m_hqMode = (value > 0.5);
     } else if (identifier == "finetune") {
         m_fineTuning = (value > 0.5);
-    } else if (identifier == "soloinstrument") {
+    } else if (identifier == "instrument") {
         m_instrument = lrintf(value);
     }
 }
@@ -364,7 +360,7 @@ Silvet::reset()
         delete m_postFilter[i];
     }
     m_postFilter.clear();
-    for (int i = 0; i < processingNotes; ++i) {
+    for (int i = 0; i < m_instruments[0].templateNoteCount; ++i) {
         m_postFilter.push_back(new MedianFilter<double>(3));
     }
     m_pianoRoll.clear();
@@ -427,7 +423,7 @@ Silvet::transcribe(const Grid &cqout)
     int iterations = m_hqMode ? 20 : 10;
 
     //!!! pitches or notes? [terminology]
-    Grid localPitches(width, vector<double>(processingNotes, 0.0));
+    Grid localPitches(width, vector<double>(pack.templateNoteCount, 0.0));
 
     bool wantShifts = m_hqMode && m_fineTuning;
     int shiftCount = 1;
@@ -438,7 +434,7 @@ Silvet::transcribe(const Grid &cqout)
     vector<vector<int> > localBestShifts;
     if (wantShifts) {
         localBestShifts = 
-            vector<vector<int> >(width, vector<int>(processingNotes, 0));
+            vector<vector<int> >(width, vector<int>(pack.templateNoteCount, 0));
     }
 
     vector<bool> present(width, false);
@@ -447,7 +443,7 @@ Silvet::transcribe(const Grid &cqout)
     for (int i = 0; i < width; ++i) {
 
         double sum = 0.0;
-        for (int j = 0; j < processingHeight; ++j) {
+        for (int j = 0; j < pack.templateHeight; ++j) {
             sum += filtered.at(i).at(j);
         }
         if (sum < 1e-5) continue;
@@ -463,7 +459,7 @@ Silvet::transcribe(const Grid &cqout)
         const float *pitchDist = em.getPitchDistribution();
         const float *const *shiftDist = em.getShifts();
 
-        for (int j = 0; j < processingNotes; ++j) {
+        for (int j = 0; j < pack.templateNoteCount; ++j) {
 
             localPitches[i][j] = pitchDist[j] * sum;
 
@@ -485,7 +481,7 @@ Silvet::transcribe(const Grid &cqout)
 
         if (!present[i]) {
             // silent column
-            for (int j = 0; j < processingNotes; ++j) {
+            for (int j = 0; j < pack.templateNoteCount; ++j) {
                 m_postFilter[j]->push(0.0);
             }
             m_pianoRoll.push_back(map<int, double>());
@@ -527,6 +523,8 @@ Silvet::preProcess(const Grid &in)
     // size we reduce to in a moment
     int latentColumns = m_cq->getLatency() / m_cq->getColumnHop();
 
+    const InstrumentPack &pack = m_instruments[m_instrument];
+
     for (int i = 0; i < width; ++i) {
 
         if (m_columnCount < latentColumns) {
@@ -541,7 +539,7 @@ Silvet::preProcess(const Grid &in)
 
         if (select) {
             vector<double> inCol = in[i];
-            vector<double> outCol(processingHeight);
+            vector<double> outCol(pack.templateHeight);
 
             // we reverse the column as we go (the CQ output is
             // "upside-down", with high frequencies at the start of
@@ -549,20 +547,20 @@ Silvet::preProcess(const Grid &in)
             // then ignore the first 55 (lowest-frequency) bins,
             // giving us 545 bins instead of 600
 
-            for (int j = 0; j < processingHeight; ++j) {
+            for (int j = 0; j < pack.templateHeight; ++j) {
                 int ix = inCol.size() - j - 55;
                 outCol[j] = inCol[ix];
             }
 
             vector<double> noiseLevel1 = 
                 MedianFilter<double>::filter(40, outCol);
-            for (int j = 0; j < processingHeight; ++j) {
+            for (int j = 0; j < pack.templateHeight; ++j) {
                 noiseLevel1[j] = std::min(outCol[j], noiseLevel1[j]);
             }
 
             vector<double> noiseLevel2 = 
                 MedianFilter<double>::filter(40, noiseLevel1);
-            for (int j = 0; j < processingHeight; ++j) {
+            for (int j = 0; j < pack.templateHeight; ++j) {
                 outCol[j] = std::max(outCol[j] - noiseLevel2[j], 0.0);
             }
 
@@ -580,9 +578,11 @@ Silvet::postProcess(const vector<double> &pitches,
                     const vector<int> &bestShifts,
                     bool wantShifts)
 {
+    const InstrumentPack &pack = m_instruments[m_instrument];
+
     vector<double> filtered;
 
-    for (int j = 0; j < processingNotes; ++j) {
+    for (int j = 0; j < pack.templateNoteCount; ++j) {
         m_postFilter[j]->push(pitches[j]);
         filtered.push_back(m_postFilter[j]->get());
     }
@@ -599,7 +599,7 @@ Silvet::postProcess(const vector<double> &pitches,
 
     ValueIndexMap strengths;
 
-    for (int j = 0; j < processingNotes; ++j) {
+    for (int j = 0; j < pack.templateNoteCount; ++j) {
         double strength = filtered[j];
         if (strength < threshold) continue;
         strengths.insert(ValueIndexMap::value_type(strength, j));

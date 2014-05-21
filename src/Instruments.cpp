@@ -30,6 +30,8 @@ using std::cerr;
 using std::endl;
 
 const char *simpleInstruments[] = {
+    // Each instrument has two consecutive slots, one for the pack
+    // name and one for the template to look up
     "Guitar", "guitar",
     "Violin", "violin",
     "Cello", "cello",
@@ -40,6 +42,28 @@ const char *simpleInstruments[] = {
     "Tenor Sax", "tenorsax",
     "Bassoon", "bassoon",
 };
+
+static bool
+isString(int i)
+{
+    string tname(simpleInstruments[i+1]);
+    return tname == "violin"
+	|| tname == "cello"
+	;
+}
+
+static bool
+isWind(int i)
+{
+    string tname(simpleInstruments[i+1]);
+    return tname == "horn"
+	|| tname == "flute"
+	|| tname == "oboe"
+	|| tname == "clarinet"
+	|| tname == "tenorsax"
+	|| tname == "bassoon"
+	;
+}
 
 static InstrumentPack::Templates
 templatesFor(string name)
@@ -111,6 +135,9 @@ InstrumentPack::listInstrumentPacks()
 	ii.push_back(piano);
     }
 
+    vector<Templates> stringTemplates;
+    vector<Templates> windTemplates;
+
     for (int i = 0;
 	 i < int(sizeof(simpleInstruments)/sizeof(simpleInstruments[0]));
 	 i += 2) {
@@ -118,6 +145,12 @@ InstrumentPack::listInstrumentPacks()
 	Templates t = templatesFor(simpleInstruments[i+1]);
 	tt.push_back(t);
 	allTemplates.push_back(t);
+	if (isString(i)) {
+	    stringTemplates.push_back(t);
+	}
+	if (isWind(i)) {
+	    windTemplates.push_back(t);
+	}
 	InstrumentPack instr(t.lowestNote,
 			     t.highestNote,
 			     simpleInstruments[i],
@@ -133,6 +166,22 @@ InstrumentPack::listInstrumentPacks()
 		       allTemplates);
     if (isOK(all)) {
 	ii.insert(ii.begin(), all);
+    }
+
+    InstrumentPack strings(silvet_templates_lowest_note,  // cello
+			   silvet_templates_highest_note, // violin
+			   "String ensemble",
+			   stringTemplates);
+    if (isOK(strings)) {
+	ii.push_back(strings);
+    }
+
+    InstrumentPack winds(silvet_templates_lowest_note,   // basson
+			 silvet_templates_highest_note,  // flute
+			 "Wind ensemble",
+			 windTemplates);
+    if (isOK(winds)) {
+	ii.push_back(winds);
     }
 
     return ii;
