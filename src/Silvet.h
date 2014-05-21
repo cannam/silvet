@@ -85,16 +85,16 @@ protected:
 
     vector<MedianFilter<double> *> m_postFilter;
     vector<map<int, double> > m_pianoRoll;
+    vector<map<int, int> > m_pianoRollShifts;
 
     Grid preProcess(const Grid &);
 
-    map<int, double> postProcess(const float *pitches,
-                                 const float *const *shifts,
-                                 int shiftCount,
-                                 double gain); // -> piano roll column
+    void postProcess(const float *pitches,
+                     const float *const *shifts,
+                     int shiftCount,
+                     double gain); // -> piano roll column
 
-    FeatureList noteTrack(const map<int, double> &pianoRollColumn, 
-                          int shiftCount);
+    FeatureList noteTrack(int shiftCount);
 
     FeatureSet transcribe(const Grid &);
 

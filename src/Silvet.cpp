@@ -263,9 +263,9 @@ Silvet::noteName(int i) const
 }
 
 float
-Silvet::noteFrequency(int note, int shiftCount) const
+Silvet::noteFrequency(int note, int shift, int shiftCount) const
 {
-    float fineNote = float(note) / float(shiftCount);
+    float fineNote = float(note) + float(shift) / float(shiftCount);
     return float(27.5 * pow(2.0, fineNote / 12.0));
 }
 
@@ -392,6 +392,7 @@ Silvet::transcribe(const Grid &cqout)
     }
 
     int shiftCount = 1;
+
     if (m_hqMode && m_fineTuning) {
         shiftCount = m_instruments[m_instrument].templateMaxShift * 2 + 1;
     }
@@ -399,18 +400,21 @@ Silvet::transcribe(const Grid &cqout)
     for (int i = 0; i < width; ++i) {
 
         if (!em[i]) {
-            noteTrack(map<int, double>(), shiftCount);
+            m_pianoRoll.push_back(map<int, double>());
+            if (shiftCount > 1) {
+                m_pianoRollShifts.push_back(map<int, int>());
+            }
             continue;
         }
 
-        map<int, double> active = postProcess(em[i]->getPitchDistribution(),
-                                              em[i]->getShifts(),
-                                              shiftCount,
-                                              sums[i]);
+        postProcess(em[i]->getPitchDistribution(),
+                    em[i]->getShifts(),
+                    shiftCount,
+                    sums[i]);
         
         delete em[i];
         
-        FeatureList noteFeatures = noteTrack(active, shiftCount);
+        FeatureList noteFeatures = noteTrack(shiftCount);
 
         for (FeatureList::const_iterator fi = noteFeatures.begin();
              fi != noteFeatures.end(); ++fi) {
@@ -488,7 +492,7 @@ Silvet::preProcess(const Grid &in)
     return out;
 }
     
-map<int, double>
+void
 Silvet::postProcess(const float *pitches,
                     const float *const *shifts,
                     int shiftCount,
@@ -518,53 +522,62 @@ Silvet::postProcess(const float *pitches,
         double strength = filtered[j];
         if (strength < threshold) continue;
 
-        // convert note number j to a pitch value p. If we are not
-        // using fine tuning, p is the same as j; otherwise p is j *
-        // shiftCount + preferred shift
+        strengths.insert(ValueIndexMap::value_type(strength, j));
+    }
 
-        int p = j;
+    ValueIndexMap::const_iterator si = strengths.end();
 
-        if (m_hqMode && m_fineTuning && shiftCount > 1) {
-            float bestShiftValue = 0.f;
+    map<int, double> active;
+    map<int, int> activeShifts;
+
+    while (int(active.size()) < polyphony && si != strengths.begin()) {
+
+        --si;
+
+        double strength = si->first;
+        int j = si->second;
+
+        active[j] = strength;
+
+        if (shiftCount > 1) {
+
+            // find preferred shift f for note j
             int bestShift = 0;
+
+            float bestShiftValue = 0.f;
             for (int f = 0; f < shiftCount; ++f) {
                 if (f == 0 || shifts[f][j] > bestShiftValue) {
                     bestShiftValue = shifts[f][j];
-                    bestShift = f;
+                    bestShift = f - int(shiftCount / 2);
                 }
             }
             //!!! I think our shift array per note is actually upside down, check this
-            p = j * shiftCount + bestShift;
+
+            activeShifts[j] = bestShift;
         }
-
-        strengths.insert(ValueIndexMap::value_type(strength, p));
     }
 
-    map<int, double> active;
-    ValueIndexMap::const_iterator si = strengths.end();
-    while (int(active.size()) < polyphony && si != strengths.begin()) {
-        --si;
-//        cerr << si->second << " : " << si->first << endl;
-        active[si->second] = si->first;
-        if (si == strengths.begin()) break;
+    m_pianoRoll.push_back(active);
+    if (shiftCount > 1) {
+        m_pianoRollShifts.push_back(activeShifts);
     }
-
-    return active;
 }
 
 Vamp::Plugin::FeatureList
-Silvet::noteTrack(const map<int, double> &active, int shiftCount)
+Silvet::noteTrack(int shiftCount)
 {        
     // Minimum duration pruning, and conversion to notes. We can only
     // report notes that have just ended (i.e. that are absent in the
-    // latest active set but present in the last set in the piano
+    // latest active set but present in the prior set in the piano
     // roll) -- any notes that ended earlier will have been reported
     // already, and if they haven't ended, we don't know their
     // duration.
 
     int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
 
-    int width = m_pianoRoll.size();
+    int width = m_pianoRoll.size() - 1;
+
+    const map<int, double> &active = m_pianoRoll[width];
 
     double columnDuration = 1.0 / m_colsPerSec;
 
@@ -575,7 +588,6 @@ Silvet::noteTrack(const map<int, double> &active, int shiftCount)
     FeatureList noteFeatures;
 
     if (width < durationThreshold + 1) {
-        m_pianoRoll.push_back(active);
         return noteFeatures;
     }
     
@@ -630,8 +642,6 @@ Silvet::noteTrack(const map<int, double> &active, int shiftCount)
         nf.label = noteName(note);
         noteFeatures.push_back(nf);
     }
-
-    m_pianoRoll.push_back(active);
 
 //    cerr << "returning " << noteFeatures.size() << " complete note(s) " << endl;
 
