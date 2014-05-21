@@ -317,8 +317,16 @@ Silvet::reset()
 	m_resampler = 0;
     }
 
+    double minFreq = 27.5;
+
+    if (!m_hqMode) {
+        // We don't actually return any notes from the bottom octave,
+        // so we can just pad with zeros
+        minFreq *= 2;
+    }
+
     CQParameters params(processingSampleRate,
-                        27.5, 
+                        minFreq, 
                         processingSampleRate / 3,
                         processingBPO);
 
@@ -364,6 +372,16 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
     }
 
     Grid cqout = m_cq->process(data);
+
+    if (!m_hqMode) {
+        // Our CQ is one octave shorter in draft mode, so pad with
+        // zeros
+        vector<double> octave(m_cq->getBinsPerOctave(), 0.0);
+        for (int i = 0; i < int(cqout.size()); ++i) {
+            cqout[i].insert(cqout[i].end(), octave.begin(), octave.end());
+        }
+    }
+    
     FeatureSet fs = transcribe(cqout);
     return fs;
 }
