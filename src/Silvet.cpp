@@ -329,7 +329,7 @@ Silvet::reset()
                      // in the CQ parameter calculations, must check
     params.atomHopFactor = 0.3;
     params.threshold = 0.0005;
-    params.window = CQParameters::Hann; //!!! todo: test whether it makes any difference
+    params.window = CQParameters::Hann;
 
     m_cq = new CQSpectrogram(params, CQSpectrogram::InterpolateLinear);
 
