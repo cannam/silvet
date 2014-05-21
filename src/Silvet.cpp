@@ -33,6 +33,8 @@ using Vamp::RealTime;
 
 static int processingSampleRate = 44100;
 static int processingBPO = 60;
+
+//!!! todo: replace these two with values from instrument pack
 static int processingHeight = 545;
 static int processingNotes = 88;
 
@@ -382,52 +384,83 @@ Silvet::transcribe(const Grid &cqout)
     FeatureSet fs;
 
     if (filtered.empty()) return fs;
+    
+    const InstrumentPack &pack = m_instruments[m_instrument];
 
     int width = filtered.size();
 
     int iterations = m_hqMode ? 20 : 10;
 
-    vector<EM *> em(width, (EM *)0);
-    vector<double> sums(width, 0.0);
+    //!!! pitches or notes? [terminology]
+    Grid localPitches(width, vector<double>(processingNotes, 0.0));
+
+    bool wantShifts = m_hqMode && m_fineTuning;
+    int shiftCount = 1;
+    if (wantShifts) {
+        shiftCount = pack.templateMaxShift * 2 + 1;
+    }
+
+    vector<vector<int> > localBestShifts;
+    if (wantShifts) {
+        localBestShifts = 
+            vector<vector<int> >(width, vector<int>(processingNotes, 0));
+    }
+
+    vector<bool> present(width, false);
 
 #pragma omp parallel for
     for (int i = 0; i < width; ++i) {
 
+        double sum = 0.0;
         for (int j = 0; j < processingHeight; ++j) {
-            sums[i] += filtered.at(i).at(j);
+            sum += filtered.at(i).at(j);
         }
+        if (sum < 1e-5) continue;
 
-        if (sums[i] < 1e-5) continue;
+        present[i] = true;
 
-        em[i] = new EM(&m_instruments[m_instrument], m_hqMode);
+        EM em(&pack, m_hqMode);
 
         for (int j = 0; j < iterations; ++j) {
-            em[i]->iterate(filtered.at(i).data());
+            em.iterate(filtered.at(i).data());
         }
-    }
 
-    int shiftCount = 1;
+        const float *pitchDist = em.getPitchDistribution();
+        const float *const *shiftDist = em.getShifts();
 
-    if (m_hqMode && m_fineTuning) {
-        shiftCount = m_instruments[m_instrument].templateMaxShift * 2 + 1;
+        for (int j = 0; j < processingNotes; ++j) {
+
+            localPitches[i][j] = pitchDist[j] * sum;
+
+            int bestShift = 0;
+            int bestShiftValue = 0.0;
+            if (wantShifts) {
+                for (int k = 0; k < shiftCount; ++k) {
+                    if (k == 0 || shiftDist[k][j] > bestShiftValue) {
+                        bestShiftValue = shiftDist[k][j];
+                        bestShift = k;
+                    }
+                }
+                localBestShifts[i][j] = bestShift;
+            }                
+        }
     }
         
     for (int i = 0; i < width; ++i) {
 
-        if (!em[i]) {
+        if (!present[i]) {
+            // silent column
+            for (int j = 0; j < processingNotes; ++j) {
+                m_postFilter[j]->push(0.0);
+            }
             m_pianoRoll.push_back(map<int, double>());
-            if (shiftCount > 1) {
+            if (wantShifts) {
                 m_pianoRollShifts.push_back(map<int, int>());
             }
             continue;
         }
 
-        postProcess(em[i]->getPitchDistribution(),
-                    em[i]->getShifts(),
-                    shiftCount,
-                    sums[i]);
-        
-        delete em[i];
+        postProcess(localPitches[i], localBestShifts[i], wantShifts);
         
         FeatureList noteFeatures = noteTrack(shiftCount);
 
@@ -508,15 +541,14 @@ Silvet::preProcess(const Grid &in)
 }
     
 void
-Silvet::postProcess(const float *pitches,
-                    const float *const *shifts,
-                    int shiftCount,
-                    double gain)
+Silvet::postProcess(const vector<double> &pitches,
+                    const vector<int> &bestShifts,
+                    bool wantShifts)
 {
     vector<double> filtered;
 
     for (int j = 0; j < processingNotes; ++j) {
-        m_postFilter[j]->push(pitches[j] * gain);
+        m_postFilter[j]->push(pitches[j]);
         filtered.push_back(m_postFilter[j]->get());
     }
 
@@ -533,10 +565,8 @@ Silvet::postProcess(const float *pitches,
     ValueIndexMap strengths;
 
     for (int j = 0; j < processingNotes; ++j) {
-
         double strength = filtered[j];
         if (strength < threshold) continue;
-
         strengths.insert(ValueIndexMap::value_type(strength, j));
     }
 
@@ -554,24 +584,14 @@ Silvet::postProcess(const float *pitches,
 
         active[j] = strength;
 
-        if (shiftCount > 1) {
-
-            // find preferred shift f for note j
-            int bestShift = 0;
-            float bestShiftValue = 0.f;
-            for (int f = 0; f < shiftCount; ++f) {
-                if (f == 0 || shifts[f][j] > bestShiftValue) {
-                    bestShiftValue = shifts[f][j];
-                    bestShift = f;
-                }
-            }
-
-            activeShifts[j] = bestShift;
+        if (wantShifts) {
+            activeShifts[j] = bestShifts[j];
         }
     }
 
     m_pianoRoll.push_back(active);
-    if (shiftCount > 1) {
+
+    if (wantShifts) {
         m_pianoRollShifts.push_back(activeShifts);
     }
 }

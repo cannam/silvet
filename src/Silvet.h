@@ -89,10 +89,9 @@ protected:
 
     Grid preProcess(const Grid &);
 
-    void postProcess(const float *pitches,
-                     const float *const *shifts,
-                     int shiftCount,
-                     double gain); // -> piano roll column
+    void postProcess(const vector<double> &pitches,
+                     const vector<int> &bestShifts,
+                     bool wantShifts); // -> piano roll column
 
     FeatureList noteTrack(int shiftCount);
 
