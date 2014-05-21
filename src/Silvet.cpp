@@ -265,8 +265,23 @@ Silvet::noteName(int i) const
 float
 Silvet::noteFrequency(int note, int shift, int shiftCount) const
 {
-    float fineNote = float(note) + float(shift) / float(shiftCount);
-    return float(27.5 * pow(2.0, fineNote / 12.0));
+    // Convert shift number to a pitch shift. The given shift number
+    // is an offset into the template array, which starts with some
+    // zeros, followed by the template, then some trailing zeros.
+    // 
+    // Example: if we have templateMaxShift == 2 and thus shiftCount
+    // == 5, then the number will be in the range 0-4 and the template
+    // will have 2 zeros at either end. Thus number 2 represents the
+    // template "as recorded", for a pitch shift of 0; smaller indices
+    // represent moving the template *up* in pitch (by introducing
+    // zeros at the start, which is the low-frequency end), for a
+    // positive pitch shift; and higher values represent moving it
+    // down in pitch, for a negative pitch shift.
+
+    float pshift =
+        float((shiftCount - shift) - int(shiftCount / 2) - 1) / shiftCount;
+
+    return float(27.5 * pow(2.0, (note + pshift) / 12.0));
 }
 
 bool
@@ -543,15 +558,13 @@ Silvet::postProcess(const float *pitches,
 
             // find preferred shift f for note j
             int bestShift = 0;
-
             float bestShiftValue = 0.f;
             for (int f = 0; f < shiftCount; ++f) {
                 if (f == 0 || shifts[f][j] > bestShiftValue) {
                     bestShiftValue = shifts[f][j];
-                    bestShift = f - int(shiftCount / 2);
+                    bestShift = f;
                 }
             }
-            //!!! I think our shift array per note is actually upside down, check this
 
             activeShifts[j] = bestShift;
         }
@@ -572,8 +585,6 @@ Silvet::noteTrack(int shiftCount)
     // roll) -- any notes that ended earlier will have been reported
     // already, and if they haven't ended, we don't know their
     // duration.
-
-    int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
 
     int width = m_pianoRoll.size() - 1;
 
@@ -607,40 +618,16 @@ Silvet::noteTrack(int shiftCount)
         int end = width;
         int start = end-1;
 
-        double maxStrength = 0.0;
-
         while (m_pianoRoll[start].find(note) != m_pianoRoll[start].end()) {
-            double strength = m_pianoRoll[start][note];
-            if (strength > maxStrength) {
-                maxStrength = strength;
-            }
             --start;
         }
         ++start;
 
-        int duration = width - start;
-//        cerr << "duration " << duration << " for just-ended note " << note << endl;
-        if (duration < durationThreshold) {
-            // spurious
+        if ((end - start) < durationThreshold) {
             continue;
         }
 
-        int velocity = maxStrength * 2;
-        if (velocity > 127) velocity = 127;
-
-//        cerr << "Found a genuine note, starting at " << columnDuration * start << " with duration " << columnDuration * duration << endl;
-
-        Feature nf;
-        nf.hasTimestamp = true;
-        nf.timestamp = RealTime::fromSeconds
-            (columnDuration * (start - postFilterLatency) + 0.02);
-        nf.hasDuration = true;
-        nf.duration = RealTime::fromSeconds
-            (columnDuration * duration);
-        nf.values.push_back(noteFrequency(note, shiftCount));
-        nf.values.push_back(velocity);
-        nf.label = noteName(note);
-        noteFeatures.push_back(nf);
+        emitNote(start, end, note, shiftCount, noteFeatures);
     }
 
 //    cerr << "returning " << noteFeatures.size() << " complete note(s) " << endl;
@@ -648,3 +635,75 @@ Silvet::noteTrack(int shiftCount)
     return noteFeatures;
 }
 
+void
+Silvet::emitNote(int start, int end, int note, int shiftCount,
+                 FeatureList &noteFeatures)
+{
+    int partStart = start;
+    int partShift = 0;
+    int partVelocity = 0;
+
+    Feature f;
+    f.hasTimestamp = true;
+    f.hasDuration = true;
+
+    double columnDuration = 1.0 / m_colsPerSec;
+    int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
+    int partThreshold = floor(0.05 / columnDuration);
+
+    for (int i = start; i != end; ++i) {
+        
+        double strength = m_pianoRoll[i][note];
+
+        int shift = 0;
+
+        if (shiftCount > 1) {
+
+            shift = m_pianoRollShifts[i][note];
+
+            if (i == partStart) {
+                partShift = shift;
+            }
+
+            if (i > partStart + partThreshold && shift != partShift) {
+                
+//                cerr << "i = " << i << ", partStart = " << partStart << ", shift = " << shift << ", partShift = " << partShift << endl;
+
+                // pitch has changed, emit an intermediate note
+                f.timestamp = RealTime::fromSeconds
+                    (columnDuration * (partStart - postFilterLatency) + 0.02);
+                f.duration = RealTime::fromSeconds
+                    (columnDuration * (i - partStart));
+                f.values.clear();
+                f.values.push_back
+                    (noteFrequency(note, partShift, shiftCount));
+                f.values.push_back(partVelocity);
+                f.label = noteName(note);
+                noteFeatures.push_back(f);
+                partStart = i;
+                partShift = shift;
+                partVelocity = 0;
+            }
+        }
+
+        int v = strength * 2;
+        if (v > 127) v = 127;
+
+        if (v > partVelocity) {
+            partVelocity = v;
+        }
+    }
+
+    if (end >= partStart + partThreshold) {
+        f.timestamp = RealTime::fromSeconds
+            (columnDuration * (partStart - postFilterLatency) + 0.02);
+        f.duration = RealTime::fromSeconds
+            (columnDuration * (end - partStart));
+        f.values.clear();
+        f.values.push_back
+            (noteFrequency(note, partShift, shiftCount));
+        f.values.push_back(partVelocity);
+        f.label = noteName(note);
+        noteFeatures.push_back(f);
+    }
+}

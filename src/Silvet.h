@@ -96,10 +96,13 @@ protected:
 
     FeatureList noteTrack(int shiftCount);
 
+    void emitNote(int start, int end, int note, int shiftCount,
+                  FeatureList &noteFeatures);
+
     FeatureSet transcribe(const Grid &);
 
     string noteName(int n) const;
-    float noteFrequency(int n, int shiftCount) const;
+    float noteFrequency(int n, int shift, int shiftCount) const;
 
     int m_blockSize;
     int m_columnCount;
