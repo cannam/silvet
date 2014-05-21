@@ -248,18 +248,32 @@ Silvet::getOutputDescriptors() const
 }
 
 std::string
-Silvet::noteName(int i) const
+Silvet::noteName(int note, int shift, int shiftCount) const
 {
     static const char *names[] = {
         "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"
     };
 
-    const char *n = names[i % 12];
+    const char *n = names[note % 12];
 
-    int oct = (i + 9) / 12; 
+    int oct = (note + 9) / 12; 
     
-    char buf[20];
-    sprintf(buf, "%s%d", n, oct);
+    char buf[30];
+
+    float pshift = 0.f;
+    if (shiftCount > 1) {
+        // see noteFrequency below
+        pshift = 
+            float((shiftCount - shift) - int(shiftCount / 2) - 1) / shiftCount;
+    }
+
+    if (pshift > 0.f) {
+        sprintf(buf, "%s%d+%dc", n, oct, int(round(pshift * 100)));
+    } else if (pshift < 0.f) {
+        sprintf(buf, "%s%d-%dc", n, oct, int(round((-pshift) * 100)));
+    } else {
+        sprintf(buf, "%s%d", n, oct);
+    }
 
     return buf;
 }
@@ -280,8 +294,11 @@ Silvet::noteFrequency(int note, int shift, int shiftCount) const
     // positive pitch shift; and higher values represent moving it
     // down in pitch, for a negative pitch shift.
 
-    float pshift =
-        float((shiftCount - shift) - int(shiftCount / 2) - 1) / shiftCount;
+    float pshift = 0.f;
+    if (shiftCount > 1) {
+        pshift = 
+            float((shiftCount - shift) - int(shiftCount / 2) - 1) / shiftCount;
+    }
 
     return float(27.5 * pow(2.0, (note + pshift) / 12.0));
 }
@@ -716,7 +733,7 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
                 f.values.push_back
                     (noteFrequency(note, partShift, shiftCount));
                 f.values.push_back(partVelocity);
-                f.label = noteName(note);
+                f.label = noteName(note, partShift, shiftCount);
                 noteFeatures.push_back(f);
                 partStart = i;
                 partShift = shift;
@@ -741,7 +758,7 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
         f.values.push_back
             (noteFrequency(note, partShift, shiftCount));
         f.values.push_back(partVelocity);
-        f.label = noteName(note);
+        f.label = noteName(note, partShift, shiftCount);
         noteFeatures.push_back(f);
     }
 }

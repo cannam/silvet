@@ -100,7 +100,7 @@ protected:
 
     FeatureSet transcribe(const Grid &);
 
-    string noteName(int n) const;
+    string noteName(int n, int shift, int shiftCount) const;
     float noteFrequency(int n, int shift, int shiftCount) const;
 
     int m_blockSize;
