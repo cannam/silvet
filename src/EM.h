@@ -91,6 +91,7 @@ private:
     const int m_sourceCount;
     
     const float m_pitchSparsity;
+    const float m_shiftSparsity;
     const float m_sourceSparsity;
 
     const int m_lowestPitch;

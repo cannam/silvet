@@ -39,9 +39,8 @@ EM::EM(const InstrumentPack *pack, bool useShifts) :
     m_binCount(pack->templateHeight),
     m_sourceCount(pack->templates.size()),
     m_pitchSparsity(1.1),
-    //!!! note: slightly less source sparsity might help; also
-    //!!! consider a modest shift sparsity e.g. 1.1
-    m_sourceSparsity(1.3),
+    m_shiftSparsity(1.1),
+    m_sourceSparsity(1.2),
     m_lowestPitch(pack->lowestNote),
     m_highestPitch(pack->highestNote)
 {
@@ -255,7 +254,16 @@ EM::maximisation(const float *column)
     if (m_pitchSparsity != 1.0) {
         for (int n = 0; n < m_noteCount; ++n) {
             m_updatePitches[n] = 
-                pow(m_updatePitches[n], m_pitchSparsity);
+                powf(m_updatePitches[n], m_pitchSparsity);
+        }
+    }
+
+    if (m_shifts && m_shiftSparsity != 1.0) {
+        for (int i = 0; i < m_shiftCount; ++i) {
+            for (int n = 0; n < m_noteCount; ++n) {
+                m_updateShifts[i][n] =
+                    powf(m_updateShifts[i][n], m_shiftSparsity);
+            }
         }
     }
 
@@ -263,7 +271,7 @@ EM::maximisation(const float *column)
         for (int i = 0; i < m_sourceCount; ++i) {
             for (int n = 0; n < m_noteCount; ++n) {
                 m_updateSources[i][n] =
-                    pow(m_updateSources[i][n], m_sourceSparsity);
+                    powf(m_updateSources[i][n], m_sourceSparsity);
             }
         }
     }
