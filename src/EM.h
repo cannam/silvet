@@ -29,6 +29,7 @@ public:
     int getBinCount() const { return m_binCount; }
     int getNoteCount() const { return m_noteCount; }
     int getSourceCount() const { return m_sourceCount; }
+    int getShiftCount() const { return m_shiftCount; }
 
     /**
      * Carry out one iteration using the given column as input. The
@@ -59,6 +60,15 @@ public:
      */
     const float *const *getSources() const {
 	return m_sources; 
+    }
+    
+    /** 
+     * Return the shift distribution for the current estimate. The
+     * returned pointer refers to getShiftCount() arrays of
+     * getNoteCount() values.
+     */
+    const float *const *getShifts() const {
+	return m_shifts; 
     }
 
 private:

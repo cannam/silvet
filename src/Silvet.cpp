@@ -33,6 +33,8 @@ using Vamp::RealTime;
 
 static int processingSampleRate = 44100;
 static int processingBPO = 60;
+
+//!!! todo: replace these two with values from instrument pack
 static int processingHeight = 545;
 static int processingNotes = 88;
 
@@ -42,6 +44,7 @@ Silvet::Silvet(float inputSampleRate) :
     m_resampler(0),
     m_cq(0),
     m_hqMode(true),
+    m_fineTuning(false),
     m_instrument(0)
 {
 }
@@ -142,7 +145,7 @@ Silvet::getParameterDescriptors() const
     desc.defaultValue = 1;
     desc.isQuantized = true;
     desc.quantizeStep = 1;
-    desc.valueNames.push_back("Draft (faster)");
+    desc.valueNames.push_back("Draft (faster)"); 
     desc.valueNames.push_back("Intensive (higher quality)");
     list.push_back(desc);
 
@@ -159,7 +162,18 @@ Silvet::getParameterDescriptors() const
     for (int i = 0; i < int(m_instruments.size()); ++i) {
         desc.valueNames.push_back(m_instruments[i].name);
     }
+    list.push_back(desc);
 
+    desc.identifier = "finetune";
+    desc.name = "Return fine pitch estimates";
+    desc.unit = "";
+    desc.description = "Return pitch estimates at finer than semitone resolution (works only in Intensive mode)";
+    desc.minValue = 0;
+    desc.maxValue = 1;
+    desc.defaultValue = 0;
+    desc.isQuantized = true;
+    desc.quantizeStep = 1;
+    desc.valueNames.clear();
     list.push_back(desc);
 
     return list;
@@ -170,6 +184,8 @@ Silvet::getParameter(string identifier) const
 {
     if (identifier == "mode") {
         return m_hqMode ? 1.f : 0.f;
+    } else if (identifier == "finetune") {
+        return m_fineTuning ? 1.f : 0.f;
     } else if (identifier == "soloinstrument") {
         return m_instrument;
     }
@@ -181,6 +197,8 @@ Silvet::setParameter(string identifier, float value)
 {
     if (identifier == "mode") {
         m_hqMode = (value > 0.5);
+    } else if (identifier == "finetune") {
+        m_fineTuning = (value > 0.5);
     } else if (identifier == "soloinstrument") {
         m_instrument = lrintf(value);
     }
@@ -247,9 +265,25 @@ Silvet::noteName(int i) const
 }
 
 float
-Silvet::noteFrequency(int note) const
+Silvet::noteFrequency(int note, int shift, int shiftCount) const
 {
-    return float(27.5 * pow(2.0, note / 12.0));
+    // Convert shift number to a pitch shift. The given shift number
+    // is an offset into the template array, which starts with some
+    // zeros, followed by the template, then some trailing zeros.
+    // 
+    // Example: if we have templateMaxShift == 2 and thus shiftCount
+    // == 5, then the number will be in the range 0-4 and the template
+    // will have 2 zeros at either end. Thus number 2 represents the
+    // template "as recorded", for a pitch shift of 0; smaller indices
+    // represent moving the template *up* in pitch (by introducing
+    // zeros at the start, which is the low-frequency end), for a
+    // positive pitch shift; and higher values represent moving it
+    // down in pitch, for a negative pitch shift.
+
+    float pshift =
+        float((shiftCount - shift) - int(shiftCount / 2) - 1) / shiftCount;
+
+    return float(27.5 * pow(2.0, (note + pshift) / 12.0));
 }
 
 bool
@@ -350,12 +384,29 @@ Silvet::transcribe(const Grid &cqout)
     FeatureSet fs;
 
     if (filtered.empty()) return fs;
+    
+    const InstrumentPack &pack = m_instruments[m_instrument];
 
     int width = filtered.size();
 
     int iterations = m_hqMode ? 20 : 10;
 
-    Grid pitchMatrix(width, vector<double>(processingNotes));
+    //!!! pitches or notes? [terminology]
+    Grid localPitches(width, vector<double>(processingNotes, 0.0));
+
+    bool wantShifts = m_hqMode && m_fineTuning;
+    int shiftCount = 1;
+    if (wantShifts) {
+        shiftCount = pack.templateMaxShift * 2 + 1;
+    }
+
+    vector<vector<int> > localBestShifts;
+    if (wantShifts) {
+        localBestShifts = 
+            vector<vector<int> >(width, vector<int>(processingNotes, 0));
+    }
+
+    vector<bool> present(width, false);
 
 #pragma omp parallel for
     for (int i = 0; i < width; ++i) {
@@ -364,25 +415,54 @@ Silvet::transcribe(const Grid &cqout)
         for (int j = 0; j < processingHeight; ++j) {
             sum += filtered.at(i).at(j);
         }
-
         if (sum < 1e-5) continue;
 
-        EM em(&m_instruments[m_instrument], m_hqMode);
+        present[i] = true;
+
+        EM em(&pack, m_hqMode);
 
         for (int j = 0; j < iterations; ++j) {
             em.iterate(filtered.at(i).data());
         }
-        
-        const float *pitches = em.getPitchDistribution();
+
+        const float *pitchDist = em.getPitchDistribution();
+        const float *const *shiftDist = em.getShifts();
 
         for (int j = 0; j < processingNotes; ++j) {
-            pitchMatrix[i][j] = pitches[j] * sum;
+
+            localPitches[i][j] = pitchDist[j] * sum;
+
+            int bestShift = 0;
+            int bestShiftValue = 0.0;
+            if (wantShifts) {
+                for (int k = 0; k < shiftCount; ++k) {
+                    if (k == 0 || shiftDist[k][j] > bestShiftValue) {
+                        bestShiftValue = shiftDist[k][j];
+                        bestShift = k;
+                    }
+                }
+                localBestShifts[i][j] = bestShift;
+            }                
         }
     }
-
-    for (int i = 0; i < width; ++i) {
         
-        FeatureList noteFeatures = postProcess(pitchMatrix[i]);
+    for (int i = 0; i < width; ++i) {
+
+        if (!present[i]) {
+            // silent column
+            for (int j = 0; j < processingNotes; ++j) {
+                m_postFilter[j]->push(0.0);
+            }
+            m_pianoRoll.push_back(map<int, double>());
+            if (wantShifts) {
+                m_pianoRollShifts.push_back(map<int, int>());
+            }
+            continue;
+        }
+
+        postProcess(localPitches[i], localBestShifts[i], wantShifts);
+        
+        FeatureList noteFeatures = noteTrack(shiftCount);
 
         for (FeatureList::const_iterator fi = noteFeatures.begin();
              fi != noteFeatures.end(); ++fi) {
@@ -460,17 +540,17 @@ Silvet::preProcess(const Grid &in)
     return out;
 }
     
-Vamp::Plugin::FeatureList
-Silvet::postProcess(const vector<double> &pitches)        
-{        
+void
+Silvet::postProcess(const vector<double> &pitches,
+                    const vector<int> &bestShifts,
+                    bool wantShifts)
+{
     vector<double> filtered;
 
     for (int j = 0; j < processingNotes; ++j) {
         m_postFilter[j]->push(pitches[j]);
         filtered.push_back(m_postFilter[j]->get());
     }
-
-    int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
 
     // Threshold for level and reduce number of candidate pitches
 
@@ -483,28 +563,52 @@ Silvet::postProcess(const vector<double> &pitches)
     typedef std::multimap<double, int> ValueIndexMap;
 
     ValueIndexMap strengths;
+
     for (int j = 0; j < processingNotes; ++j) {
-        strengths.insert(ValueIndexMap::value_type(filtered[j], j));
+        double strength = filtered[j];
+        if (strength < threshold) continue;
+        strengths.insert(ValueIndexMap::value_type(strength, j));
     }
+
+    ValueIndexMap::const_iterator si = strengths.end();
 
     map<int, double> active;
-    ValueIndexMap::const_iterator si = strengths.end();
-    while (int(active.size()) < polyphony) {
+    map<int, int> activeShifts;
+
+    while (int(active.size()) < polyphony && si != strengths.begin()) {
+
         --si;
-        if (si->first < threshold) break;
-//        cerr << si->second << " : " << si->first << endl;
-        active[si->second] = si->first;
-        if (si == strengths.begin()) break;
+
+        double strength = si->first;
+        int j = si->second;
+
+        active[j] = strength;
+
+        if (wantShifts) {
+            activeShifts[j] = bestShifts[j];
+        }
     }
 
+    m_pianoRoll.push_back(active);
+
+    if (wantShifts) {
+        m_pianoRollShifts.push_back(activeShifts);
+    }
+}
+
+Vamp::Plugin::FeatureList
+Silvet::noteTrack(int shiftCount)
+{        
     // Minimum duration pruning, and conversion to notes. We can only
     // report notes that have just ended (i.e. that are absent in the
-    // latest active set but present in the last set in the piano
+    // latest active set but present in the prior set in the piano
     // roll) -- any notes that ended earlier will have been reported
     // already, and if they haven't ended, we don't know their
     // duration.
 
-    int width = m_pianoRoll.size();
+    int width = m_pianoRoll.size() - 1;
+
+    const map<int, double> &active = m_pianoRoll[width];
 
     double columnDuration = 1.0 / m_colsPerSec;
 
@@ -515,11 +619,9 @@ Silvet::postProcess(const vector<double> &pitches)
     FeatureList noteFeatures;
 
     if (width < durationThreshold + 1) {
-        m_pianoRoll.push_back(active);
         return noteFeatures;
     }
     
-    //!!! try: 20ms intervals in intensive mode
     //!!! try: repeated note detection? (look for change in first derivative of the pitch matrix)
 
     for (map<int, double>::const_iterator ni = m_pianoRoll[width-1].begin();
@@ -536,46 +638,92 @@ Silvet::postProcess(const vector<double> &pitches)
         int end = width;
         int start = end-1;
 
-        double maxStrength = 0.0;
-
         while (m_pianoRoll[start].find(note) != m_pianoRoll[start].end()) {
-            double strength = m_pianoRoll[start][note];
-            if (strength > maxStrength) {
-                maxStrength = strength;
-            }
             --start;
         }
         ++start;
 
-        int duration = width - start;
-//        cerr << "duration " << duration << " for just-ended note " << note << endl;
-        if (duration < durationThreshold) {
-            // spurious
+        if ((end - start) < durationThreshold) {
             continue;
         }
 
-        int velocity = maxStrength * 2;
-        if (velocity > 127) velocity = 127;
-
-//        cerr << "Found a genuine note, starting at " << columnDuration * start << " with duration " << columnDuration * duration << endl;
-
-        Feature nf;
-        nf.hasTimestamp = true;
-        nf.timestamp = RealTime::fromSeconds
-            (columnDuration * (start - postFilterLatency) + 0.02);
-        nf.hasDuration = true;
-        nf.duration = RealTime::fromSeconds
-            (columnDuration * duration);
-        nf.values.push_back(noteFrequency(note));
-        nf.values.push_back(velocity);
-        nf.label = noteName(note);
-        noteFeatures.push_back(nf);
+        emitNote(start, end, note, shiftCount, noteFeatures);
     }
-
-    m_pianoRoll.push_back(active);
 
 //    cerr << "returning " << noteFeatures.size() << " complete note(s) " << endl;
 
     return noteFeatures;
 }
 
+void
+Silvet::emitNote(int start, int end, int note, int shiftCount,
+                 FeatureList &noteFeatures)
+{
+    int partStart = start;
+    int partShift = 0;
+    int partVelocity = 0;
+
+    Feature f;
+    f.hasTimestamp = true;
+    f.hasDuration = true;
+
+    double columnDuration = 1.0 / m_colsPerSec;
+    int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
+    int partThreshold = floor(0.05 / columnDuration);
+
+    for (int i = start; i != end; ++i) {
+        
+        double strength = m_pianoRoll[i][note];
+
+        int shift = 0;
+
+        if (shiftCount > 1) {
+
+            shift = m_pianoRollShifts[i][note];
+
+            if (i == partStart) {
+                partShift = shift;
+            }
+
+            if (i > partStart + partThreshold && shift != partShift) {
+                
+//                cerr << "i = " << i << ", partStart = " << partStart << ", shift = " << shift << ", partShift = " << partShift << endl;
+
+                // pitch has changed, emit an intermediate note
+                f.timestamp = RealTime::fromSeconds
+                    (columnDuration * (partStart - postFilterLatency) + 0.02);
+                f.duration = RealTime::fromSeconds
+                    (columnDuration * (i - partStart));
+                f.values.clear();
+                f.values.push_back
+                    (noteFrequency(note, partShift, shiftCount));
+                f.values.push_back(partVelocity);
+                f.label = noteName(note);
+                noteFeatures.push_back(f);
+                partStart = i;
+                partShift = shift;
+                partVelocity = 0;
+            }
+        }
+
+        int v = strength * 2;
+        if (v > 127) v = 127;
+
+        if (v > partVelocity) {
+            partVelocity = v;
+        }
+    }
+
+    if (end >= partStart + partThreshold) {
+        f.timestamp = RealTime::fromSeconds
+            (columnDuration * (partStart - postFilterLatency) + 0.02);
+        f.duration = RealTime::fromSeconds
+            (columnDuration * (end - partStart));
+        f.values.clear();
+        f.values.push_back
+            (noteFrequency(note, partShift, shiftCount));
+        f.values.push_back(partVelocity);
+        f.label = noteName(note);
+        noteFeatures.push_back(f);
+    }
+}

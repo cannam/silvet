@@ -77,6 +77,7 @@ protected:
     CQSpectrogram *m_cq;
 
     bool m_hqMode;
+    bool m_fineTuning;
     int m_instrument;
     int m_colsPerSec;
 
@@ -84,13 +85,23 @@ protected:
 
     vector<MedianFilter<double> *> m_postFilter;
     vector<map<int, double> > m_pianoRoll;
+    vector<map<int, int> > m_pianoRollShifts;
 
     Grid preProcess(const Grid &);
-    FeatureList postProcess(const vector<double> &);
+
+    void postProcess(const vector<double> &pitches,
+                     const vector<int> &bestShifts,
+                     bool wantShifts); // -> piano roll column
+
+    FeatureList noteTrack(int shiftCount);
+
+    void emitNote(int start, int end, int note, int shiftCount,
+                  FeatureList &noteFeatures);
+
     FeatureSet transcribe(const Grid &);
 
     string noteName(int n) const;
-    float noteFrequency(int n) const;
+    float noteFrequency(int n, int shift, int shiftCount) const;
 
     int m_blockSize;
     int m_columnCount;
