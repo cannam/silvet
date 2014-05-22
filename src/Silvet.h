@@ -108,6 +108,7 @@ protected:
     Vamp::RealTime m_startTime;
 
     mutable int m_notesOutputNo;
+    mutable int m_fcqOutputNo;
 };
 
 #endif

@@ -44,9 +44,6 @@ EM::EM(const InstrumentPack *pack, bool useShifts) :
     m_lowestPitch(pack->lowestNote),
     m_highestPitch(pack->highestNote)
 {
-    //!!! we now know the first octave is empty, in draft mode --
-    //!!! could eliminate it
-
     m_pitches = allocate<float>(m_noteCount);
     m_updatePitches = allocate<float>(m_noteCount);
     for (int n = 0; n < m_noteCount; ++n) {

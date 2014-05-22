@@ -41,7 +41,8 @@ Silvet::Silvet(float inputSampleRate) :
     m_cq(0),
     m_hqMode(true),
     m_fineTuning(false),
-    m_instrument(0)
+    m_instrument(0),
+    m_colsPerSec(50)
 {
 }
 
@@ -240,6 +241,35 @@ Silvet::getOutputDescriptors() const
     m_notesOutputNo = list.size();
     list.push_back(d);
 
+    d.identifier = "timefreq";
+    d.name = "Time-frequency distribution";
+    d.description = "Filtered constant-Q time-frequency distribution used as input to the expectation-maximisation algorithm";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = m_instruments[0].templateHeight;
+    d.binNames.clear();
+    if (m_cq) {
+        char name[20];
+        for (int i = 0; i < m_instruments[0].templateHeight; ++i) {
+            // We have a 600-bin (10 oct 60-bin CQ) of which the
+            // lowest-frequency 55 bins have been dropped, for a
+            // 545-bin template. The native CQ bins go high->low
+            // frequency though, so these are still the first 545 bins
+            // as reported by getBinFrequency, though in reverse order
+            float freq = m_cq->getBinFrequency
+                (m_instruments[0].templateHeight - i - 1);
+            sprintf(name, "%.1f Hz", freq);
+            d.binNames.push_back(name);
+        }
+    }
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::FixedSampleRate;
+    d.sampleRate = m_colsPerSec;
+    d.hasDuration = false;
+    m_fcqOutputNo = list.size();
+    list.push_back(d);
+
     return list;
 }
 
@@ -385,16 +415,6 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
     }
 
     Grid cqout = m_cq->process(data);
-
-    if (!m_hqMode) {
-        // Our CQ is one octave shorter in draft mode, so pad with
-        // zeros
-        vector<double> octave(m_cq->getBinsPerOctave(), 0.0);
-        for (int i = 0; i < int(cqout.size()); ++i) {
-            cqout[i].insert(cqout[i].end(), octave.begin(), octave.end());
-        }
-    }
-    
     FeatureSet fs = transcribe(cqout);
     return fs;
 }
@@ -417,6 +437,14 @@ Silvet::transcribe(const Grid &cqout)
     if (filtered.empty()) return fs;
     
     const InstrumentPack &pack = m_instruments[m_instrument];
+
+    for (int i = 0; i < (int)filtered.size(); ++i) {
+        Feature f;
+        for (int j = 0; j < pack.templateHeight; ++j) {
+            f.values.push_back(float(filtered[i][j]));
+        }
+        fs[m_fcqOutputNo].push_back(f);
+    }
 
     int width = filtered.size();
 
@@ -541,15 +569,30 @@ Silvet::preProcess(const Grid &in)
             vector<double> inCol = in[i];
             vector<double> outCol(pack.templateHeight);
 
-            // we reverse the column as we go (the CQ output is
-            // "upside-down", with high frequencies at the start of
-            // each column, and we want it the other way around) and
-            // then ignore the first 55 (lowest-frequency) bins,
-            // giving us 545 bins instead of 600
+            // In HQ mode, the CQ returns 600 bins and we ignore the
+            // lowest 55 of them.
+            // 
+            // In draft mode the CQ is an octave shorter, returning
+            // 540 bins, so we instead pad them with an additional 5
+            // zeros.
+            // 
+            // We also need to reverse the column as we go, since the
+            // raw CQ has the high frequencies first and we need it
+            // the other way around.
 
-            for (int j = 0; j < pack.templateHeight; ++j) {
-                int ix = inCol.size() - j - 55;
-                outCol[j] = inCol[ix];
+            if (m_hqMode) {
+                for (int j = 0; j < pack.templateHeight; ++j) {
+                    int ix = inCol.size() - j - 55;
+                    outCol[j] = inCol[ix];
+                }
+            } else {
+                for (int j = 0; j < 5; ++j) {
+                    outCol[j] = 0.0;
+                }
+                for (int j = 5; j < pack.templateHeight; ++j) {
+                    int ix = inCol.size() - j + 4;
+                    outCol[j] = inCol[ix];
+                }
             }
 
             vector<double> noiseLevel1 = 
