@@ -19,6 +19,8 @@
 #include <cq/CQSpectrogram.h>
 
 #include "MedianFilter.h"
+#include "PeakInterpolator.h"
+
 #include "constant-q-cpp/src/dsp/Resampler.h"
 
 #include <vector>
@@ -239,6 +241,21 @@ Silvet::getOutputDescriptors() const
     d.sampleRate = m_inputSampleRate / (m_cq ? m_cq->getColumnHop() : 62);
     d.hasDuration = true;
     m_notesOutputNo = list.size();
+    list.push_back(d);
+
+    d.identifier = "f0";
+    d.name = "Predominant fundamental frequency";
+    d.description = "Interpolated frequency of fundamental of most salient pitch at each time frame";
+    d.unit = "Hz";
+    d.hasFixedBinCount = true;
+    d.binCount = 1;
+    d.binNames.push_back("Frequency");
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::FixedSampleRate;
+    d.sampleRate = m_colsPerSec;
+    d.hasDuration = false;
+    m_f0OutputNo = list.size();
     list.push_back(d);
 
     d.identifier = "timefreq";
@@ -521,6 +538,13 @@ Silvet::transcribe(const Grid &cqout)
         }
 
         postProcess(localPitches[i], localBestShifts[i], wantShifts);
+
+        FeatureList f0Features = convertF0Features(filtered[i], shiftCount);
+        
+        for (FeatureList::const_iterator fi = f0Features.begin();
+             fi != f0Features.end(); ++fi) {
+            fs[m_f0OutputNo].push_back(*fi);
+        }
         
         FeatureList noteFeatures = noteTrack(shiftCount);
 
@@ -654,6 +678,9 @@ Silvet::postProcess(const vector<double> &pitches,
     map<int, double> active;
     map<int, int> activeShifts;
 
+    m_predominantNote = -1;
+    m_predominantShift = -1;
+
     while (int(active.size()) < polyphony && si != strengths.begin()) {
 
         --si;
@@ -663,8 +690,17 @@ Silvet::postProcess(const vector<double> &pitches,
 
         active[j] = strength;
 
+        if (m_predominantNote < 0) {
+            m_predominantNote = j;
+        }
+
         if (wantShifts) {
+
             activeShifts[j] = bestShifts[j];
+
+            if (m_predominantShift < 0) {
+                m_predominantShift = bestShifts[j];
+            }
         }
     }
 
@@ -673,6 +709,43 @@ Silvet::postProcess(const vector<double> &pitches,
     if (wantShifts) {
         m_pianoRollShifts.push_back(activeShifts);
     }
+}
+
+Vamp::Plugin::FeatureList
+Silvet::convertF0Features(const vector<double> &column, int shiftCount)
+{
+    FeatureList fl;
+
+    if (m_predominantNote < 0) {
+        Feature f;
+        f.hasTimestamp = false;
+        f.hasDuration = false;
+        f.values.push_back(0.f);
+        fl.push_back(f);
+        return fl;
+    }
+
+    int f0bin = m_predominantNote * shiftCount;
+
+    if (m_predominantShift >= 0) {
+        f0bin += (shiftCount - m_predominantShift) - int(shiftCount / 2) - 1;
+    }
+
+    PeakInterpolator pi;
+    float interpolated = (float)pi.findPeakLocation
+        (column.data(), column.size(), f0bin);
+
+    float f0 = m_cq->getBinFrequency
+        (m_instruments[0].templateHeight - interpolated - 1.f);
+
+    cerr << "note = " << m_predominantNote << " shift = " << m_predominantShift << " f0bin = " << f0bin << " interpolated = " << interpolated << " f0 = " << f0 << endl;
+    
+    Feature f;
+    f.hasTimestamp = false;
+    f.hasDuration = false;
+    f.values.push_back(f0);
+    fl.push_back(f);
+    return fl;
 }
 
 Vamp::Plugin::FeatureList

@@ -86,12 +86,16 @@ protected:
     vector<MedianFilter<double> *> m_postFilter;
     vector<map<int, double> > m_pianoRoll;
     vector<map<int, int> > m_pianoRollShifts;
+    int m_predominantNote;
+    int m_predominantShift;
 
     Grid preProcess(const Grid &);
 
     void postProcess(const vector<double> &pitches,
                      const vector<int> &bestShifts,
                      bool wantShifts); // -> piano roll column
+
+    FeatureList convertF0Features(const vector<double> &cq, int shiftCount);
 
     FeatureList noteTrack(int shiftCount);
 
@@ -109,6 +113,7 @@ protected:
 
     mutable int m_notesOutputNo;
     mutable int m_fcqOutputNo;
+    mutable int m_f0OutputNo;
 };
 
 #endif
