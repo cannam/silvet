@@ -492,11 +492,12 @@ Silvet::transcribe(const Grid &cqout)
             localPitches[i][j] = pitchDist[j] * sum;
 
             int bestShift = 0;
-            int bestShiftValue = 0.0;
+            float bestShiftValue = 0.0;
             if (wantShifts) {
                 for (int k = 0; k < shiftCount; ++k) {
-                    if (k == 0 || shiftDist[k][j] > bestShiftValue) {
-                        bestShiftValue = shiftDist[k][j];
+                    float value = shiftDist[k][j];
+                    if (k == 0 || value > bestShiftValue) {
+                        bestShiftValue = value;
                         bestShift = k;
                     }
                 }
