@@ -79,43 +79,6 @@ public:
      */
     Vamp::RealTime getDuration() const;
 
-    /**
-     * Convert the given sequence of accepted hypotheses into a
-     * sampled series of pitches (in Hz), returned at regular
-     * intervals determined by the given start time, end time, and
-     * interval. The range is [start,end], i.e. the end time is
-     * included. The interval must be greater than zero.
-     *
-     * Unvoiced samples are returned as 0Hz.
-     */
-    static std::vector<double> sample(const std::set<NoteHypothesis> &,
-                                      Vamp::RealTime startTime,
-                                      Vamp::RealTime endTime,
-                                      Vamp::RealTime interval);
-
-    /**
-     *!!! No! Not equally spaced, should be able to be anything [ordered]
-     
-     * Given a series of equally spaced observations, return a series
-     * of the same number of pitches (in Hz) calculated by running an
-     * AgentFeeder<NoteHypothesis> on the observations and flattening
-     * and sampling the resulting accepted hypotheses.
-     *
-     * The result should contain only pitches that contributed to
-     * recognised notes in the input observations, with the remaining
-     * (unvoiced) samples returned as 0Hz.
-     *
-     * If the input observations are not equally spaced, the result is
-     * undefined.
-     *!!! (what about rounding errors from RealTime to frame and vice versa?)
-     *!!! (should provide a Timebase?)
-     *!!! update docs for updated api
-     */
-    static std::vector<double> winnow(const Observations &,
-                                      Vamp::RealTime startTime,
-                                      Vamp::RealTime endTime,
-                                      Vamp::RealTime interval);
-
     //!!!
     bool operator==(const NoteHypothesis &other) const {
         return m_state == other.m_state && m_pending == other.m_pending;
