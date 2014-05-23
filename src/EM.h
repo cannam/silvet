@@ -26,6 +26,8 @@ public:
     EM(const InstrumentPack *pack, bool useShifts); // pack must outlive me
     ~EM();
 
+    void setPitchSparsity(float sparsity) { m_pitchSparsity = sparsity; }
+
     int getBinCount() const { return m_binCount; }
     int getNoteCount() const { return m_noteCount; }
     int getSourceCount() const { return m_sourceCount; }
@@ -90,9 +92,9 @@ private:
     const int m_binCount;
     const int m_sourceCount;
     
-    const float m_pitchSparsity;
-    const float m_shiftSparsity;
-    const float m_sourceSparsity;
+    float m_pitchSparsity;
+    float m_shiftSparsity;
+    float m_sourceSparsity;
 
     const int m_lowestPitch;
     const int m_highestPitch;

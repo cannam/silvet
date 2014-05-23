@@ -480,6 +480,8 @@ Silvet::transcribe(const Grid &cqout)
 
         EM em(&pack, m_hqMode);
 
+        em.setPitchSparsity(pack.pitchSparsity);
+
         for (int j = 0; j < iterations; ++j) {
             em.iterate(filtered.at(i).data());
         }
@@ -633,19 +635,13 @@ Silvet::postProcess(const vector<double> &pitches,
 
     // Threshold for level and reduce number of candidate pitches
 
-    int polyphony = 5;
-
-    //!!! make this a parameter (was 4.8, try adjusting, compare levels against matlab code)
-    double threshold = 6;
-//    double threshold = 4.8;
-
     typedef std::multimap<double, int> ValueIndexMap;
 
     ValueIndexMap strengths;
 
     for (int j = 0; j < pack.templateNoteCount; ++j) {
         double strength = filtered[j];
-        if (strength < threshold) continue;
+        if (strength < pack.levelThreshold) continue;
         strengths.insert(ValueIndexMap::value_type(strength, j));
     }
 
@@ -654,7 +650,7 @@ Silvet::postProcess(const vector<double> &pitches,
     map<int, double> active;
     map<int, int> activeShifts;
 
-    while (int(active.size()) < polyphony && si != strengths.begin()) {
+    while (int(active.size()) < pack.maxPolyphony && si != strengths.begin()) {
 
         --si;
 

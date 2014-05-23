@@ -131,6 +131,8 @@ InstrumentPack::listInstrumentPacks()
 			 silvet_templates_highest_note,
 			 "Piano",
 			 pianoTemplates);
+    piano.maxPolyphony = 8;
+    piano.levelThreshold = 3;
     if (isOK(piano)) {
 	ii.push_back(piano);
     }
@@ -145,16 +147,21 @@ InstrumentPack::listInstrumentPacks()
 	Templates t = templatesFor(simpleInstruments[i+1]);
 	tt.push_back(t);
 	allTemplates.push_back(t);
-	if (isString(i)) {
-	    stringTemplates.push_back(t);
-	}
-	if (isWind(i)) {
-	    windTemplates.push_back(t);
-	}
 	InstrumentPack instr(t.lowestNote,
 			     t.highestNote,
 			     simpleInstruments[i],
 			     tt);
+        instr.pitchSparsity = 1.5;
+	if (isString(i)) {
+            instr.maxPolyphony = 2;
+            instr.levelThreshold = 3;
+	    stringTemplates.push_back(t);
+	}
+	if (isWind(i)) {
+            instr.maxPolyphony = 1;
+            instr.levelThreshold = 5;
+	    windTemplates.push_back(t);
+	}
 	if (isOK(instr)) {
 	    ii.push_back(instr);
 	}
@@ -164,6 +171,8 @@ InstrumentPack::listInstrumentPacks()
 		       silvet_templates_highest_note,
 		       "Multiple or unknown instruments",
 		       allTemplates);
+    all.maxPolyphony = 5;
+    all.levelThreshold = 6;//!!! but this does need to be a parameter too, or else we need to be able to detect very quiet stuff somehow
     if (isOK(all)) {
 	ii.insert(ii.begin(), all);
     }
@@ -172,6 +181,8 @@ InstrumentPack::listInstrumentPacks()
 			   silvet_templates_highest_note, // violin
 			   "String ensemble",
 			   stringTemplates);
+    strings.maxPolyphony = 5;
+    strings.levelThreshold = 3;
     if (isOK(strings)) {
 	ii.push_back(strings);
     }
@@ -180,6 +191,8 @@ InstrumentPack::listInstrumentPacks()
 			 silvet_templates_highest_note,  // flute
 			 "Wind ensemble",
 			 windTemplates);
+    winds.maxPolyphony = 5;
+    winds.levelThreshold = 5;
     if (isOK(winds)) {
 	ii.push_back(winds);
     }
