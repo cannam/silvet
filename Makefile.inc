@@ -19,11 +19,30 @@ PLUGIN_LDFLAGS := $(LDFLAGS) $(PLUGIN_LDFLAGS)
 
 PLUGIN	:= silvet$(PLUGIN_EXT)
 
-PLUGIN_HEADERS := $(SRC_DIR)/Silvet.h $(SRC_DIR)/EM.h $(SRC_DIR)/Instruments.h
-PLUGIN_SOURCES := $(SRC_DIR)/Silvet.cpp $(SRC_DIR)/EM.cpp $(SRC_DIR)/Instruments.cpp $(SRC_DIR)/libmain.cpp
+PLUGIN_HEADERS := \
+	$(SRC_DIR)/Silvet.h \
+	$(SRC_DIR)/EM.h \
+	$(SRC_DIR)/Instruments.h \
+	$(SRC_DIR)/AgentFeeder.h \
+	$(SRC_DIR)/AgentFeederMono.h \
+	$(SRC_DIR)/AgentFeederPoly.h \
+	$(SRC_DIR)/AgentHypothesis.h \
+	$(SRC_DIR)/NoteHypothesis.h
 
-BQVEC_HEADERS	:= $(BQVEC_DIR)/Allocators.h $(BQVEC_DIR)/Restrict.h $(BQVEC_DIR)/VectorOps.h
-BQVEC_SOURCES	:= $(BQVEC_DIR)/Allocators.cpp
+PLUGIN_SOURCES := \
+	$(SRC_DIR)/Silvet.cpp \
+	$(SRC_DIR)/EM.cpp \
+	$(SRC_DIR)/Instruments.cpp \
+	$(SRC_DIR)/NoteHypothesis.cpp \
+	$(SRC_DIR)/libmain.cpp
+
+BQVEC_HEADERS	:= \
+	$(BQVEC_DIR)/Allocators.h \
+	$(BQVEC_DIR)/Restrict.h \
+	$(BQVEC_DIR)/VectorOps.h
+
+BQVEC_SOURCES	:= \
+	$(BQVEC_DIR)/Allocators.cpp
 
 HEADERS	     := $(PLUGIN_HEADERS) $(BQVEC_HEADERS)
 SOURCES	     := $(PLUGIN_SOURCES) $(BQVEC_SOURCES)
