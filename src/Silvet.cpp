@@ -534,18 +534,20 @@ Silvet::transcribe(const Grid &cqout)
             for (int j = 0; j < pack.templateNoteCount; ++j) {
                 m_postFilter[j]->push(0.0);
             }
-            continue;
-        }
+        } else {
 
-        postProcess(localPitches[i], localBestShifts[i], 
-                    wantShifts, shiftCount);
+            postProcess(localPitches[i], localBestShifts[i], 
+                        wantShifts, shiftCount);
         
-        FeatureList noteFeatures = obtainNotes();
+            FeatureList noteFeatures = obtainNotes();
 
-        for (FeatureList::const_iterator fi = noteFeatures.begin();
-             fi != noteFeatures.end(); ++fi) {
-            fs[m_notesOutputNo].push_back(*fi);
+            for (FeatureList::const_iterator fi = noteFeatures.begin();
+                 fi != noteFeatures.end(); ++fi) {
+                fs[m_notesOutputNo].push_back(*fi);
+            }
         }
+
+        ++m_columnCountOut;
     }
 
     return fs;
@@ -677,8 +679,6 @@ Silvet::postProcess(const vector<double> &pitches,
         AgentHypothesis::Observation obs(freq, t, confidence);
         m_agentFeeder->feed(obs);
     }
-
-    m_columnCountOut ++;
 }
 
 Vamp::Plugin::FeatureList
