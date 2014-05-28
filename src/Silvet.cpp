@@ -499,6 +499,8 @@ Silvet::transcribe(const Grid &cqout)
 
         EM em(&pack, m_hqMode);
 
+        em.setPitchSparsity(pack.pitchSparsity);
+
         for (int j = 0; j < iterations; ++j) {
             em.iterate(filtered.at(i).data());
         }
@@ -648,7 +650,7 @@ Silvet::postProcess(const vector<double> &pitches,
         filtered.push_back(m_postFilter[j]->get());
     }
 
-    double threshold = 1;
+    double threshold = 1; //!!! pack.levelThreshold
 
     double columnDuration = 1.0 / m_colsPerSec;
     int postFilterLatency = int(m_postFilter[0]->getSize() / 2);

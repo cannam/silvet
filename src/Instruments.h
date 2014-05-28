@@ -39,6 +39,11 @@ public:
 
     int lowestNote;
     int highestNote;
+
+    int maxPolyphony; // realistic practical limit, not a theoretical one
+    float pitchSparsity;
+    float levelThreshold;
+
     std::string name;
 
     struct Templates {
@@ -57,6 +62,9 @@ private:
 		   std::vector<Templates> tt) :
 	lowestNote(lowest),
 	highestNote(highest),
+        maxPolyphony(5),
+        pitchSparsity(1.1),
+        levelThreshold(5),
 	name(n),
 	templates(tt) { }
 };
