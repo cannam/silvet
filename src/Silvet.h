@@ -88,7 +88,6 @@ protected:
     vector<MedianFilter<double> *> m_postFilter;
 
     AgentFeeder *m_agentFeeder;
-    std::set<NoteHypothesis> m_emitted;
 
     Grid preProcess(const Grid &);
 

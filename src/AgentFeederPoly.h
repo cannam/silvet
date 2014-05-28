@@ -71,12 +71,13 @@ public:
         }
     }
 
-    std::set<Hypothesis> getAcceptedHypotheses() const {
+    std::set<Hypothesis> retrieveAcceptedHypotheses() {
         std::set<Hypothesis> hs;
         for (typename Hypotheses::const_iterator i = m_state.completed.begin();
              i != m_state.completed.end(); ++i) {
             hs.insert(*i);
         }
+        m_state.completed.clear();
         return hs;
     }
 

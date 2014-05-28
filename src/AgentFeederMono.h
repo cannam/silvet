@@ -148,8 +148,10 @@ public:
         }
     }
 
-    Hypotheses getAcceptedHypotheses() const {
-        return m_accepted;
+    Hypotheses retrieveAcceptedHypotheses() {
+        Hypotheses aa = m_accepted;
+        m_accepted.clear();
+        return aa;
     }
 
 private:

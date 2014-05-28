@@ -696,19 +696,13 @@ Silvet::obtainNotes()
         return noteFeatures;
     }
 
-    std::set<NoteHypothesis> hh = feeder->getAcceptedHypotheses();
+    std::set<NoteHypothesis> hh = feeder->retrieveAcceptedHypotheses();
 
     //!!! inefficient
     for (std::set<NoteHypothesis>::const_iterator hi = hh.begin();
          hi != hh.end(); ++hi) { 
 
         NoteHypothesis h(*hi);
-
-        if (m_emitted.find(h) != m_emitted.end()) {
-            continue; // already returned this one
-        }
-
-        m_emitted.insert(h);
 
         NoteHypothesis::Note n = h.getAveragedNote();
 
