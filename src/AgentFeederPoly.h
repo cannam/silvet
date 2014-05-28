@@ -20,8 +20,9 @@
 #include "AgentFeeder.h"
 
 #include <cassert>
+#include <stdexcept>
 
-//#define DEBUG_FEEDER 1
+#define DEBUG_FEEDER 1
 
 /**
  * Take a series of observations or estimates (one at a time) and feed
@@ -39,10 +40,9 @@
 template <typename Hypothesis>
 class AgentFeederPoly : public AgentFeeder
 {
-public:
-    typedef std::set<Hypothesis> Hypotheses;
-    
 private:
+    typedef std::vector<Hypothesis> Hypotheses;
+
     struct State {
         Hypotheses provisional;
         Hypotheses satisfied;
@@ -55,10 +55,10 @@ public:
 
     virtual void feed(AgentHypothesis::Observation o) {
 #ifdef DEBUG_FEEDER        
-        std::cerr << "feed: have observation [value = " << o.value << ", time = " << o.time << "]" << std::endl;
+        std::cerr << "\nfeed: have observation [value = " << o.value << ", time = " << o.time << "]" << std::endl;
 #endif
 
-        update(m_state, o);
+        m_state = update(m_state, o);
     }
 
     virtual void finish() {
@@ -67,16 +67,21 @@ public:
 #endif
         for (typename Hypotheses::const_iterator i = m_state.satisfied.begin();
              i != m_state.satisfied.end(); ++i) {
-            m_state.completed.insert(*i);
+            m_state.completed.push_back(*i);
         }
     }
 
-    Hypotheses getAcceptedHypotheses() const {
-        return m_state.completed;
+    std::set<Hypothesis> getAcceptedHypotheses() const {
+        std::set<Hypothesis> hs;
+        for (typename Hypotheses::const_iterator i = m_state.completed.begin();
+             i != m_state.completed.end(); ++i) {
+            hs.insert(*i);
+        }
+        return hs;
     }
 
 private:
-    void update(State &s, AgentHypothesis::Observation o) {
+    State update(State s, AgentHypothesis::Observation o) {
 
         /*
           An observation can "belong" to any number of provisional
@@ -98,14 +103,14 @@ private:
           must be discarded.
         */
 
+        State newState;
+
         // We only ever add to the completed hypotheses, never remove
         // anything from them. But we may remove from provisional (if
         // rejected or transferred to satisfied) and satisfied (when
         // completed).
-
-        Hypotheses toCompleted;
-        Hypotheses toSatisfied;
-        Hypotheses toProvisional;
+        
+        newState.completed = s.completed;
         
         bool swallowed = false;
 
@@ -126,6 +131,7 @@ private:
                 // for expiry, because the state is only updated when
                 // accept() is called.
                 //!!! That looks like a limitation in the Hypothesis API
+                newState.satisfied.push_back(h);
 
             } else { // !swallowed
 
@@ -134,8 +140,11 @@ private:
                     std::cerr << "accepted by satisfied hypothesis " << &(*i) << ", state is " << h.getState() << std::endl;
 #endif
                     swallowed = true;
+                    newState.satisfied.push_back(h);
                 } else if (h.getState() == Hypothesis::Expired) {
-                    toCompleted.insert(h);
+                    newState.completed.push_back(h);
+                } else {
+                    newState.satisfied.push_back(h);
                 }
             }
         }
@@ -147,6 +156,7 @@ private:
 #endif
             // no provisional hypotheses have become satisfied, no new
             // ones have been introduced
+            newState.provisional = s.provisional;
 
         } else {
 
@@ -171,13 +181,13 @@ private:
                 if (promoted == Hypothesis() &&
                     h.accept(o) &&
                     h.getState() == Hypothesis::Satisfied) {
-                    toSatisfied.insert(h);
+                    newState.satisfied.push_back(h);
 #ifdef DEBUG_FEEDER        
                     std::cerr << "promoting a hypothesis to satisfied, have " << newState.satisfied.size() << " satisfied now" << std::endl;
 #endif
                     promoted = h;
                 } else if (h.getState() != Hypothesis::Rejected) {
-                    // leave as provisional
+                    newState.provisional.push_back(h);
                 }
             }
 
@@ -189,50 +199,41 @@ private:
                 h.accept(o);
 
                 if (h.getState() == Hypothesis::Provisional) {
-                    toProvisional.insert(h);
+                    newState.provisional.push_back(h);
                 } else if (h.getState() == Hypothesis::Satisfied) {
-                    toSatisfied.insert(h);
+                    newState.satisfied.push_back(h);
                 }
 
 #ifdef DEBUG_FEEDER        
                 std::cerr << "update: new hypothesis of state " << h.getState() << ", provisional count -> " << newState.provisional.size() << std::endl;
 #endif
+            } else {
 
+#ifdef DEBUG_FEEDER        
+                std::cerr << "a hypothesis became satisfied, reaping its observations" << std::endl;
+#endif
+                newState = reap(newState);
             }
         }
 
-        for (typename Hypotheses::const_iterator i = toCompleted.begin();
-             i != toCompleted.end(); ++i) {
-            s.satisfied.erase(*i);
-            s.completed.insert(*i);
-        }
-        for (typename Hypotheses::const_iterator i = toSatisfied.begin();
-             i != toSatisfied.end(); ++i) {
-            s.provisional.erase(*i);
-            s.satisfied.insert(*i);
-        }
-        for (typename Hypotheses::const_iterator i = toProvisional.begin();
-             i != toProvisional.end(); ++i) {
-            s.provisional.insert(*i);
-        }
-
-        reap(s);
+        return newState;
     }
 
-    void reap(State &s) {
+    State reap(State s) {
 
         // "When a hypothesis subsequently becomes satisfied, all
         // other provisional hypotheses containing any of its
         // observations must be discarded."
 
-        if (s.provisional.empty()) return;
+        if (s.provisional.empty()) return s;
 
         int reaped = 0;
 
-        Hypotheses toRemove = Hypotheses();;
+        Hypotheses prior = s.provisional;
+        s.provisional = Hypotheses();
 
-        for (typename Hypotheses::const_iterator hi = s.provisional.begin();
-             hi != s.provisional.end(); ++hi) {
+        for (typename Hypotheses::const_iterator hi = prior.begin();
+             hi != prior.end(); ++hi) {
                     
             const AgentHypothesis::Observations obs =
                 hi->getAcceptedObservations();
@@ -261,15 +262,11 @@ private:
                 }
             }
 
-            if (!keep) {
-                toRemove.insert(*hi);
+            if (keep) {
+                s.provisional.push_back(*hi);
+            } else {
                 ++reaped;
             }
-        }
-        
-        for (typename Hypotheses::const_iterator i = toRemove.begin();
-             i != toRemove.end(); ++i) {
-            s.provisional.erase(i);
         }
 
 #ifdef DEBUG_FEEDER
@@ -279,6 +276,8 @@ private:
                   << s.completed.size() << " completed, reaped "
                   << reaped << std::endl;
 #endif
+
+        return s;
     }
 };
 

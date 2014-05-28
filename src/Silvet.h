@@ -24,6 +24,7 @@
 
 #include "MedianFilter.h"
 #include "Instruments.h"
+#include "NoteHypothesis.h"
 
 using std::string;
 using std::vector;
@@ -32,6 +33,7 @@ using std::map;
 
 class Resampler;
 class CQSpectrogram;
+class AgentFeeder;
 
 class Silvet : public Vamp::Plugin
 {
@@ -84,19 +86,18 @@ protected:
     typedef vector<vector<double> > Grid;
 
     vector<MedianFilter<double> *> m_postFilter;
-    vector<map<int, double> > m_pianoRoll;
-    vector<map<int, int> > m_pianoRollShifts;
+
+    AgentFeeder *m_agentFeeder;
+    std::set<NoteHypothesis> m_emitted;
 
     Grid preProcess(const Grid &);
 
     void postProcess(const vector<double> &pitches,
                      const vector<int> &bestShifts,
-                     bool wantShifts); // -> piano roll column
+                     bool wantShifts,
+                     int shiftCount); // -> feeder
 
-    FeatureList noteTrack(int shiftCount);
-
-    void emitNote(int start, int end, int note, int shiftCount,
-                  FeatureList &noteFeatures);
+    FeatureList obtainNotes();
 
     FeatureSet transcribe(const Grid &);
 
@@ -104,7 +105,8 @@ protected:
     float noteFrequency(int n, int shift, int shiftCount) const;
 
     int m_blockSize;
-    int m_columnCount;
+    int m_columnCountIn;
+    int m_columnCountOut;
     Vamp::RealTime m_startTime;
 
     mutable int m_notesOutputNo;

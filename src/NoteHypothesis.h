@@ -47,21 +47,33 @@ public:
     virtual Observations getAcceptedObservations() const;
 
     struct Note {
-        Note() : freq(0), time(), duration() { }
-        Note(double _f, Vamp::RealTime _t, Vamp::RealTime _d) :
-            freq(_f), time(_t), duration(_d) { }
+        Note() : freq(0), time(), duration(), confidence(1.0) { }
+        Note(double _f, Vamp::RealTime _t, Vamp::RealTime _d, double _i) :
+            freq(_f), time(_t), duration(_d), confidence(_i) { }
         bool operator==(const Note &e) const {
-            return e.freq == freq && e.time == time && e.duration == duration;
+            return e.freq == freq && e.time == time && 
+                e.duration == duration && e.confidence == confidence;
         }
 	double freq;
 	Vamp::RealTime time;
 	Vamp::RealTime duration;
+        double confidence;
     };
     
     /**
      * Return the mean frequency of the accepted observations
      */
     double getMeanFrequency() const;
+    
+    /**
+     * Return the median frequency of the accepted observations
+     */
+    double getMedianFrequency() const;
+    
+    /**
+     * Return the median confidence of the accepted observations
+     */
+    double getMedianConfidence() const;
 
     /**
      * Return a single note roughly matching this hypothesis
@@ -85,7 +97,25 @@ public:
     }
 
     bool operator<(const NoteHypothesis &other) const {
-        return getStartTime() < other.getStartTime();
+        if (getStartTime() != other.getStartTime()) {
+            return getStartTime() < other.getStartTime();
+        } else if (m_state != other.m_state) {
+            return m_state < other.m_state;
+        } else if (m_pending.size() != other.m_pending.size()) {
+            return m_pending.size() < other.m_pending.size();
+        } else {
+            Observations::const_iterator i = m_pending.begin();
+            Observations::const_iterator j = other.m_pending.begin();
+            while (i != m_pending.end()) {
+                if (*i == *j) {
+                    ++i;
+                    ++j;
+                } else {
+                    return *i < *j;
+                }
+            }
+            return false;
+        }
     }
 
 private:

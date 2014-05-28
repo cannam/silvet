@@ -21,10 +21,14 @@
 #include <cassert>
 
 #include <map>
+#include <algorithm>
 
 using Vamp::RealTime;
 
-//#define DEBUG_NOTE_HYPOTHESIS 1
+using std::cerr;
+using std::endl;
+
+#define DEBUG_NOTE_HYPOTHESIS 1
 
 NoteHypothesis::NoteHypothesis()
 {
@@ -50,8 +54,8 @@ NoteHypothesis::isWithinTolerance(Observation s) const
     double r = s.value / last.value;
     int cents = lrint(1200.0 * (log(r) / log(2.0)));
 #ifdef DEBUG_NOTE_HYPOTHESIS
-    std::cerr << "isWithinTolerance: this " << s.value << " is " << cents
-              << " cents from prior " << last.value << std::endl;
+    cerr << "isWithinTolerance: this " << s.value << " is " << cents
+              << " cents from prior " << last.value << endl;
 #endif
     if (cents < -60 || cents > 60) return false;
 
@@ -60,8 +64,8 @@ NoteHypothesis::isWithinTolerance(Observation s) const
     r = s.value / meanFreq;
     cents = lrint(1200.0 * (log(r) / log(2.0)));
 #ifdef DEBUG_NOTE_HYPOTHESIS
-    std::cerr << "isWithinTolerance: this " << s.value << " is " << cents
-              << " cents from mean " << meanFreq << std::endl;
+    cerr << "isWithinTolerance: this " << s.value << " is " << cents
+              << " cents from mean " << meanFreq << endl;
 #endif
     if (cents < -80 || cents > 80) return false;
     
@@ -78,10 +82,10 @@ NoteHypothesis::isOutOfDateFor(Observation s) const
     Observation last = *i;
 
 #ifdef DEBUG_NOTE_HYPOTHESIS
-    std::cerr << "isOutOfDateFor: this " << s.time << " is "
+    cerr << "isOutOfDateFor: this " << s.time << " is "
               << (s.time - last.time) << " from last " << last.time
               << " (threshold " << RealTime::fromMilliseconds(40) << ")"
-              << std::endl;
+              << endl;
 #endif
 
     return ((s.time - last.time) > RealTime::fromMilliseconds(40));
@@ -99,17 +103,31 @@ NoteHypothesis::isSatisfied() const
     }
     meanConfidence /= m_pending.size();
 
+    //!!! surely this depends on the hop size?
     int lengthRequired = 100;
     if (meanConfidence > 0.0) {
         lengthRequired = int(2.0 / meanConfidence + 0.5);
     }
-//    if (lengthRequired < 1) lengthRequired = 1;
+    //!!! 
+    lengthRequired = lengthRequired / 2;
+    if (lengthRequired < 1) lengthRequired = 1;
 
 #ifdef DEBUG_NOTE_HYPOTHESIS
-    std::cerr << "meanConfidence " << meanConfidence << ", lengthRequired " << lengthRequired << std::endl;
+    cerr << "meanConfidence " << meanConfidence << ", lengthRequired " << lengthRequired << endl;
 #endif
 
     return ((int)m_pending.size() > lengthRequired);
+}
+
+static void printState(NoteHypothesis::State s)
+{
+    switch (s) {
+    case NoteHypothesis::New: cerr << "New"; break;
+    case NoteHypothesis::Provisional: cerr << "Provisional"; break;
+    case NoteHypothesis::Rejected: cerr << "Rejected"; break;
+    case NoteHypothesis::Satisfied: cerr << "Satisfied"; break;
+    case NoteHypothesis::Expired: cerr << "Expired"; break;
+    }
 }
 
 bool
@@ -118,7 +136,9 @@ NoteHypothesis::accept(Observation s)
     bool accept = false;
 
 #ifdef DEBUG_NOTE_HYPOTHESIS
-    std::cerr << "NoteHypothesis[" << this << "]::accept: state " << m_state << "..." << std::endl;
+    cerr << "NoteHypothesis[" << this << "]::accept (value " << s.value << ", time " << s.time << ", confidence " << s.confidence << "): state ";
+    printState(m_state);
+    cerr << "..." << endl;
 #endif
 
     static double negligibleConfidence = 0.0001;
@@ -164,14 +184,23 @@ NoteHypothesis::accept(Observation s)
     }
 
     if (accept) {
+#ifdef DEBUG_NOTE_HYPOTHESIS
+        cerr << "... accepting" << endl;
+#endif
         m_pending.insert(s);
         if (m_state == Provisional && isSatisfied()) {
             m_state = Satisfied;
         }
+    } else {
+#ifdef DEBUG_NOTE_HYPOTHESIS
+        cerr << "... not accepting" << endl;
+#endif
     }
 
 #ifdef DEBUG_NOTE_HYPOTHESIS
-    std::cerr << "... -> " << m_state << " (pending: " << m_pending.size() << ")" << std::endl;
+    cerr << "... -> ";
+    printState(m_state);
+    cerr << " (pending: " << m_pending.size() << ")" << endl;
 #endif
 
     return accept;
@@ -194,6 +223,19 @@ NoteHypothesis::getAcceptedObservations() const
 }
 
 double
+NoteHypothesis::getMedianFrequency() const
+{
+    if (m_pending.empty()) return 0.0;
+    std::vector<double> freqs;
+    for (Observations::const_iterator i = m_pending.begin();
+         i != m_pending.end(); ++i) {
+        freqs.push_back(i->value);
+    }
+    std::sort(freqs.begin(), freqs.end());
+    return freqs[freqs.size()/2];
+}
+
+double
 NoteHypothesis::getMeanFrequency() const
 {
     double acc = 0.0;
@@ -206,6 +248,19 @@ NoteHypothesis::getMeanFrequency() const
     return acc;
 }
 
+double
+NoteHypothesis::getMedianConfidence() const
+{
+    if (m_pending.empty()) return 0.0;
+    std::vector<double> confs;
+    for (Observations::const_iterator i = m_pending.begin();
+         i != m_pending.end(); ++i) {
+        confs.push_back(i->confidence);
+    }
+    std::sort(confs.begin(), confs.end());
+    return confs[confs.size()/2];
+}
+
 NoteHypothesis::Note
 NoteHypothesis::getAveragedNote() const
 {
@@ -213,9 +268,8 @@ NoteHypothesis::getAveragedNote() const
 
     n.time = getStartTime();
     n.duration = getDuration();
-
-    // just mean frequency for now, but this isn't at all right perceptually
-    n.freq = getMeanFrequency();
+    n.freq = getMedianFrequency();
+    n.confidence = getMedianConfidence();
     
     return n;
 }
