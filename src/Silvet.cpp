@@ -334,6 +334,15 @@ Silvet::noteFrequency(int note, int shift, int shiftCount) const
     return float(27.5 * pow(2.0, (note + pshift) / 12.0));
 }
 
+float
+Silvet::roundToMidiFrequency(float freq) const
+{
+    // n is our note number, not actually MIDI note number as we have
+    // a different origin
+    float n = 12.0 * (log(freq / 27.5) / log(2.0));
+    return 27.5 * pow(2.0, round(n) / 12.0);
+}
+
 bool
 Silvet::initialise(size_t channels, size_t stepSize, size_t blockSize)
 {
@@ -397,7 +406,8 @@ Silvet::reset()
     }
     m_postFilter.clear();
     for (int i = 0; i < m_instruments[0].templateNoteCount; ++i) {
-        m_postFilter.push_back(new MedianFilter<double>(3));
+//!!!        m_postFilter.push_back(new MedianFilter<double>(3));
+        m_postFilter.push_back(new MedianFilter<double>(1));//!!!
     }
 
     m_columnCountIn = 0;
@@ -709,13 +719,18 @@ Silvet::obtainNotes()
         int velocity = n.confidence * 127;
         if (velocity > 127) velocity = 127;
 
+        float freq = n.freq;
+        if (!m_fineTuning) {
+            freq = roundToMidiFrequency(freq);
+        }
+
         Feature f;
         f.hasTimestamp = true;
         f.hasDuration = true;
         f.timestamp = n.time;
         f.duration = n.duration;
         f.values.clear();
-        f.values.push_back(n.freq);
+        f.values.push_back(freq);
         f.values.push_back(velocity);
 //        f.label = noteName(note, partShift, shiftCount);
         noteFeatures.push_back(f);

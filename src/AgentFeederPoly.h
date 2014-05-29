@@ -22,7 +22,7 @@
 #include <cassert>
 #include <stdexcept>
 
-#define DEBUG_FEEDER 1
+//#define DEBUG_FEEDER 1
 
 /**
  * Take a series of observations or estimates (one at a time) and feed

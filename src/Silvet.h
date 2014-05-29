@@ -102,6 +102,7 @@ protected:
 
     string noteName(int n, int shift, int shiftCount) const;
     float noteFrequency(int n, int shift, int shiftCount) const;
+    float roundToMidiFrequency(float f) const;
 
     int m_blockSize;
     int m_columnCountIn;

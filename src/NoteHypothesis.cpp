@@ -28,7 +28,7 @@ using Vamp::RealTime;
 using std::cerr;
 using std::endl;
 
-#define DEBUG_NOTE_HYPOTHESIS 1
+//#define DEBUG_NOTE_HYPOTHESIS 1
 
 NoteHypothesis::NoteHypothesis()
 {
@@ -119,6 +119,7 @@ NoteHypothesis::isSatisfied() const
     return ((int)m_pending.size() > lengthRequired);
 }
 
+#ifdef DEBUG_NOTE_HYPOTHESIS
 static void printState(NoteHypothesis::State s)
 {
     switch (s) {
@@ -129,6 +130,7 @@ static void printState(NoteHypothesis::State s)
     case NoteHypothesis::Expired: cerr << "Expired"; break;
     }
 }
+#endif
 
 bool
 NoteHypothesis::accept(Observation s)
