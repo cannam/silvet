@@ -75,7 +75,17 @@ public:
         std::set<Hypothesis> hs;
         for (typename Hypotheses::const_iterator i = m_state.completed.begin();
              i != m_state.completed.end(); ++i) {
-            hs.insert(*i);
+            Hypothesis h(*i);
+#ifdef DEBUG_FEEDER
+            std::cerr << "returning accepted hypothesis: strengths: ";
+            for (typename Hypothesis::Observations::const_iterator j = 
+                     h.getAcceptedObservations().begin(); 
+                 j != h.getAcceptedObservations().end(); ++j) {
+                std::cerr << j->confidence << " ";
+            }
+            std::cerr << std::endl;
+#endif
+            hs.insert(h);
         }
         m_state.completed.clear();
         return hs;
