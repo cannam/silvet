@@ -31,7 +31,9 @@
  * moment (that is, the earliest contemporary hypothesis to have
  * become satisfied). The series of accepted and completed hypotheses
  * from construction to the present time can be queried through
- * getAcceptedHypotheses().
+ * retrieveAcceptedHypotheses(), which detaches them from the current
+ * feeder (i.e. hypotheses returned from one call to this function
+ * will not be returned by any subsequent call).
  *
  * Call feed() to provide a new observation. Call finish() when all
  * observations have been provided. The set of hypotheses returned by
@@ -41,97 +43,103 @@
 template <typename Hypothesis>
 class AgentFeederMono : public AgentFeeder
 {
-public:
-    AgentFeederMono() { }
+private:
+    typedef std::vector<Hypothesis> Hypotheses;
 
-    typedef std::set<Hypothesis> Hypotheses;
+public:
+    AgentFeederMono() : m_haveCurrent(false) { }
 
     virtual void feed(AgentHypothesis::Observation o) {
 
 #ifdef DEBUG_FEEDER        
         std::cerr << "feed: have observation [value = " << o.value << ", time = " << o.time << "]" << std::endl;
 #endif
-        
-        if (!m_current.accept(o)) {
 
+        if (m_haveCurrent) {
+            if (m_current.accept(o)) {
+                return;
+            }
             if (m_current.getState() == Hypothesis::Expired) {
-                m_accepted.insert(m_current);
+                m_accepted.push_back(m_current);
 #ifdef DEBUG_FEEDER        
                 std::cerr << "current has expired, pushing to accepted" << std::endl;
 #endif
+                m_haveCurrent = false;
             }
+        }
 
-            bool swallowed = false;
+        bool swallowed = false;
 
 #ifdef DEBUG_FEEDER        
-            std::cerr << "not swallowed by current" << std::endl;
+        std::cerr << "not swallowed by current" << std::endl;
 #endif
 
-            Hypotheses newCandidates;
+        Hypotheses newCandidates;
 
-            for (typename Hypotheses::iterator i = m_candidates.begin();
-                 i != m_candidates.end(); ++i) {
+        for (typename Hypotheses::iterator i = m_candidates.begin();
+             i != m_candidates.end(); ++i) {
 
-                Hypothesis h = *i;
+            Hypothesis h = *i;
                 
-                if (swallowed) {
+            if (swallowed) {
 
-                    // don't offer: each observation can only belong to one
-                    // satisfied hypothesis
-                    newCandidates.insert(h);
+                // don't offer: each observation can only belong to one
+                // satisfied hypothesis
+                newCandidates.push_back(h);
 
-                } else {
+            } else {
 
-                    if (h.accept(o)) {
+                if (h.accept(o)) {
 #ifdef DEBUG_FEEDER        
-                        std::cerr << "accepted, state is " << h.getState() << std::endl;
+                    std::cerr << "accepted, state is " << h.getState() << std::endl;
 #endif
-                        if (h.getState() == Hypothesis::Satisfied) {
+                    if (h.getState() == Hypothesis::Satisfied) {
 
-                            swallowed = true;
+                        swallowed = true;
         
-                            if (m_current.getState() == Hypothesis::Expired ||
-                                m_current.getState() == Hypothesis::Rejected) {
+                        if (!m_haveCurrent ||
+                            m_current.getState() == Hypothesis::Expired ||
+                            m_current.getState() == Hypothesis::Rejected) {
 #ifdef DEBUG_FEEDER        
-                                std::cerr << "current has ended, updating from candidate" << std::endl;
+                            std::cerr << "current has ended, updating from candidate" << std::endl;
 #endif
-                                m_current = h;
-                            } else {
-                                newCandidates.insert(h);
-                            }
-                            
+                            m_current = h;
+                            m_haveCurrent = true;
                         } else {
-                            newCandidates.insert(h);
+                            newCandidates.push_back(h);
                         }
+
+                    } else {
+                        newCandidates.push_back(h);
                     }
                 }
             }
+        }
             
-            if (!swallowed) {
-                Hypothesis h;
-                h.accept(o); // must succeed, as h is new
-                newCandidates.insert(h);
+        if (!swallowed) {
+            Hypothesis h;
+            h.accept(o); // must succeed, as h is new
+            newCandidates.push_back(h);
 #ifdef DEBUG_FEEDER        
-                std::cerr << "not swallowed, creating new hypothesis" << std::endl;
+            std::cerr << "not swallowed, creating new hypothesis" << std::endl;
 #endif
-            }
+        }
 
-            // reap rejected/expired hypotheses from candidates list,
-            // and assign back to m_candidates
+        // reap rejected/expired hypotheses from candidates list,
+        // and assign back to m_candidates
+        
+        m_candidates.clear();
 
-            m_candidates.clear();
-
-            for (typename Hypotheses::const_iterator i = newCandidates.begin();
-                 i != newCandidates.end(); ++i) {
-                Hypothesis h = *i;
-                if (h.getState() != Hypothesis::Rejected && 
-                    h.getState() != Hypothesis::Expired) {
-                    m_candidates.insert(h);
-                } else {
+        for (typename Hypotheses::const_iterator i = newCandidates.begin();
+             i != newCandidates.end(); ++i) {
+            Hypothesis h = *i;
+            if (h.getState() != Hypothesis::Rejected && 
+                h.getState() != Hypothesis::Expired) {
+                m_candidates.push_back(h);
+            } else {
 #ifdef DEBUG_FEEDER        
-                    std::cerr << "reaping a candidate" << std::endl;
+                std::cerr << "reaping a candidate" << std::endl;
 #endif
-                }
             }
         }  
 #ifdef DEBUG_FEEDER        
@@ -140,23 +148,32 @@ public:
     }
 
     virtual void finish() {
-        if (m_current.getState() == Hypothesis::Satisfied) {
+        if (m_haveCurrent &&
+            (m_current.getState() == Hypothesis::Satisfied)) {
 #ifdef DEBUG_FEEDER        
             std::cerr << "finish: current is satisfied, pushing to accepted" << std::endl;
 #endif
-            m_accepted.insert(m_current);
+            m_accepted.push_back(m_current);
         }
     }
 
-    Hypotheses retrieveAcceptedHypotheses() {
-        Hypotheses aa = m_accepted;
+    std::set<Hypothesis> retrieveAcceptedHypotheses() {
+        std::set<Hypothesis> hs;
+#ifdef DEBUG_FEEDER
+        std::cerr << "retrieveAcceptedHypotheses: returning " << m_accepted.size() << " accepted" << std::endl;
+#endif
+        for (typename Hypotheses::const_iterator i = m_accepted.begin();
+             i != m_accepted.end(); ++i) {
+            hs.insert(*i);
+        }
         m_accepted.clear();
-        return aa;
+        return hs;
     }
 
 private:
     Hypotheses m_candidates;
     Hypothesis m_current;
+    bool m_haveCurrent;
     Hypotheses m_accepted;
 };
 

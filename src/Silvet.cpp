@@ -20,6 +20,7 @@
 
 #include "MedianFilter.h"
 #include "AgentFeederPoly.h"
+#include "AgentFeederMono.h"
 #include "NoteHypothesis.h"
 
 #include "constant-q-cpp/src/dsp/Resampler.h"
@@ -405,7 +406,7 @@ Silvet::reset()
         delete m_postFilter[i];
     }
     m_postFilter.clear();
-    for (int i = 0; i < m_instruments[0].templateNoteCount; ++i) {
+    for (int i = 0; i < m_instruments[m_instrument].templateNoteCount; ++i) {
 //!!!        m_postFilter.push_back(new MedianFilter<double>(3));
         m_postFilter.push_back(new MedianFilter<double>(1));//!!!
     }
@@ -414,7 +415,11 @@ Silvet::reset()
     m_columnCountOut = 0;
     m_startTime = RealTime::zeroTime;
 
-    m_agentFeeder = new AgentFeederPoly<NoteHypothesis>();
+    if (m_instruments[m_instrument].maxPolyphony == 1) {
+        m_agentFeeder = new AgentFeederMono<NoteHypothesis>();
+    } else {
+        m_agentFeeder = new AgentFeederPoly<NoteHypothesis>();
+    }
 }
 
 Silvet::FeatureSet
@@ -696,19 +701,29 @@ Silvet::obtainNotes()
 {        
     FeatureList noteFeatures;
 
-    typedef AgentFeederPoly<NoteHypothesis> NoteFeeder;
+    std::set<NoteHypothesis> hh;
 
-    NoteFeeder *feeder = dynamic_cast<NoteFeeder *>(m_agentFeeder);
+    AgentFeederPoly<NoteHypothesis> *polyFeeder = 
+        dynamic_cast<AgentFeederPoly<NoteHypothesis> *>(m_agentFeeder);
 
-    if (!feeder) {
-        cerr << "INTERNAL ERROR: Feeder is not a poly-note-hypothesis-feeder!"
-             << endl;
+    AgentFeederMono<NoteHypothesis> *monoFeeder = 
+        dynamic_cast<AgentFeederMono<NoteHypothesis> *>(m_agentFeeder);
+
+    if (polyFeeder) {
+
+        hh = polyFeeder->retrieveAcceptedHypotheses();
+
+    } else if (monoFeeder) {
+
+        hh = monoFeeder->retrieveAcceptedHypotheses();
+
+    } else {
+
+        cerr << "INTERNAL ERROR: Feeder is neither poly- nor "
+             << "mono-note-hypothesis-feeder!" << endl;
         return noteFeatures;
     }
 
-    std::set<NoteHypothesis> hh = feeder->retrieveAcceptedHypotheses();
-
-    //!!! inefficient
     for (std::set<NoteHypothesis>::const_iterator hi = hh.begin();
          hi != hh.end(); ++hi) { 
 
