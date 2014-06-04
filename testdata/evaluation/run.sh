@@ -39,8 +39,11 @@ instfile="/tmp/$$instruments.txt"
 trap 'rm -f "$outfile" "$tmpwav" "$instfile" "$outfile.lab"' 0
 
 # Use the mix and single-instrument non-synthetic files for a (varied)
-# subset of the TRIOS dataset
-infiles=`find "$trios_path" -name \*.wav -print | egrep '(mozart|lussier|take_five)' | grep -v _syn`
+# subset of the TRIOS dataset. Omit percussion (but we still use the
+# Take Five example, even though it's largely percussion, because it's
+# a good test of how we do with other instruments in the presence of
+# percussion).
+infiles=`find "$trios_path" -name \*.wav -print | egrep '(mozart|lussier|take_five)' | grep -v _syn.wav | grep -v kick.wav | grep -v ride.wav | grep -v snare.wav`
 
 grep Piano "$rdffile" | sed 's/^.*( *//' | sed 's/ *).*$//' | sed 's/ "/\n/g' | sed 's/"//g' | tr '[A-Z]' '[a-z]' | tail -n +2 | cat -n > "$instfile"
 
@@ -58,7 +61,7 @@ echo
 echo "Input files are:"
 echo $infiles | fmt -1
 
-for infile in $infiles; do
+time for infile in $infiles; do
 
     echo
     echo "Evaluating for file $infile..."
@@ -94,9 +97,11 @@ for infile in $infiles; do
     done > "$outfile.lab"
 
     for ms in 50 100; do
+	mark=""
+	if [ "$ms" = "50" ]; then mark="  <-- main measure"; fi;
 	echo
 	echo "Validating against ground truth at $ms ms:"
-	"$yc" ./evaluate_lab.yeti "$ms" "../TRIOS-groundtruth/$piece/$arrangement.lab" "$outfile.lab"
+	"$yc" ./evaluate_lab.yeti "$ms" "../TRIOS-groundtruth/$piece/$arrangement.lab" "$outfile.lab" | sed 's/$/'"$mark"'/'
 	echo
 	echo "Validating against MIREX submission at $ms ms:"
 	"$yc" ./evaluate_lab.yeti "$ms" "../TRIOS-mirex2012-matlab/$piece/$arrangement.lab" "$outfile.lab"
