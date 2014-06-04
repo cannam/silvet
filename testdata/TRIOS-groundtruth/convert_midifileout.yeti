@@ -1,0 +1,73 @@
+
+// Convert the output of the midifile program
+// (https://code.soundsoftware.ac.uk/projects/midifile)
+// into lab file like those output from the test scripts.
+//
+// The midifile format contains lines looking like:
+//
+// <t>: Note: channel <c> duration <d> pitch <p> velocity <v>
+//
+// where t and d are defined in terms of the timebase and
+// tempo, which are (usually) given in earlier lines:
+//
+// Timing division: <n> ppq
+// <t>: Tempo: <n>
+//
+// Note that we assume 4 quarter-notes per bar and we
+// don't parse time signatures.
+// 
+// The output file format looks like:
+//
+// onset offset frequency
+//
+// with times in seconds.
+
+program convert_midifileout;
+
+usage () =
+    eprintln "\nUsage: convert_midifileout file.txt\n";
+
+toFrequency m = 
+    440 * Math#pow(2.0, (m - 69) / 12.0);
+
+toTime timebase tempo t =
+    (t / timebase) * (60 / tempo);
+
+convert f =
+   (str = openInFile f "UTF-8";
+    var timebase = 480;
+    var tempo = 120;
+    for (str.lines ()) do line:
+        bits = strSplit ": " line;
+        if length bits > 1 then
+            if bits[0] == "Timing division" then
+                timebase := number (strReplace " ppq" "" bits[1]);
+                eprintln "Set timing division to \(timebase)";
+            elif bits[1] == "Tempo" then
+                if length bits < 3 then 
+                    failWith "Too few bits in tempo line: \(line)";
+                fi;
+                tempo := number (bits[2]);
+                eprintln "Set tempo to \(tempo)";
+            elif bits[1] == "Note" then
+                if length bits < 3 then
+                    failWith "Too few bits in note line: \(line)";
+                fi;
+                noteparts = strSplit " " bits[2];
+                if length noteparts < 8 then
+                    failWith "Too few note parameters in line: \(line)";
+                fi;
+                onset = toTime timebase tempo (number bits[0]);
+                duration = toTime timebase tempo (number noteparts[3]);
+                frequency = toFrequency (number noteparts[5]);
+                println "\(onset)\t\(onset + duration)\t\(frequency)";
+            fi;
+        fi;
+    done;
+    str.close ());
+
+case (list _argv) of
+file::[]: convert file;
+_: usage ();
+esac;
+
