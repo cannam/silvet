@@ -27,6 +27,8 @@ case "$trios_path" in
 *\ *) echo "TRIOS dataset path $trios_path has a space in it, this script won't handle that"; exit 1;;
 esac
 
+( cd ../.. ; make -f Makefile.linux ) || exit 1
+
 VAMP_PATH=../..
 export VAMP_PATH
 
@@ -52,6 +54,7 @@ grep Piano "$rdffile" | sed 's/^.*( *//' | sed 's/ *).*$//' | sed 's/ "/\n/g' | 
 instrument_for() {
     filename="$1"
     base=`basename "$filename" .wav`
+    if [ "$base" = "saxophone" ]; then base="tenorsax"; fi
     instrument_no=`grep "$base" "$instfile" | awk '{ print $1; }'`
     if [ -z "$instrument_no" ] || [ -z "$base" ]; 
     then echo 0
