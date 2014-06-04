@@ -17,12 +17,14 @@ if ! sonic-annotator -v ; then
     exit 1
 fi
 
-rdffile="../silvet.n3"
+rdffile="../../silvet.n3"
 if [ ! -f "$rdffile" ] ; then
-    
+    echo "Failed to find plugin RDF file at $rdffile, giving up"
+    exit 1
+fi
 
 case "$trios_path" in
-*\ *) echo "TRIOS dataset path $trios_path has a space in it, this script won't handle that!"; exit 1;;
+*\ *) echo "TRIOS dataset path $trios_path has a space in it, this script won't handle that"; exit 1;;
 esac
 
 VAMP_PATH=../..
@@ -43,14 +45,18 @@ infiles=`find "$trios_path" -name \*.wav -print | egrep '(mozart|lussier|take_fi
 grep Piano "$rdffile" | sed 's/^.*( *//' | sed 's/ *).*$//' | sed 's/ "/\n/g' | sed 's/"//g' | tr '[A-Z]' '[a-z]' | tail -n +2 | cat -n > "$instfile"
 
 instrument_for() {
-    filename="$0"
+    filename="$1"
     base=`basename "$filename" .wav`
     instrument_no=`grep "$base" "$instfile" | awk '{ print $1; }'`
-    if [ -z "$instrument_no" ]; 
+    if [ -z "$instrument_no" ] || [ -z "$base" ]; 
     then echo 0
     else echo "$instrument_no"
     fi
 }
+
+echo
+echo "Input files are:"
+echo $infiles | fmt -1
 
 for infile in $infiles; do
 
@@ -62,15 +68,18 @@ for infile in $infiles; do
 	[0-9]*) ;;
 	*) echo "Instrument extraction failed for infile $infile -- not even default multi-instrument setting returned?"; exit 1;;
     esac
+    
+    piece=`basename \`dirname "$infile" \``
+    arrangement=`basename "$infile" .wav`
 
     echo
-    echo "For file $infile, using instrument setting $instrument..."
+    echo "For piece $piece, arrangement $arrangement, using instrument $instrument..."
 
     sox "$infile" "$tmpwav" gain -n -6.020599913279624
 
     ##!!! todo: actually apply the instrument setting!
 
-    time sonic-annotator \
+    sonic-annotator \
 	--writer csv \
 	--csv-one-file "$outfile" \
 	--csv-force \
@@ -83,9 +92,6 @@ for infile in $infiles; do
 	    end=`echo "$start $duration + p" | dc`
 	    echo -e "$start\t$end\t$frequency"
     done > "$outfile.lab"
-    
-    piece=`basename \`dirname "$infile" \``
-    arrangement=`basename "$infile" .wav`
 
     for ms in 50 100; do
 	echo
