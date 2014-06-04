@@ -131,8 +131,10 @@ InstrumentPack::listInstrumentPacks()
 			 silvet_templates_highest_note,
 			 "Piano",
 			 pianoTemplates);
-    piano.maxPolyphony = 8;
-    piano.levelThreshold = 3;
+//    piano.maxPolyphony = 8;
+//    piano.levelThreshold = 3;
+    piano.maxPolyphony = 5;
+    piano.levelThreshold = 6;
     if (isOK(piano)) {
 	ii.push_back(piano);
     }
@@ -151,15 +153,17 @@ InstrumentPack::listInstrumentPacks()
 			     t.highestNote,
 			     simpleInstruments[i],
 			     tt);
-        instr.pitchSparsity = 1.5;
+//        instr.pitchSparsity = 1.5;
+        instr.maxPolyphony = 5;
+        instr.levelThreshold = 6;
 	if (isString(i)) {
-            instr.maxPolyphony = 2;
-            instr.levelThreshold = 3;
+//            instr.maxPolyphony = 2;
+//            instr.levelThreshold = 3;
 	    stringTemplates.push_back(t);
 	}
 	if (isWind(i)) {
-            instr.maxPolyphony = 1;
-            instr.levelThreshold = 5;
+//            instr.maxPolyphony = 1;
+//            instr.levelThreshold = 5;
 	    windTemplates.push_back(t);
 	}
 	if (isOK(instr)) {

@@ -49,7 +49,7 @@ Audio file "/tmp/5389norm.wav": 1ch at 44100Hz
 
 
 Validating against ground truth at 50 ms:
-precision 43.1, recall 65, accuracy 35, F 51.9  <-- main measure
+precision 43.1, recall 65, accuracy 35, F 51.9  <-- main mozart/piano
 
 Validating against MIREX submission at 50 ms:
 precision 30, recall 39.5, accuracy 20.5, F 34.1
@@ -102,7 +102,7 @@ Audio file "/tmp/5389norm.wav": 1ch at 44100Hz
 
 
 Validating against ground truth at 50 ms:
-precision 27.2, recall 75, accuracy 25, F 40  <-- main measure
+precision 27.2, recall 75, accuracy 25, F 40  <-- main mozart/viola
 
 Validating against MIREX submission at 50 ms:
 precision 43.1, recall 30.6, accuracy 21.8, F 35.8
@@ -155,7 +155,7 @@ Audio file "/tmp/5389norm.wav": 1ch at 44100Hz
 
 
 Validating against ground truth at 50 ms:
-precision 56.8, recall 55.4, accuracy 39, F 56.1  <-- main measure
+precision 56.8, recall 55.4, accuracy 39, F 56.1  <-- main mozart/mix
 
 Validating against MIREX submission at 50 ms:
 precision 60.9, recall 58.8, accuracy 42.7, F 59.8
@@ -208,7 +208,7 @@ Audio file "/tmp/5389norm.wav": 1ch at 44100Hz
 
 
 Validating against ground truth at 50 ms:
-precision 90.5, recall 69.5, accuracy 64.8, F 78.6  <-- main measure
+precision 90.5, recall 69.5, accuracy 64.8, F 78.6  <-- main mozart/clarinet
 
 Validating against MIREX submission at 50 ms:
 precision 83, recall 61.1, accuracy 54.3, F 70.4
@@ -261,7 +261,7 @@ Audio file "/tmp/5389norm.wav": 1ch at 44100Hz
 
 
 Validating against ground truth at 50 ms:
-precision 38.3, recall 51.2, accuracy 28.1, F 43.8  <-- main measure
+precision 38.3, recall 51.2, accuracy 28.1, F 43.8  <-- main lussier/piano
 
 Validating against MIREX submission at 50 ms:
 precision 22, recall 29.4, accuracy 14.4, F 25.1
@@ -314,7 +314,7 @@ Audio file "/tmp/5389norm.wav": 1ch at 44100Hz
 
 
 Validating against ground truth at 50 ms:
-precision 55.3, recall 37.5, accuracy 28.7, F 44.6  <-- main measure
+precision 55.3, recall 37.5, accuracy 28.7, F 44.6  <-- main lussier/mix
 
 Validating against MIREX submission at 50 ms:
 precision 61.7, recall 53.3, accuracy 40, F 57.2
@@ -367,7 +367,7 @@ Audio file "/tmp/5389norm.wav": 1ch at 44100Hz
 
 
 Validating against ground truth at 50 ms:
-precision 78.6, recall 73.8, accuracy 61.5, F 76.1  <-- main measure
+precision 78.6, recall 73.8, accuracy 61.5, F 76.1  <-- main lussier/bassoon
 
 Validating against MIREX submission at 50 ms:
 precision 44.2, recall 19.2, accuracy 15.5, F 26.8
@@ -420,7 +420,7 @@ Audio file "/tmp/5389norm.wav": 1ch at 44100Hz
 
 
 Validating against ground truth at 50 ms:
-precision 28, recall 87.5, accuracy 26.9, F 42.4  <-- main measure
+precision 28, recall 87.5, accuracy 26.9, F 42.4  <-- main lussier/trumpet
 
 Validating against MIREX submission at 50 ms:
 precision 45.3, recall 49.2, accuracy 30.9, F 47.2
@@ -472,7 +472,7 @@ Audio file "/tmp/5389norm.wav": 1ch at 44100Hz
 Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 4%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 9%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 15%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 20%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 25%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 30%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 35%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 41%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 46%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 51%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 56%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 61%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 67%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 72%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 77%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 82%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 87%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 93%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 98%Extracting and writing features... 99%Extracting and writing features... 100%Extracting and writing features... Done
 
 Validating against ground truth at 50 ms:
-precision 22.8, recall 38.7, accuracy 16.8, F 28.7  <-- main measure
+precision 22.8, recall 38.7, accuracy 16.8, F 28.7  <-- main take_five/piano
 
 Validating against MIREX submission at 50 ms:
 precision 34.3, recall 38, accuracy 22, F 36.1
@@ -524,7 +524,7 @@ Audio file "/tmp/5389norm.wav": 1ch at 44100Hz
 Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 4%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 9%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 15%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 20%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 25%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 30%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 35%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 41%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 46%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 51%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 56%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 61%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 67%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 72%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 77%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 82%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 87%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 93%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 98%Extracting and writing features... 99%Extracting and writing features... 100%Extracting and writing features... Done
 
 Validating against ground truth at 50 ms:
-precision 68.4, recall 75.4, accuracy 55.9, F 71.7  <-- main measure
+precision 68.4, recall 75.4, accuracy 55.9, F 71.7  <-- main take_five/mix
 
 Validating against MIREX submission at 50 ms:
 precision 73.2, recall 66.8, accuracy 53.7, F 69.8
@@ -576,7 +576,7 @@ Audio file "/tmp/5389norm.wav": 1ch at 44100Hz
 Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 4%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 9%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 15%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 20%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 25%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 30%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 35%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 41%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 46%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 51%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 56%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 61%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 67%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 72%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 77%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 82%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 87%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 93%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 98%Extracting and writing features... 99%Extracting and writing features... 100%Extracting and writing features... Done
 
 Validating against ground truth at 50 ms:
-precision 78.3, recall 89.5, accuracy 71.7, F 83.5  <-- main measure
+precision 78.3, recall 89.5, accuracy 71.7, F 83.5  <-- main take_five/saxophone
 
 Validating against MIREX submission at 50 ms:
 precision 78.3, recall 67.1, accuracy 56.6, F 72.3
