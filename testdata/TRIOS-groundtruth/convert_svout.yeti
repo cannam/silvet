@@ -7,10 +7,10 @@
 //
 // onset offset frequency
 
-program convert;
+program convert_svout;
 
 usage () =
-    eprintln "\nUsage: convert file.csv\n";
+    eprintln "\nUsage: convert_svout file.csv\n";
 
 toFrequency m = 
     440 * Math#pow(2.0, (m - 69) / 12.0);
