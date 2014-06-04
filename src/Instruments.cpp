@@ -153,17 +153,15 @@ InstrumentPack::listInstrumentPacks()
 			     t.highestNote,
 			     simpleInstruments[i],
 			     tt);
-//        instr.pitchSparsity = 1.5;
-        instr.maxPolyphony = 5;
-        instr.levelThreshold = 6;
+        instr.pitchSparsity = 1.5;
 	if (isString(i)) {
-//            instr.maxPolyphony = 2;
-//            instr.levelThreshold = 3;
+            instr.maxPolyphony = 1;
+            instr.levelThreshold = 3;
 	    stringTemplates.push_back(t);
 	}
 	if (isWind(i)) {
-//            instr.maxPolyphony = 1;
-//            instr.levelThreshold = 5;
+            instr.maxPolyphony = 1;
+            instr.levelThreshold = 3;
 	    windTemplates.push_back(t);
 	}
 	if (isOK(instr)) {
