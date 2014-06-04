@@ -101,10 +101,10 @@ time for infile in $infiles; do
 
     for ms in 50 100; do
 	mark=""
-	if [ "$ms" = "50" ]; then mark="  <-- main measure"; fi;
+	if [ "$ms" = "50" ]; then mark="  <-- main $piece/$arrangement"; fi;
 	echo
 	echo "Validating against ground truth at $ms ms:"
-	"$yc" ./evaluate_lab.yeti "$ms" "../TRIOS-groundtruth/$piece/$arrangement.lab" "$outfile.lab" | sed 's/$/'"$mark"'/'
+	"$yc" ./evaluate_lab.yeti "$ms" "../TRIOS-groundtruth/$piece/$arrangement.lab" "$outfile.lab" | sed 's,$,'"$mark"','
 	echo
 	echo "Validating against MIREX submission at $ms ms:"
 	"$yc" ./evaluate_lab.yeti "$ms" "../TRIOS-mirex2012-matlab/$piece/$arrangement.lab" "$outfile.lab"
