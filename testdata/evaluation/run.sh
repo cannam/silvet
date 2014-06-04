@@ -36,7 +36,9 @@ tmpwav="/tmp/$$norm.wav"
 
 instfile="/tmp/$$instruments.txt"
 
-trap 'rm -f "$outfile" "$tmpwav" "$instfile" "$outfile.lab"' 0
+transfile="/tmp/$$transform.ttl"
+
+trap 'rm -f "$outfile" "$tmpwav" "$instfile" "$transfile" "$outfile.lab"' 0
 
 # Use the mix and single-instrument non-synthetic files for a (varied)
 # subset of the TRIOS dataset. Omit percussion (but we still use the
@@ -80,13 +82,14 @@ time for infile in $infiles; do
 
     sox "$infile" "$tmpwav" gain -n -6.020599913279624
 
-    ##!!! todo: actually apply the instrument setting!
+    # generate the transform by interpolating the instrument parameter
+    cat transform.ttl | sed "s/INSTRUMENT_PARAMETER/$instrument/" > "$transfile"
 
     sonic-annotator \
 	--writer csv \
 	--csv-one-file "$outfile" \
 	--csv-force \
-	--default vamp:silvet:silvet:notes \
+	--transform "$transfile" \
 	"$tmpwav"
 
     cat "$outfile" | \
