@@ -1,0 +1,188 @@
+Yeti 0.9.9+
+1.0
+make -C constant-q-cpp -f Makefile.linux libcq.a
+make[1]: Entering directory '/home/cannam/code/silvet/constant-q-cpp'
+make[1]: 'libcq.a' is up to date.
+make[1]: Leaving directory '/home/cannam/code/silvet/constant-q-cpp'
+
+Input files are:
+/home/cannam/Music/TRIOS_dataset/lussier/bassoon.wav
+/home/cannam/Music/TRIOS_dataset/take_five/saxophone.wav
+/home/cannam/Music/TRIOS_dataset/schubert/violin.wav
+/home/cannam/Music/TRIOS_dataset/mozart/clarinet.wav
+
+Evaluating for file /home/cannam/Music/TRIOS_dataset/lussier/bassoon.wav...
+
+For piece lussier, arrangement bassoon, using instrument 10...
+
+Validating against ground truth at 50 ms:
+precision 64.7, recall 84.6, accuracy 57.8, F 73.3  <-- main lussier/bassoon
+
+Validating against MIREX submission at 50 ms:
+precision 43.5, recall 26.4, accuracy 19.6, F 32.8
+
+Validating MIREX against ground truth at 50 ms:
+precision 31.4, recall 67.6, accuracy 27.3, F 42.9
+
+Validating against ground truth at 100 ms:
+precision 67, recall 87.6, accuracy 61.2, F 76
+
+Validating against MIREX submission at 100 ms:
+precision 63.5, recall 38.5, accuracy 31.5, F 48
+
+Validating MIREX against ground truth at 100 ms:
+precision 37.1, recall 80, accuracy 33.9, F 50.7
+
+
+For piece lussier, arrangement bassoon, using instrument 0...
+
+Validating against ground truth at 50 ms:
+precision 40.6, recall 76.9, accuracy 36.2, F 53.1  <-- main lussier/bassoon
+
+Validating against MIREX submission at 50 ms:
+precision 66.6, recall 58.5, accuracy 45.3, F 62.3
+
+Validating MIREX against ground truth at 50 ms:
+precision 31.4, recall 67.6, accuracy 27.3, F 42.9
+
+Validating against ground truth at 100 ms:
+precision 40.6, recall 76.9, accuracy 36.2, F 53.1
+
+Validating against MIREX submission at 100 ms:
+precision 82.1, recall 72.1, accuracy 62.3, F 76.8
+
+Validating MIREX against ground truth at 100 ms:
+precision 37.1, recall 80, accuracy 33.9, F 50.7
+
+
+Evaluating for file /home/cannam/Music/TRIOS_dataset/take_five/saxophone.wav...
+
+For piece take_five, arrangement saxophone, using instrument 0...
+
+Validating against ground truth at 50 ms:
+precision 76.6, recall 90.4, accuracy 70.8, F 82.9  <-- main take_five/saxophone
+
+Validating against MIREX submission at 50 ms:
+precision 75.8, recall 67.1, accuracy 55.2, F 71.2
+
+Validating MIREX against ground truth at 50 ms:
+precision 67.8, recall 90.4, accuracy 63.3, F 77.5
+
+Validating against ground truth at 100 ms:
+precision 78.2, recall 92.3, accuracy 73.4, F 84.7
+
+Validating against MIREX submission at 100 ms:
+precision 89.5, recall 79.2, accuracy 72.5, F 84
+
+Validating MIREX against ground truth at 100 ms:
+precision 70, recall 93.3, accuracy 66.6, F 80
+
+
+For piece take_five, arrangement saxophone, using instrument 0...
+
+Validating against ground truth at 50 ms:
+precision 75, recall 88.5, accuracy 68.3, F 81.2  <-- main take_five/saxophone
+
+Validating against MIREX submission at 50 ms:
+precision 75.8, recall 67.1, accuracy 55.2, F 71.2
+
+Validating MIREX against ground truth at 50 ms:
+precision 67.8, recall 90.4, accuracy 63.3, F 77.5
+
+Validating against ground truth at 100 ms:
+precision 77.4, recall 91.4, accuracy 72.1, F 83.8
+
+Validating against MIREX submission at 100 ms:
+precision 88.7, recall 78.5, accuracy 71.4, F 83.3
+
+Validating MIREX against ground truth at 100 ms:
+precision 70, recall 93.3, accuracy 66.6, F 80
+
+
+Evaluating for file /home/cannam/Music/TRIOS_dataset/schubert/violin.wav...
+
+For piece schubert, arrangement violin, using instrument 3...
+
+Validating against ground truth at 50 ms:
+precision 56, recall 80.7, accuracy 49.4, F 66.1  <-- main schubert/violin
+
+Validating against MIREX submission at 50 ms:
+precision 43.9, recall 28.3, accuracy 20.8, F 34.4
+
+Validating MIREX against ground truth at 50 ms:
+precision 20.4, recall 45.6, accuracy 16.4, F 28.2
+
+Validating against ground truth at 100 ms:
+precision 62.1, recall 89.4, accuracy 57.9, F 73.3
+
+Validating against MIREX submission at 100 ms:
+precision 63.4, recall 40.9, accuracy 33.1, F 49.7
+
+Validating MIREX against ground truth at 100 ms:
+precision 31.4, recall 70.1, accuracy 27.7, F 43.4
+
+
+For piece schubert, arrangement violin, using instrument 0...
+
+Validating against ground truth at 50 ms:
+precision 30.6, recall 59.6, accuracy 25.3, F 40.4  <-- main schubert/violin
+
+Validating against MIREX submission at 50 ms:
+precision 56.7, recall 49.6, accuracy 36, F 52.9
+
+Validating MIREX against ground truth at 50 ms:
+precision 20.4, recall 45.6, accuracy 16.4, F 28.2
+
+Validating against ground truth at 100 ms:
+precision 36.9, recall 71.9, accuracy 32.2, F 48.8
+
+Validating against MIREX submission at 100 ms:
+precision 78.3, recall 68.5, accuracy 57.6, F 73.1
+
+Validating MIREX against ground truth at 100 ms:
+precision 31.4, recall 70.1, accuracy 27.7, F 43.4
+
+
+Evaluating for file /home/cannam/Music/TRIOS_dataset/mozart/clarinet.wav...
+
+For piece mozart, arrangement clarinet, using instrument 8...
+
+Validating against ground truth at 50 ms:
+precision 89.2, recall 72.4, accuracy 66.6, F 80  <-- main mozart/clarinet
+
+Validating against MIREX submission at 50 ms:
+precision 89.2, recall 69.4, accuracy 64.1, F 78.1
+
+Validating MIREX against ground truth at 50 ms:
+precision 72.2, recall 75.3, accuracy 58.4, F 73.7
+
+Validating against ground truth at 100 ms:
+precision 96.4, recall 78.2, accuracy 76, F 86.4
+
+Validating against MIREX submission at 100 ms:
+precision 98.2, recall 76.3, accuracy 75.3, F 85.9
+
+Validating MIREX against ground truth at 100 ms:
+precision 75, recall 78.2, accuracy 62, F 76.5
+
+
+For piece mozart, arrangement clarinet, using instrument 0...
+
+Validating against ground truth at 50 ms:
+precision 81.9, recall 72.4, accuracy 62.5, F 76.9  <-- main mozart/clarinet
+
+Validating against MIREX submission at 50 ms:
+precision 80.3, recall 68, accuracy 58.3, F 73.6
+
+Validating MIREX against ground truth at 50 ms:
+precision 72.2, recall 75.3, accuracy 58.4, F 73.7
+
+Validating against ground truth at 100 ms:
+precision 86.8, recall 76.8, accuracy 68.8, F 81.5
+
+Validating against MIREX submission at 100 ms:
+precision 86.8, recall 73.6, accuracy 66.2, F 79.6
+
+Validating MIREX against ground truth at 100 ms:
+precision 75, recall 78.2, accuracy 62, F 76.5
+
