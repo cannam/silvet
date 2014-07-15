@@ -30,9 +30,9 @@ transcription in it, which you can play back or export as a MIDI file.
 How good is it?
 ---------------
 
-Reasonable for recordings that suit it: chamber music, solo piano,
-acoustic jazz, etc. But the range of music that works well is quite
-limited at this stage.
+It's reasonable for recordings that suit it: chamber music, solo
+piano, acoustic jazz, etc. But the range of music that works well is
+quite limited at this stage.
 
 Silvet uses a probablistic latent-variable estimation method to
 decompose a Constant-Q time-frequency matrix into note activations
@@ -61,23 +61,30 @@ in the Multiple F0 Tracking task:
 http://www.music-ir.org/mirex/wiki/2012:Multiple_Fundamental_Frequency_Estimation_%26_Tracking_Results
 
 
-Authors and copyright
----------------------
+Authors
+-------
 
-The method implemented in Silvet is by Emmanouil Benetos, see
-"A Shift-Invariant Latent Variable Model for Automatic Music
-Transcription" by Emmanouil Benetos and Simon Dixon (CMJ 2012).  If
-you make use of this software for academic purposes, please cite this
-publication (see the the CITATION file for BibTeX).
+The Silvet plugin code was adapted by Chris Cannam from research and a
+MATLAB implementation by Emmanouil Benetos.
 
-The plugin code is by Chris Cannam and Emmanouil Benetos and is
-Copyright 2014 Queen Mary, University of London. It is distributed
-under the GNU General Public License: see the file COPYING for
-details.
+
+Citation, License and Use
+-------------------------
 
 If you make use of this software for any public or commercial purpose,
 we ask you to kindly mention the authors and Queen Mary, University of
 London in your user-visible documentation. We're very happy to see
 this sort of use but would much appreciate being credited, independent
-of the requirements of the software license itself.
+of the requirements of the software license itself (see below).
 
+If you make use of this software for academic purposes, please cite:
+
+  Emmanouil Benetos and Simon Dixon, "A Shift-Invariant Latent
+  Variable Model for Automatic Music Transcription".
+  Computer Music Journal, volume 36 no 4, 2012, pp. 81-94.
+
+(See the CITATION file for a BibTeX reference.)
+
+This plugin is Copyright 2014 Queen Mary, University of London. It is
+distributed under the GNU General Public License: see the file COPYING
+for details.
