@@ -27,6 +27,7 @@ public:
     ~EM();
 
     void setPitchSparsity(float sparsity) { m_pitchSparsity = sparsity; }
+    void setSourceSparsity(float sparsity) { m_sourceSparsity = sparsity; }
 
     int getBinCount() const { return m_binCount; }
     int getNoteCount() const { return m_noteCount; }

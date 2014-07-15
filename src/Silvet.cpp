@@ -475,6 +475,7 @@ Silvet::transcribe(const Grid &cqout)
         EM em(&pack, m_hqMode);
 
         em.setPitchSparsity(pack.pitchSparsity);
+        em.setSourceSparsity(pack.sourceSparsity);
 
         for (int j = 0; j < iterations; ++j) {
             em.iterate(filtered.at(i).data());

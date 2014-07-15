@@ -132,9 +132,11 @@ InstrumentPack::listInstrumentPacks()
 			 "Piano",
 			 pianoTemplates);
 //    piano.maxPolyphony = 8;
-//    piano.levelThreshold = 3;
+//    piano.levelThreshold = 4;
     piano.maxPolyphony = 5;
     piano.levelThreshold = 6;
+    piano.pitchSparsity = 1.0;
+    piano.sourceSparsity = 1.0;
     if (isOK(piano)) {
 	ii.push_back(piano);
     }
@@ -145,6 +147,7 @@ InstrumentPack::listInstrumentPacks()
     for (int i = 0;
 	 i < int(sizeof(simpleInstruments)/sizeof(simpleInstruments[0]));
 	 i += 2) {
+
 	vector<Templates> tt;
 	Templates t = templatesFor(simpleInstruments[i+1]);
 	tt.push_back(t);

@@ -42,6 +42,7 @@ public:
 
     int maxPolyphony; // realistic practical limit, not a theoretical one
     float pitchSparsity;
+    float sourceSparsity;
     float levelThreshold;
 
     std::string name;
@@ -64,6 +65,7 @@ private:
 	highestNote(highest),
         maxPolyphony(5),
         pitchSparsity(1.1),
+        sourceSparsity(1.2),
         levelThreshold(5),
 	name(n),
 	templates(tt) { }
