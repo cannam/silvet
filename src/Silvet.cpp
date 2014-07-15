@@ -390,6 +390,7 @@ Silvet::reset()
     m_pianoRoll.clear();
     m_columnCount = 0;
     m_startTime = RealTime::zeroTime;
+    m_signalMax = 0.0;
 }
 
 Silvet::FeatureSet
@@ -401,7 +402,18 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
     
     vector<double> data;
     for (int i = 0; i < m_blockSize; ++i) {
-        data.push_back(inputBuffers[0][i]);
+        double d = inputBuffers[0][i];
+        if (fabs(d) > m_signalMax) {
+            m_signalMax = fabs(d);
+        } 
+    }
+    for (int i = 0; i < m_blockSize; ++i) {
+        double d = inputBuffers[0][i];
+        if (m_signalMax > 0.0) {
+            data.push_back(d / m_signalMax * 0.5);
+        } else {
+            data.push_back(0.0);
+        }
     }
 
     if (m_resampler) {

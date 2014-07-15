@@ -107,6 +107,8 @@ protected:
     int m_columnCount;
     Vamp::RealTime m_startTime;
 
+    double m_signalMax;
+
     mutable int m_notesOutputNo;
     mutable int m_fcqOutputNo;
 };
