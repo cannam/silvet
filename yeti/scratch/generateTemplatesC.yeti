@@ -35,6 +35,7 @@ hardcodedRanges = [
     "piano1": { lowest = 16, highest = 72 },
     "piano2": { lowest = 16, highest = 72 },
     "piano3": { lowest = 16, highest = 72 },
+    "pianorwc": { lowest = 16, highest = 72 },
 ];
 
 overallLowest = 15;
