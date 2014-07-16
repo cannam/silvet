@@ -64,42 +64,49 @@ time for infile in $infiles; do
 
     for instrument in $intended_instrument 0; do
 
-	echo
-	echo "For file $filename, instrument $instrument..."
+	for norm in no yes; do
 
-	# Don't normalise -- part of the point here is to make it work
-	# for various different levels
-	cp "$infile" "$tmpwav"
-
-	# generate the transform by interpolating the instrument parameter
-	cat transform.ttl | sed "s/INSTRUMENT_PARAMETER/$instrument/" > "$transfile"
-
-	sonic-annotator \
-	    --writer csv \
-	    --csv-one-file "$outfile" \
-	    --csv-force \
-	    --transform "$transfile" \
-	    "$tmpwav"
-
-	cat "$outfile" | \
-	    sed 's/^[^,]*,//' | \
-	    while IFS=, read start duration frequency level label; do
-	    end=`echo "$start $duration + p" | dc`
-	    echo -e "$start\t$end\t$frequency"
-	done > "$outfile.lab"
-
-	for ms in 50; do
-	    mark=""
-	    if [ "$instrument" = "0" ]; then
-		mark="  <-- generic for $filename"; 
-	    else
-		mark="  <-- piano preset for $filename";
-	    fi;
 	    echo
-	    echo "Validating against ground truth at $ms ms:"
-	    "$yc" ./evaluate_lab.yeti "$ms" "../piano-groundtruth/$filename.lab" "$outfile.lab" | sed 's,$,'"$mark"','
-	done;
+	    echo "For file $filename, instrument $instrument, norm $norm..."
 
-	echo
+	    if [ "$norm" = "no" ]; then
+		# Don't normalise -- part of the point here is to make
+		# it work for various different levels
+		cp "$infile" "$tmpwav"
+	    else
+		# Normalise as reference
+		sox "$infile" "$tmpwav" gain -n -6.020599913279624
+	    fi
+
+	    # generate the transform by interpolating the instrument parameter
+	    cat transform.ttl | sed "s/INSTRUMENT_PARAMETER/$instrument/" > "$transfile"
+
+	    sonic-annotator \
+		--writer csv \
+		--csv-one-file "$outfile" \
+		--csv-force \
+		--transform "$transfile" \
+		"$tmpwav"
+
+	    cat "$outfile" | \
+		sed 's/^[^,]*,//' | \
+		while IFS=, read start duration frequency level label; do
+		end=`echo "$start $duration + p" | dc`
+		echo -e "$start\t$end\t$frequency"
+	    done > "$outfile.lab"
+
+	    for ms in 50; do
+		mark=""
+		if [ "$instrument" = "0" ]; then
+		    mark="  <-- generic for $filename (norm = $norm)"; 
+		else
+		    mark="  <-- piano preset for $filename (norm = $norm)";
+		fi;
+		echo
+		echo "Validating against ground truth at $ms ms:"
+		"$yc" ./evaluate_lab.yeti "$ms" "../piano-groundtruth/$filename.lab" "$outfile.lab" | sed 's,$,'"$mark"','
+	    done;
+	    echo
+	done
     done
 done
