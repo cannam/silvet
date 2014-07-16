@@ -51,11 +51,17 @@ pc n =
 report { ntot, nref, ncorr } =
    (nfp = ntot - ncorr;
     nfn = nref - ncorr;
-    rec = ncorr / nref;
-    pre = ncorr / ntot;
-    f = 2 * ((pre * rec) / (pre + rec));
-    acc = ncorr / (ncorr + nfp + nfn);
-    println "precision \(pc pre), recall \(pc rec), accuracy \(pc acc), F \(pc f)");
+    if nref == 0 then
+        println "ERROR: no events in reference!"
+    elif ntot == 0 then
+        println "WARNING: no events transcribed!"
+    else
+        rec = ncorr / nref;
+        pre = ncorr / ntot;
+        f = if pre + rec == 0 then 0 else 2 * ((pre * rec) / (pre + rec)) fi;
+        acc = ncorr / (ncorr + nfp + nfn);
+        println "precision \(pc pre), recall \(pc rec), accuracy \(pc acc), F \(pc f)";
+    fi);
 
 case (list _argv) of
 reqd::ref::trans::[]: report (evaluate (number reqd / 1000) ref trans);
