@@ -107,13 +107,13 @@ time for infile in $infiles; do
 	if [ "$ms" = "50" ]; then mark="  <-- main $piece/$arrangement"; fi;
 	echo
 	echo "Validating against ground truth at $ms ms:"
-	"$yc" ./evaluate_lab.yeti "$ms" "../TRIOS-groundtruth/$piece/$arrangement.lab" "$outfile.lab" | sed 's,$,'"$mark"','
+	"$yc" ../scripts/evaluate_lab.yeti "$ms" "../TRIOS-groundtruth/$piece/$arrangement.lab" "$outfile.lab" | sed 's,$,'"$mark"','
 	echo
 	echo "Validating against MIREX submission at $ms ms:"
-	"$yc" ./evaluate_lab.yeti "$ms" "../TRIOS-mirex2012-matlab/$piece/$arrangement.lab" "$outfile.lab"
+	"$yc" ../scripts/evaluate_lab.yeti "$ms" "../TRIOS-mirex2012-matlab/$piece/$arrangement.lab" "$outfile.lab"
 	echo
 	echo "Validating MIREX against ground truth at $ms ms":
-	"$yc" ./evaluate_lab.yeti "$ms" "../TRIOS-groundtruth/$piece/$arrangement.lab" "../TRIOS-mirex2012-matlab/$piece/$arrangement.lab"
+	"$yc" ../scripts/evaluate_lab.yeti "$ms" "../TRIOS-groundtruth/$piece/$arrangement.lab" "../TRIOS-mirex2012-matlab/$piece/$arrangement.lab"
     done;
 
     echo

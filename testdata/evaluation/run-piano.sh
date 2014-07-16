@@ -110,7 +110,7 @@ time for infile in $infiles; do
 		echo
 		echo "Validating against ground truth at $ms ms:"
 		egrep '(^[0-9]\.)|(^[012][0-9]\.)' "../piano-groundtruth/$filename.lab" > "$reference.lab"
-		"$yc" ./evaluate_lab.yeti "$ms" "$reference.lab" "$outfile.lab" | sed 's,$,'"$mark"','
+		"$yc" ../scripts/evaluate_lab.yeti "$ms" "$reference.lab" "$outfile.lab" | sed 's,$,'"$mark"','
 		cp "$reference.lab" /tmp/reference.lab
 		cp "$outfile.lab" /tmp/detected.lab
 	    done;
