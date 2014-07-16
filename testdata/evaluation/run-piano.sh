@@ -95,12 +95,14 @@ time for infile in $infiles; do
 		echo -e "$start\t$end\t$frequency"
 	    done > "$outfile.lab"
 
-	    for ms in 50; do
+	    for ms in 50 100 150; do
 		mark=""
-		if [ "$instrument" = "0" ]; then
-		    mark="  <-- generic for $filename (norm = $norm)"; 
-		else
-		    mark="  <-- piano preset for $filename (norm = $norm)";
+		if [ "$ms" = "50" ]; then
+		    if [ "$instrument" = "0" ]; then
+			mark="  <-- generic for $filename (norm = $norm)"; 
+		    else
+			mark="  <-- piano preset for $filename (norm = $norm)";
+		    fi
 		fi;
 		echo
 		echo "Validating against ground truth at $ms ms:"
