@@ -36,6 +36,7 @@ VAMP_PATH=../..
 export VAMP_PATH
 
 outfile="/tmp/$$"
+reference="/tmp/$$ref"
 
 tmpwav="/tmp/$$.wav"
 
@@ -62,6 +63,8 @@ time for infile in $infiles; do
 
     filename=$(basename "$infile" .wav)
 
+    duration=30
+
     for instrument in $intended_instrument 0; do
 
 	for norm in no yes; do
@@ -72,10 +75,10 @@ time for infile in $infiles; do
 	    if [ "$norm" = "no" ]; then
 		# Don't normalise -- part of the point here is to make
 		# it work for various different levels
-		cp "$infile" "$tmpwav"
+		sox "$infile" "$tmpwav" trim 0 $duration
 	    else
 		# Normalise as reference
-		sox "$infile" "$tmpwav" gain -n -6.020599913279624
+		sox "$infile" "$tmpwav" trim 0 $duration gain -n -6.020599913279624
 	    fi
 
 	    # generate the transform by interpolating the instrument parameter
@@ -99,14 +102,17 @@ time for infile in $infiles; do
 		mark=""
 		if [ "$ms" = "50" ]; then
 		    if [ "$instrument" = "0" ]; then
-			mark="  <-- generic for $filename (norm = $norm)"; 
+			mark="  <-- main generic preset for $filename (norm = $norm)"; 
 		    else
-			mark="  <-- piano preset for $filename (norm = $norm)";
+			mark="  <-- main piano preset for $filename (norm = $norm)";
 		    fi
 		fi;
 		echo
 		echo "Validating against ground truth at $ms ms:"
-		"$yc" ./evaluate_lab.yeti "$ms" "../piano-groundtruth/$filename.lab" "$outfile.lab" | sed 's,$,'"$mark"','
+		egrep '(^[0-9]\.)|(^[012][0-9]\.)' "../piano-groundtruth/$filename.lab" > "$reference.lab"
+		"$yc" ./evaluate_lab.yeti "$ms" "$reference.lab" "$outfile.lab" | sed 's,$,'"$mark"','
+		cp "$reference.lab" /tmp/reference.lab
+		cp "$outfile.lab" /tmp/detected.lab
 	    done;
 	    echo
 	done
