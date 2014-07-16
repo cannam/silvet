@@ -5,7 +5,7 @@
 
 /* note: intended to parse as both C and C++ */
 
-#define SILVET_TEMPLATE_COUNT      12   /* Number of instruments */
+#define SILVET_TEMPLATE_COUNT      14   /* Number of instruments */
 #define SILVET_TEMPLATE_NOTE_COUNT 88   /* Number of notes per instrument */ 
 #define SILVET_TEMPLATE_HEIGHT     545  /* Frequency bins per template */
 #define SILVET_TEMPLATE_MAX_SHIFT  2    /* Zeros at either end of template */ 
@@ -31,9 +31,11 @@ static silvet_template_t silvet_templates[SILVET_TEMPLATE_COUNT] = {
 #include "oboe.h"
 #include "tenorsax.h"
 #include "violin.h"
+#include "viola.h"
 #include "piano1.h"
 #include "piano2.h"
 #include "piano3.h"
+#include "pianorwc.h"
 };
 
 #endif

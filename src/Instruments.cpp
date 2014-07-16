@@ -34,6 +34,7 @@ const char *simpleInstruments[] = {
     // name and one for the template to look up
     "Guitar", "guitar",
     "Violin", "violin",
+    "Viola", "viola",
     "Cello", "cello",
     "Horn", "horn",
     "Flute", "flute",
@@ -44,10 +45,11 @@ const char *simpleInstruments[] = {
 };
 
 static bool
-isString(int i)
+isBowedString(int i)
 {
     string tname(simpleInstruments[i+1]);
     return tname == "violin"
+	|| tname == "viola"
 	|| tname == "cello"
 	;
 }
@@ -124,11 +126,13 @@ InstrumentPack::listInstrumentPacks()
     allTemplates.push_back(templatesFor("piano1"));
     allTemplates.push_back(templatesFor("piano2"));
     allTemplates.push_back(templatesFor("piano3"));
+    allTemplates.push_back(templatesFor("pianorwc"));
 
     vector<Templates> pianoTemplates;
     pianoTemplates.push_back(templatesFor("piano1"));
     pianoTemplates.push_back(templatesFor("piano2"));
     pianoTemplates.push_back(templatesFor("piano3"));
+    pianoTemplates.push_back(templatesFor("pianorwc"));
     InstrumentPack piano(silvet_templates_lowest_note,
 			 silvet_templates_highest_note,
 			 "Piano",
@@ -161,7 +165,7 @@ InstrumentPack::listInstrumentPacks()
 //        instr.pitchSparsity = 1.5;
         instr.maxPolyphony = 5;
         instr.levelThreshold = 6;
-	if (isString(i)) {
+	if (isBowedString(i)) {
 //            instr.maxPolyphony = 2;
 //            instr.levelThreshold = 3;
 	    stringTemplates.push_back(t);
@@ -188,7 +192,7 @@ InstrumentPack::listInstrumentPacks()
 
     InstrumentPack strings(silvet_templates_lowest_note,  // cello
 			   silvet_templates_highest_note, // violin
-			   "String ensemble",
+			   "String quartet",
 			   stringTemplates);
     strings.maxPolyphony = 5;
     strings.levelThreshold = 3;

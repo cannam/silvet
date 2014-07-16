@@ -80,7 +80,7 @@ plugbase:silvet_param_instrument a  vamp:QuantizedParameter ;
     vamp:unit           "" ;
     vamp:quantize_step   1  ;
     vamp:default_value   0 ;
-    vamp:value_names     ( "Multiple or unknown instruments" "Piano" "Guitar" "Violin" "Cello" "Horn" "Flute" "Oboe" "Clarinet" "Tenor Sax" "Bassoon" "String ensemble" "Wind ensemble");
+    vamp:value_names     ( "Multiple or unknown instruments" "Piano" "Guitar" "Violin" "Viola" "Cello" "Horn" "Flute" "Oboe" "Clarinet" "Tenor Sax" "Bassoon" "String quartet" "Wind ensemble");
     .
 plugbase:silvet_param_finetune a  vamp:QuantizedParameter ;
     vamp:identifier     "finetune" ;

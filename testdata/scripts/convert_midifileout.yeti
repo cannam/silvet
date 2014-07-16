@@ -13,8 +13,8 @@
 // Timing division: <n> ppq
 // <t>: Tempo: <n>
 //
-// Note that we assume 4 quarter-notes per bar and we
-// don't parse time signatures.
+// Note that we assume 4 quarter-notes per bar, we don't parse time
+// signatures, and we only handle the first tempo event.
 // 
 // The output file format looks like:
 //
@@ -37,6 +37,7 @@ convert f =
    (str = openInFile f "UTF-8";
     var timebase = 480;
     var tempo = 120;
+    var tempoNowFixed = false;
     for (str.lines ()) do line:
         bits = strSplit ": " line;
         if length bits > 1 then
@@ -44,12 +45,17 @@ convert f =
                 timebase := number (strReplace " ppq" "" bits[1]);
                 eprintln "Set timing division to \(timebase)";
             elif bits[1] == "Tempo" then
+                if tempoNowFixed then
+                    failWith "Can't handle variable-tempo file";
+                fi;
                 if length bits < 3 then 
                     failWith "Too few bits in tempo line: \(line)";
                 fi;
                 tempo := number (bits[2]);
+                tempoNowFixed := true;
                 eprintln "Set tempo to \(tempo)";
             elif bits[1] == "Note" then
+                tempoNowFixed := true;
                 if length bits < 3 then
                     failWith "Too few bits in note line: \(line)";
                 fi;

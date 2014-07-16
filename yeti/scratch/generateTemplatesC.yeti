@@ -13,10 +13,12 @@ instruments = [
     "oboe",
     "tenorsax",
     "violin",
+    "viola",
 //    "piano-maps-SptkBGCl",
     "piano1",
     "piano2",
     "piano3",
+    "pianorwc",
 ];
 
 hardcodedRanges = [
@@ -33,6 +35,7 @@ hardcodedRanges = [
     "piano1": { lowest = 16, highest = 72 },
     "piano2": { lowest = 16, highest = 72 },
     "piano3": { lowest = 16, highest = 72 },
+    "pianorwc": { lowest = 16, highest = 72 },
 ];
 
 overallLowest = 15;
@@ -60,10 +63,18 @@ convert instrument lines ostr =
         fi
     done;
     levels = map vec.sum notes;
-//    first = length levels - length (find (>0) levels);
-//    last = length (find (>0) (reverse levels)) - 1;
-    first = hardcodedRanges[instrument].lowest;
-    last = hardcodedRanges[instrument].highest;
+    first = 
+        if instrument in hardcodedRanges then
+            hardcodedRanges[instrument].lowest;
+        else
+            length levels - length (find (>0) levels);
+        fi;
+    last =
+        if instrument in hardcodedRanges then
+            hardcodedRanges[instrument].highest;
+        else
+            length (find (>0) (reverse levels)) - 1;
+        fi;
     ostr.writeln warning;
     ostr.writeln "";
     ostr.writeln "{\n    \"\(instrument)\",\n    \(first),\n    \(last),";
