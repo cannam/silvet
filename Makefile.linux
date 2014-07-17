@@ -15,3 +15,7 @@ include Makefile.inc
 .PHONY: constant-q-cpp
 constant-q-cpp: 
 	$(MAKE) -C $@ -f Makefile.linux libcq.a
+
+.PHONY: flattendynamics
+flattendynamics: 
+	$(MAKE) -C $@ -f Makefile flattendynamics.so
