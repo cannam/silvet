@@ -73,9 +73,8 @@ time for infile in $infiles; do
 	    echo "For file $filename, instrument $instrument, norm $norm..."
 
 	    if [ "$norm" = "no" ]; then
-		# Don't normalise -- part of the point here is to make
-		# it work for various different levels
-		sox "$infile" "$tmpwav" trim 0 $duration
+		# Don't normalise; instead use the Flatten Dynamics plugin
+		LADSPA_PATH=../../flattendynamics sox "$infile" "$tmpwav" trim 0 $duration ladspa flattendynamics flattendynamics 0
 	    else
 		# Normalise as reference
 		sox "$infile" "$tmpwav" trim 0 $duration gain -n -6.020599913279624
