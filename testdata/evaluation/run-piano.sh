@@ -44,7 +44,7 @@ transfile="/tmp/$$transform.ttl"
 
 trap 'rm -f "$outfile" "$tmpwav" "$instfile" "$transfile" "$outfile.lab"' 0
 
-infiles=$(find "$piano_path" -name \*.wav)
+infiles=$(find "$piano_path" -name \*.wav | sort)
 
 echo
 echo "Input files are:"
@@ -65,7 +65,7 @@ time for infile in $infiles; do
 
     duration=30
 
-    for instrument in $intended_instrument 0; do
+    for instrument in $intended_instrument ; do
 
 	for norm in no yes; do
 
