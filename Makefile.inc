@@ -36,7 +36,7 @@ OBJECTS	     := $(OBJECTS:.c=.o)
 
 LIBS	:= $(CQ_DIR)/libcq.a $(VAMPSDK_DIR)/libvamp-sdk.a
 
-all: constant-q-cpp flattendynamics $(PLUGIN)
+all: constant-q-cpp $(PLUGIN)
 
 $(PLUGIN):	$(OBJECTS) $(LIBS)
 	$(CXX) -o $@ $^ $(LIBS) $(PLUGIN_LDFLAGS)
