@@ -800,12 +800,12 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
         //!!! todo: do something with input gain. Presumably we need
         //!!! to index it by something close to, but not actually, i
         //!!! (depending on cq latency)
-
+/*
         cerr << "i = " << i << ", gain length = " << m_inputGains.size()
              << ", cq latency = " << m_cq->getLatency() << " (as columns = "
              << m_cq->getLatency() / m_cq->getColumnHop() << ", as input blocks = " 
              << m_cq->getLatency() / m_blockSize << ")" << endl;
-
+*/
         int v = round(strength * 2);
         if (v > 127) v = 127;
 
