@@ -32,6 +32,7 @@ using std::map;
 
 class Resampler;
 class CQSpectrogram;
+class FlattenDynamics;
 
 class Silvet : public Vamp::Plugin
 {
@@ -74,6 +75,7 @@ protected:
     const std::vector<InstrumentPack> m_instruments;
 
     Resampler *m_resampler;
+    FlattenDynamics *m_flattener;
     CQSpectrogram *m_cq;
 
     bool m_hqMode;
@@ -86,6 +88,7 @@ protected:
     vector<MedianFilter<double> *> m_postFilter;
     vector<map<int, double> > m_pianoRoll;
     vector<map<int, int> > m_pianoRollShifts;
+    vector<float> m_inputGains;
 
     Grid preProcess(const Grid &);
 

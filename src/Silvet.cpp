@@ -20,6 +20,7 @@
 
 #include "MedianFilter.h"
 #include "constant-q-cpp/src/dsp/Resampler.h"
+#include "flattendynamics-ladspa.h"
 
 #include <vector>
 
@@ -38,6 +39,7 @@ Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
     m_instruments(InstrumentPack::listInstrumentPacks()),
     m_resampler(0),
+    m_flattener(0),
     m_cq(0),
     m_hqMode(true),
     m_fineTuning(false),
@@ -49,6 +51,7 @@ Silvet::Silvet(float inputSampleRate) :
 Silvet::~Silvet()
 {
     delete m_resampler;
+    delete m_flattener;
     delete m_cq;
     for (int i = 0; i < (int)m_postFilter.size(); ++i) {
         delete m_postFilter[i];
@@ -230,7 +233,7 @@ Silvet::getOutputDescriptors() const
     d.hasKnownExtents = false;
     d.isQuantized = false;
     d.sampleType = OutputDescriptor::VariableSampleRate;
-    d.sampleRate = m_inputSampleRate / (m_cq ? m_cq->getColumnHop() : 62);
+    d.sampleRate = processingSampleRate / (m_cq ? m_cq->getColumnHop() : 62);
     d.hasDuration = true;
     m_notesOutputNo = list.size();
     list.push_back(d);
@@ -346,6 +349,7 @@ void
 Silvet::reset()
 {
     delete m_resampler;
+    delete m_flattener;
     delete m_cq;
 
     if (m_inputSampleRate != processingSampleRate) {
@@ -353,6 +357,9 @@ Silvet::reset()
     } else {
 	m_resampler = 0;
     }
+
+    m_flattener = new FlattenDynamics(m_inputSampleRate); // before resampling
+    m_flattener->reset();
 
     double minFreq = 27.5;
 
@@ -388,6 +395,7 @@ Silvet::reset()
         m_postFilter.push_back(new MedianFilter<double>(3));
     }
     m_pianoRoll.clear();
+    m_inputGains.clear();
     m_columnCount = 0;
     m_startTime = RealTime::zeroTime;
 }
@@ -398,17 +406,29 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
     if (m_columnCount == 0) {
         m_startTime = timestamp;
     }
+
+    vector<float> flattened(m_blockSize);
+    float gain = 1.f;
+    m_flattener->connectInputPort
+        (FlattenDynamics::AudioInputPort, inputBuffers[0]);
+    m_flattener->connectOutputPort
+        (FlattenDynamics::AudioOutputPort, &flattened[0]);
+    m_flattener->connectOutputPort
+        (FlattenDynamics::GainOutputPort, &gain);
+    m_flattener->process(m_blockSize);
+
+    m_inputGains.push_back(gain);
     
     vector<double> data;
     for (int i = 0; i < m_blockSize; ++i) {
-        double d = inputBuffers[0][i];
+        double d = flattened[i];
         data.push_back(d);
     }
 
     if (m_resampler) {
 	data = m_resampler->process(data.data(), data.size());
     }
-
+ 
     Grid cqout = m_cq->process(data);
     FeatureSet fs = transcribe(cqout);
     return fs;
@@ -777,7 +797,16 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
             }
         }
 
-        int v = strength * 2;
+        //!!! todo: do something with input gain. Presumably we need
+        //!!! to index it by something close to, but not actually, i
+        //!!! (depending on cq latency)
+
+        cerr << "i = " << i << ", gain length = " << m_inputGains.size()
+             << ", cq latency = " << m_cq->getLatency() << " (as columns = "
+             << m_cq->getLatency() / m_cq->getColumnHop() << ", as input blocks = " 
+             << m_cq->getLatency() / m_blockSize << ")" << endl;
+
+        int v = round(strength * 2);
         if (v > 127) v = 127;
 
         if (v > partVelocity) {
