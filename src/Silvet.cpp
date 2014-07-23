@@ -20,6 +20,7 @@
 
 #include "MedianFilter.h"
 #include "constant-q-cpp/src/dsp/Resampler.h"
+#include "flattendynamics-ladspa.h"
 
 #include <vector>
 
@@ -38,6 +39,7 @@ Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
     m_instruments(InstrumentPack::listInstrumentPacks()),
     m_resampler(0),
+    m_flattener(0),
     m_cq(0),
     m_hqMode(true),
     m_fineTuning(false),
@@ -49,6 +51,7 @@ Silvet::Silvet(float inputSampleRate) :
 Silvet::~Silvet()
 {
     delete m_resampler;
+    delete m_flattener;
     delete m_cq;
     for (int i = 0; i < (int)m_postFilter.size(); ++i) {
         delete m_postFilter[i];
@@ -230,7 +233,7 @@ Silvet::getOutputDescriptors() const
     d.hasKnownExtents = false;
     d.isQuantized = false;
     d.sampleType = OutputDescriptor::VariableSampleRate;
-    d.sampleRate = m_inputSampleRate / (m_cq ? m_cq->getColumnHop() : 62);
+    d.sampleRate = processingSampleRate / (m_cq ? m_cq->getColumnHop() : 62);
     d.hasDuration = true;
     m_notesOutputNo = list.size();
     list.push_back(d);
@@ -346,6 +349,7 @@ void
 Silvet::reset()
 {
     delete m_resampler;
+    delete m_flattener;
     delete m_cq;
 
     if (m_inputSampleRate != processingSampleRate) {
@@ -353,6 +357,9 @@ Silvet::reset()
     } else {
 	m_resampler = 0;
     }
+
+    m_flattener = new FlattenDynamics(m_inputSampleRate); // before resampling
+    m_flattener->reset();
 
     double minFreq = 27.5;
 
@@ -388,6 +395,7 @@ Silvet::reset()
         m_postFilter.push_back(new MedianFilter<double>(3));
     }
     m_pianoRoll.clear();
+    m_inputGains.clear();
     m_columnCount = 0;
     m_startTime = RealTime::zeroTime;
 }
@@ -398,16 +406,29 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
     if (m_columnCount == 0) {
         m_startTime = timestamp;
     }
+
+    vector<float> flattened(m_blockSize);
+    float gain = 1.f;
+    m_flattener->connectInputPort
+        (FlattenDynamics::AudioInputPort, inputBuffers[0]);
+    m_flattener->connectOutputPort
+        (FlattenDynamics::AudioOutputPort, &flattened[0]);
+    m_flattener->connectOutputPort
+        (FlattenDynamics::GainOutputPort, &gain);
+    m_flattener->process(m_blockSize);
+
+    m_inputGains[timestamp] = gain;
     
     vector<double> data;
     for (int i = 0; i < m_blockSize; ++i) {
-        data.push_back(inputBuffers[0][i]);
+        double d = flattened[i];
+        data.push_back(d);
     }
 
     if (m_resampler) {
 	data = m_resampler->process(data.data(), data.size());
     }
-
+ 
     Grid cqout = m_cq->process(data);
     FeatureSet fs = transcribe(cqout);
     return fs;
@@ -733,13 +754,7 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
     int partShift = 0;
     int partVelocity = 0;
 
-    Feature f;
-    f.hasTimestamp = true;
-    f.hasDuration = true;
-
-    double columnDuration = 1.0 / m_colsPerSec;
-    int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
-    int partThreshold = floor(0.05 / columnDuration);
+    int partThreshold = floor(0.05 * m_colsPerSec);
 
     for (int i = start; i != end; ++i) {
         
@@ -760,40 +775,87 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
 //                cerr << "i = " << i << ", partStart = " << partStart << ", shift = " << shift << ", partShift = " << partShift << endl;
 
                 // pitch has changed, emit an intermediate note
-                f.timestamp = RealTime::fromSeconds
-                    (columnDuration * (partStart - postFilterLatency) + 0.02);
-                f.duration = RealTime::fromSeconds
-                    (columnDuration * (i - partStart));
-                f.values.clear();
-                f.values.push_back
-                    (noteFrequency(note, partShift, shiftCount));
-                f.values.push_back(partVelocity);
-                f.label = noteName(note, partShift, shiftCount);
-                noteFeatures.push_back(f);
+                noteFeatures.push_back(makeNoteFeature(partStart,
+                                                       i,
+                                                       note,
+                                                       partShift,
+                                                       shiftCount,
+                                                       partVelocity));
                 partStart = i;
                 partShift = shift;
                 partVelocity = 0;
             }
         }
 
-        int v = strength * 2;
-        if (v > 127) v = 127;
-
+        int v = round(strength * 2);
         if (v > partVelocity) {
             partVelocity = v;
         }
     }
 
     if (end >= partStart + partThreshold) {
-        f.timestamp = RealTime::fromSeconds
-            (columnDuration * (partStart - postFilterLatency) + 0.02);
-        f.duration = RealTime::fromSeconds
-            (columnDuration * (end - partStart));
-        f.values.clear();
-        f.values.push_back
-            (noteFrequency(note, partShift, shiftCount));
-        f.values.push_back(partVelocity);
-        f.label = noteName(note, partShift, shiftCount);
-        noteFeatures.push_back(f);
+        noteFeatures.push_back(makeNoteFeature(partStart,
+                                               end,
+                                               note,
+                                               partShift,
+                                               shiftCount,
+                                               partVelocity));
     }
 }
+
+Silvet::Feature
+Silvet::makeNoteFeature(int start,
+                        int end,
+                        int note,
+                        int shift,
+                        int shiftCount,
+                        int velocity)
+{
+    double columnDuration = 1.0 / m_colsPerSec;
+    int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
+
+    Feature f;
+
+    f.hasTimestamp = true;
+    f.timestamp = RealTime::fromSeconds
+        (columnDuration * (start - postFilterLatency) + 0.02);
+
+    f.hasDuration = true;
+    f.duration = RealTime::fromSeconds
+        (columnDuration * (end - start));
+
+    f.values.clear();
+
+    f.values.push_back
+        (noteFrequency(note, shift, shiftCount));
+
+    float inputGain = getInputGainAt(f.timestamp);
+//    cerr << "adjusting velocity from " << velocity << " to " << round(velocity/inputGain) << endl;
+    velocity = round(velocity / inputGain);
+    if (velocity > 127) velocity = 127;
+    if (velocity < 1) velocity = 1;
+    f.values.push_back(velocity);
+
+    f.label = noteName(note, shift, shiftCount);
+
+    return f;
+}
+
+float
+Silvet::getInputGainAt(RealTime t)
+{
+    map<RealTime, float>::const_iterator i = m_inputGains.lower_bound(t);
+
+    if (i == m_inputGains.end()) {
+        if (i != m_inputGains.begin()) {
+            --i;
+        } else {
+            return 1.f; // no data
+        }
+    }
+
+//    cerr << "gain at time " << t << " = " << i->second << endl;
+
+    return i->second;
+}
+                        

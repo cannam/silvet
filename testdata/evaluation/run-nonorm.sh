@@ -82,8 +82,9 @@ time for infile in $infiles; do
 
     echo
     echo "For piece $piece, arrangement $arrangement, using instrument $instrument..."
-
-    sox "$infile" "$tmpwav" gain -n -6.020599913279624
+    
+    # unlike run.sh we don't normalise the input here
+    cp "$infile" "$tmpwav"
 
     # generate the transform by interpolating the instrument parameter
     cat transform.ttl | sed "s/INSTRUMENT_PARAMETER/$instrument/" > "$transfile"

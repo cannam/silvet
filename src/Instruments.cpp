@@ -122,11 +122,7 @@ InstrumentPack::listInstrumentPacks()
     vector<InstrumentPack> ii;
 
     vector<Templates> allTemplates;
-    //!!! is piano-maps-SptkBGCl the same as one of piano1, piano2, piano3?
     allTemplates.push_back(templatesFor("piano1"));
-    allTemplates.push_back(templatesFor("piano2"));
-    allTemplates.push_back(templatesFor("piano3"));
-    allTemplates.push_back(templatesFor("pianorwc"));
 
     vector<Templates> pianoTemplates;
     pianoTemplates.push_back(templatesFor("piano1"));
@@ -137,9 +133,7 @@ InstrumentPack::listInstrumentPacks()
 			 silvet_templates_highest_note,
 			 "Piano",
 			 pianoTemplates);
-//    piano.maxPolyphony = 8;
-//    piano.levelThreshold = 4;
-    piano.maxPolyphony = 5;
+    piano.maxPolyphony = 6;
     piano.levelThreshold = 6;
     piano.pitchSparsity = 1.0;
     piano.sourceSparsity = 1.0;
@@ -162,16 +156,17 @@ InstrumentPack::listInstrumentPacks()
 			     t.highestNote,
 			     simpleInstruments[i],
 			     tt);
-//        instr.pitchSparsity = 1.5;
+
         instr.maxPolyphony = 5;
         instr.levelThreshold = 6;
+
 	if (isBowedString(i)) {
-//            instr.maxPolyphony = 2;
+            instr.maxPolyphony = 2;
 //            instr.levelThreshold = 3;
 	    stringTemplates.push_back(t);
 	}
 	if (isWind(i)) {
-//            instr.maxPolyphony = 1;
+            instr.maxPolyphony = 2;
 //            instr.levelThreshold = 5;
 	    windTemplates.push_back(t);
 	}

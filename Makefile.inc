@@ -5,6 +5,7 @@ VAMPSDK_DIR  ?= ../vamp-plugin-sdk
 
 CQ_DIR	     ?= constant-q-cpp
 BQVEC_DIR    ?= bqvec/src
+FD_DIR	     ?= flattendynamics
 
 PLUGIN_EXT	?= .so
 
@@ -12,7 +13,7 @@ CXX	?= g++
 CC	?= gcc
 
 CFLAGS := $(CFLAGS)
-CXXFLAGS := $(CFLAGS) -I. -I$(VAMPSDK_DIR) -I$(CQ_DIR) -I$(BQVEC_DIR) $(CXXFLAGS)
+CXXFLAGS := $(CFLAGS) -I. -I$(VAMPSDK_DIR) -I$(CQ_DIR) -I$(BQVEC_DIR) -I$(FD_DIR) $(CXXFLAGS)
 
 LDFLAGS := $(LDFLAGS) 
 PLUGIN_LDFLAGS := $(LDFLAGS) $(PLUGIN_LDFLAGS)
@@ -25,8 +26,11 @@ PLUGIN_SOURCES := $(SRC_DIR)/Silvet.cpp $(SRC_DIR)/EM.cpp $(SRC_DIR)/Instruments
 BQVEC_HEADERS	:= $(BQVEC_DIR)/Allocators.h $(BQVEC_DIR)/Restrict.h $(BQVEC_DIR)/VectorOps.h
 BQVEC_SOURCES	:= $(BQVEC_DIR)/Allocators.cpp
 
-HEADERS	     := $(PLUGIN_HEADERS) $(BQVEC_HEADERS)
-SOURCES	     := $(PLUGIN_SOURCES) $(BQVEC_SOURCES)
+FD_HEADERS	:= $(FD_DIR)/flattendynamics-ladspa.h
+FD_SOURCES	:= $(FD_DIR)/flattendynamics-ladspa.cpp
+
+HEADERS	     := $(PLUGIN_HEADERS) $(BQVEC_HEADERS) $(FD_HEADERS)
+SOURCES	     := $(PLUGIN_SOURCES) $(BQVEC_SOURCES) $(FD_SOURCES)
 OBJECTS	     := $(SOURCES:.cpp=.o)
 OBJECTS	     := $(OBJECTS:.c=.o)
 
@@ -50,17 +54,20 @@ depend:
 
 src/Silvet.o: src/Silvet.h src/MedianFilter.h src/Instruments.h src/EM.h
 src/Silvet.o: constant-q-cpp/src/dsp/Resampler.h
+src/Silvet.o: flattendynamics/flattendynamics-ladspa.h
 src/EM.o: src/EM.h src/Instruments.h
 src/Instruments.o: src/Instruments.h data/include/templates.h
 src/Instruments.o: data/include/bassoon.h data/include/cello.h
 src/Instruments.o: data/include/clarinet.h data/include/flute.h
 src/Instruments.o: data/include/guitar.h data/include/horn.h
 src/Instruments.o: data/include/oboe.h data/include/tenorsax.h
-src/Instruments.o: data/include/violin.h data/include/piano1.h
-src/Instruments.o: data/include/piano2.h data/include/piano3.h
+src/Instruments.o: data/include/violin.h data/include/viola.h
+src/Instruments.o: data/include/piano1.h data/include/piano2.h
+src/Instruments.o: data/include/piano3.h data/include/pianorwc.h
 src/libmain.o: src/Silvet.h src/MedianFilter.h src/Instruments.h
 bqvec/src/Allocators.o: bqvec/src/Allocators.h bqvec/src/VectorOps.h
 bqvec/src/Allocators.o: bqvec/src/Restrict.h
+flattendynamics/flattendynamics-ladspa.o: flattendynamics/flattendynamics-ladspa.h
 src/Silvet.o: src/MedianFilter.h src/Instruments.h
 bqvec/src/Allocators.o: bqvec/src/VectorOps.h bqvec/src/Restrict.h
 bqvec/src/VectorOps.o: bqvec/src/Restrict.h

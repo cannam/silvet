@@ -44,7 +44,7 @@ transfile="/tmp/$$transform.ttl"
 
 trap 'rm -f "$outfile" "$tmpwav" "$instfile" "$transfile" "$outfile.lab"' 0
 
-infiles=$(find "$piano_path" -name \*.wav)
+infiles=$(find "$piano_path" -name \*.wav | sort)
 
 echo
 echo "Input files are:"
@@ -65,16 +65,15 @@ time for infile in $infiles; do
 
     duration=30
 
-    for instrument in $intended_instrument 0; do
+    for instrument in $intended_instrument ; do
 
-	for norm in no yes; do
+	for norm in no; do
 
 	    echo
 	    echo "For file $filename, instrument $instrument, norm $norm..."
 
 	    if [ "$norm" = "no" ]; then
-		# Don't normalise -- part of the point here is to make
-		# it work for various different levels
+		# Don't normalise; plugin is now supposed to do it
 		sox "$infile" "$tmpwav" trim 0 $duration
 	    else
 		# Normalise as reference
@@ -110,7 +109,7 @@ time for infile in $infiles; do
 		echo
 		echo "Validating against ground truth at $ms ms:"
 		egrep '(^[0-9]\.)|(^[012][0-9]\.)' "../piano-groundtruth/$filename.lab" > "$reference.lab"
-		"$yc" ./evaluate_lab.yeti "$ms" "$reference.lab" "$outfile.lab" | sed 's,$,'"$mark"','
+		"$yc" ../scripts/evaluate_lab.yeti "$ms" "$reference.lab" "$outfile.lab" | sed 's,$,'"$mark"','
 		cp "$reference.lab" /tmp/reference.lab
 		cp "$outfile.lab" /tmp/detected.lab
 	    done;

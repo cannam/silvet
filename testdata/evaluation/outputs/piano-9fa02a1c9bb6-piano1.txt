@@ -1,0 +1,869 @@
+Yeti 0.9.9+
+1.0
+make -C constant-q-cpp -f Makefile.linux libcq.a
+make[1]: Entering directory '/home/cannam/code/silvet/constant-q-cpp'
+make[1]: 'libcq.a' is up to date.
+make[1]: Leaving directory '/home/cannam/code/silvet/constant-q-cpp'
+g++ -Wall -O3 -fopenmp -ffast-math -msse -msse2 -mfpmath=sse -ftree-vectorize -fPIC -I../vamp-plugin-sdk/ -DUSE_PTHREADS -I. -I../vamp-plugin-sdk -Iconstant-q-cpp -Ibqvec/src -Wall -O3 -fopenmp -ffast-math -msse -msse2 -mfpmath=sse -ftree-vectorize -fPIC -I../vamp-plugin-sdk/ -DUSE_PTHREADS   -c -o src/Instruments.o src/Instruments.cpp
+g++ -o silvet.so src/Silvet.o src/EM.o src/Instruments.o src/libmain.o bqvec/src/Allocators.o constant-q-cpp/libcq.a ../vamp-plugin-sdk/libvamp-sdk.a constant-q-cpp/libcq.a ../vamp-plugin-sdk/libvamp-sdk.a   -lgomp -shared -Wl,-Bsymbolic -Wl,-z,defs -Wl,--version-script=vamp-plugin.map -lpthread
+
+Input files are:
+/home/cannam/Music/piano_small_dataset/31.wav
+/home/cannam/Music/piano_small_dataset/MAPS_MUS-scn15_7_SptkBGAm.wav
+/home/cannam/Music/piano_small_dataset/mz_333_1MINp_align.wav
+/home/cannam/Music/piano_small_dataset/MAPS_MUS-chpn_op7_1_ENSTDkAm.wav
+/home/cannam/Music/piano_small_dataset/MAPS_MUS-bach_846_AkPnBcht.wav
+
+Evaluating for file /home/cannam/Music/piano_small_dataset/31.wav...
+
+For file 31, instrument 1, norm no...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="1"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 83.3, recall 21.5, accuracy 20.6, F 34.2  <-- main piano preset for 31 (norm = no)
+
+Validating against ground truth at 100 ms:
+precision 88.8, recall 23, accuracy 22.3, F 36.5
+
+Validating against ground truth at 150 ms:
+precision 88.8, recall 23, accuracy 22.3, F 36.5
+
+
+For file 31, instrument 1, norm yes...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="1"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 57, recall 43.8, accuracy 32.9, F 49.5  <-- main piano preset for 31 (norm = yes)
+
+Validating against ground truth at 100 ms:
+precision 65.4, recall 50.3, accuracy 39.7, F 56.9
+
+Validating against ground truth at 150 ms:
+precision 69.1, recall 53.2, accuracy 43, F 60.1
+
+
+For file 31, instrument 0, norm no...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="0"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 82.6, recall 27.3, accuracy 25.8, F 41  <-- main generic preset for 31 (norm = no)
+
+Validating against ground truth at 100 ms:
+precision 86.9, recall 28.7, accuracy 27.5, F 43.2
+
+Validating against ground truth at 150 ms:
+precision 89.1, recall 29.4, accuracy 28.4, F 44.3
+
+
+For file 31, instrument 0, norm yes...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="0"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 65.6, recall 46.7, accuracy 37.5, F 54.6  <-- main generic preset for 31 (norm = yes)
+
+Validating against ground truth at 100 ms:
+precision 73.7, recall 52.5, accuracy 44.2, F 61.3
+
+Validating against ground truth at 150 ms:
+precision 79.7, recall 56.8, accuracy 49.6, F 66.3
+
+
+Evaluating for file /home/cannam/Music/piano_small_dataset/MAPS_MUS-scn15_7_SptkBGAm.wav...
+
+For file MAPS_MUS-scn15_7_SptkBGAm, instrument 1, norm no...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="1"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 46.6, recall 7, accuracy 6.4, F 12.1  <-- main piano preset for MAPS_MUS-scn15_7_SptkBGAm (norm = no)
+
+Validating against ground truth at 100 ms:
+precision 73.3, recall 11, accuracy 10.5, F 19.1
+
+Validating against ground truth at 150 ms:
+precision 86.6, recall 13, accuracy 12.7, F 22.6
+
+
+For file MAPS_MUS-scn15_7_SptkBGAm, instrument 1, norm yes...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="1"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 67.2, recall 76, accuracy 55.4, F 71.3  <-- main piano preset for MAPS_MUS-scn15_7_SptkBGAm (norm = yes)
+
+Validating against ground truth at 100 ms:
+precision 71.6, recall 81, accuracy 61.3, F 76
+
+Validating against ground truth at 150 ms:
+precision 74.3, recall 84, accuracy 65.1, F 78.8
+
+
+For file MAPS_MUS-scn15_7_SptkBGAm, instrument 0, norm no...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="0"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 60, recall 15, accuracy 13.6, F 24  <-- main generic preset for MAPS_MUS-scn15_7_SptkBGAm (norm = no)
+
+Validating against ground truth at 100 ms:
+precision 84, recall 21, accuracy 20.1, F 33.6
+
+Validating against ground truth at 150 ms:
+precision 84, recall 21, accuracy 20.1, F 33.6
+
+
+For file MAPS_MUS-scn15_7_SptkBGAm, instrument 0, norm yes...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="0"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 61, recall 72, accuracy 49.3, F 66  <-- main generic preset for MAPS_MUS-scn15_7_SptkBGAm (norm = yes)
+
+Validating against ground truth at 100 ms:
+precision 68.6, recall 81, accuracy 59.1, F 74.3
+
+Validating against ground truth at 150 ms:
+precision 71.1, recall 84, accuracy 62.6, F 77
+
+
+Evaluating for file /home/cannam/Music/piano_small_dataset/mz_333_1MINp_align.wav...
+
+For file mz_333_1MINp_align, instrument 1, norm no...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 1 from file
+Taking default sample rate of 8000Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="1"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 8000
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 1ch at 8000Hz
+Extracting and writing features... 6%Extracting and writing features... 13%Extracting and writing features... 20%Extracting and writing features... 27%Extracting and writing features... 34%Extracting and writing features... 41%Extracting and writing features... 47%Extracting and writing features... 54%Extracting and writing features... 61%Extracting and writing features... 68%Extracting and writing features... 75%Extracting and writing features... 82%Extracting and writing features... 88%Extracting and writing features... 95%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 33.3, recall 1.9, accuracy 1.8, F 3.7  <-- main piano preset for mz_333_1MINp_align (norm = no)
+
+Validating against ground truth at 100 ms:
+precision 88.8, recall 5.2, accuracy 5.1, F 9.8
+
+Validating against ground truth at 150 ms:
+precision 88.8, recall 5.2, accuracy 5.1, F 9.8
+
+
+For file mz_333_1MINp_align, instrument 1, norm yes...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 1 from file
+Taking default sample rate of 8000Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="1"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 8000
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 1ch at 8000Hz
+Extracting and writing features... 6%Extracting and writing features... 13%Extracting and writing features... 20%Extracting and writing features... 27%Extracting and writing features... 34%Extracting and writing features... 41%Extracting and writing features... 47%Extracting and writing features... 54%Extracting and writing features... 61%Extracting and writing features... 68%Extracting and writing features... 75%Extracting and writing features... 82%Extracting and writing features... 88%Extracting and writing features... 95%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 60.8, recall 66, accuracy 46.3, F 63.3  <-- main piano preset for mz_333_1MINp_align (norm = yes)
+
+Validating against ground truth at 100 ms:
+precision 69.2, recall 75.1, accuracy 56.3, F 72.1
+
+Validating against ground truth at 150 ms:
+precision 74, recall 80.3, accuracy 62.7, F 77.1
+
+
+For file mz_333_1MINp_align, instrument 0, norm no...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 1 from file
+Taking default sample rate of 8000Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="0"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 8000
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 1ch at 8000Hz
+Extracting and writing features... 6%Extracting and writing features... 13%Extracting and writing features... 20%Extracting and writing features... 27%Extracting and writing features... 34%Extracting and writing features... 41%Extracting and writing features... 47%Extracting and writing features... 54%Extracting and writing features... 61%Extracting and writing features... 68%Extracting and writing features... 75%Extracting and writing features... 82%Extracting and writing features... 88%Extracting and writing features... 95%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 26.6, recall 2.6, accuracy 2.4, F 4.7  <-- main generic preset for mz_333_1MINp_align (norm = no)
+
+Validating against ground truth at 100 ms:
+precision 73.3, recall 7.1, accuracy 7, F 13
+
+Validating against ground truth at 150 ms:
+precision 80, recall 7.8, accuracy 7.6, F 14.2
+
+
+For file mz_333_1MINp_align, instrument 0, norm yes...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 1 from file
+Taking default sample rate of 8000Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="0"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 8000
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 1ch at 8000Hz
+Extracting and writing features... 6%Extracting and writing features... 13%Extracting and writing features... 20%Extracting and writing features... 27%Extracting and writing features... 34%Extracting and writing features... 41%Extracting and writing features... 47%Extracting and writing features... 54%Extracting and writing features... 61%Extracting and writing features... 68%Extracting and writing features... 75%Extracting and writing features... 82%Extracting and writing features... 88%Extracting and writing features... 95%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 66.6, recall 64, accuracy 48.5, F 65.3  <-- main generic preset for mz_333_1MINp_align (norm = yes)
+
+Validating against ground truth at 100 ms:
+precision 78.2, recall 75.1, accuracy 62.1, F 76.6
+
+Validating against ground truth at 150 ms:
+precision 80.2, recall 77.1, accuracy 64.8, F 78.6
+
+
+Evaluating for file /home/cannam/Music/piano_small_dataset/MAPS_MUS-chpn_op7_1_ENSTDkAm.wav...
+
+For file MAPS_MUS-chpn_op7_1_ENSTDkAm, instrument 1, norm no...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="1"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 33.5, recall 16.2, accuracy 12.2, F 21.9  <-- main piano preset for MAPS_MUS-chpn_op7_1_ENSTDkAm (norm = no)
+
+Validating against ground truth at 100 ms:
+precision 59.1, recall 28.6, accuracy 23.8, F 38.5
+
+Validating against ground truth at 150 ms:
+precision 72.9, recall 35.3, accuracy 31.2, F 47.6
+
+
+For file MAPS_MUS-chpn_op7_1_ENSTDkAm, instrument 1, norm yes...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="1"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 35.4, recall 27.5, accuracy 18.3, F 31  <-- main piano preset for MAPS_MUS-chpn_op7_1_ENSTDkAm (norm = yes)
+
+Validating against ground truth at 100 ms:
+precision 60, recall 46.6, accuracy 35.5, F 52.4
+
+Validating against ground truth at 150 ms:
+precision 61.3, recall 47.7, accuracy 36.6, F 53.6
+
+
+For file MAPS_MUS-chpn_op7_1_ENSTDkAm, instrument 0, norm no...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="0"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 31.7, recall 16.2, accuracy 12, F 21.4  <-- main generic preset for MAPS_MUS-chpn_op7_1_ENSTDkAm (norm = no)
+
+Validating against ground truth at 100 ms:
+precision 60, recall 30.7, accuracy 25.5, F 40.6
+
+Validating against ground truth at 150 ms:
+precision 71.7, recall 36.7, accuracy 32, F 48.5
+
+
+For file MAPS_MUS-chpn_op7_1_ENSTDkAm, instrument 0, norm yes...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="0"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 37.1, recall 25.4, accuracy 17.7, F 30.1  <-- main generic preset for MAPS_MUS-chpn_op7_1_ENSTDkAm (norm = yes)
+
+Validating against ground truth at 100 ms:
+precision 59.7, recall 40.9, accuracy 32.1, F 48.6
+
+Validating against ground truth at 150 ms:
+precision 69, recall 47.3, accuracy 39, F 56.1
+
+
+Evaluating for file /home/cannam/Music/piano_small_dataset/MAPS_MUS-bach_846_AkPnBcht.wav...
+
+For file MAPS_MUS-bach_846_AkPnBcht, instrument 1, norm no...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="1"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 95.2, recall 13.4, accuracy 13.3, F 23.5  <-- main piano preset for MAPS_MUS-bach_846_AkPnBcht (norm = no)
+
+Validating against ground truth at 100 ms:
+precision 100, recall 14, accuracy 14, F 24.7
+
+Validating against ground truth at 150 ms:
+precision 100, recall 14, accuracy 14, F 24.7
+
+
+For file MAPS_MUS-bach_846_AkPnBcht, instrument 1, norm yes...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="1"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 95.8, recall 77.8, accuracy 75.3, F 85.9  <-- main piano preset for MAPS_MUS-bach_846_AkPnBcht (norm = yes)
+
+Validating against ground truth at 100 ms:
+precision 97.5, recall 79.1, accuracy 77.6, F 87.4
+
+Validating against ground truth at 150 ms:
+precision 97.5, recall 79.1, accuracy 77.6, F 87.4
+
+
+For file MAPS_MUS-bach_846_AkPnBcht, instrument 0, norm no...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="0"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 100, recall 21.4, accuracy 21.4, F 35.3  <-- main generic preset for MAPS_MUS-bach_846_AkPnBcht (norm = no)
+
+Validating against ground truth at 100 ms:
+precision 100, recall 21.4, accuracy 21.4, F 35.3
+
+Validating against ground truth at 150 ms:
+precision 100, recall 21.4, accuracy 21.4, F 35.3
+
+
+For file MAPS_MUS-bach_846_AkPnBcht, instrument 0, norm yes...
+force -> 
+one-file -> /tmp/25333
+Have audio source: "/tmp/25333.wav"
+Determining default rate and channel count from first input file... Done
+File or URL "/tmp/25333.wav" opened successfully
+Taking default channel count of 2 from file
+Taking default sample rate of 44100Hz from file
+(Note: Default may be overridden by transforms)
+RDFTransformFactory: NOTE: Transform is: 
+<transform
+    id="vamp:silvet:silvet:"
+    pluginVersion=""
+    program=""
+    stepSize="1024"
+    blockSize="1024"
+    windowType="hanning"
+    startTime="0.000000000"
+    duration="0.000000000"
+    sampleRate="0">
+  <parameter name="finetune" value="0"/>
+  <parameter name="instrument" value="0"/>
+  <parameter name="mode" value="1"/>
+</transform>
+
+NOTE: Transform does not specify a sample rate, using default rate of 44100
+NOTE: Loaded and initialised plugin for transform "vamp:silvet:silvet:" with plugin step size 1024 and block size 1024 (adapter step and block size 16384)
+Extracting features for: "/tmp/25333.wav"
+Audio file "/tmp/25333.wav": 2ch at 44100Hz
+Extracting and writing features... 1%Extracting and writing features... 2%Extracting and writing features... 3%Extracting and writing features... 5%Extracting and writing features... 6%Extracting and writing features... 7%Extracting and writing features... 8%Extracting and writing features... 10%Extracting and writing features... 11%Extracting and writing features... 12%Extracting and writing features... 13%Extracting and writing features... 14%Extracting and writing features... 16%Extracting and writing features... 17%Extracting and writing features... 18%Extracting and writing features... 19%Extracting and writing features... 21%Extracting and writing features... 22%Extracting and writing features... 23%Extracting and writing features... 24%Extracting and writing features... 26%Extracting and writing features... 27%Extracting and writing features... 28%Extracting and writing features... 29%Extracting and writing features... 31%Extracting and writing features... 32%Extracting and writing features... 33%Extracting and writing features... 34%Extracting and writing features... 36%Extracting and writing features... 37%Extracting and writing features... 38%Extracting and writing features... 39%Extracting and writing features... 40%Extracting and writing features... 42%Extracting and writing features... 43%Extracting and writing features... 44%Extracting and writing features... 45%Extracting and writing features... 47%Extracting and writing features... 48%Extracting and writing features... 49%Extracting and writing features... 50%Extracting and writing features... 52%Extracting and writing features... 53%Extracting and writing features... 54%Extracting and writing features... 55%Extracting and writing features... 57%Extracting and writing features... 58%Extracting and writing features... 59%Extracting and writing features... 60%Extracting and writing features... 62%Extracting and writing features... 63%Extracting and writing features... 64%Extracting and writing features... 65%Extracting and writing features... 66%Extracting and writing features... 68%Extracting and writing features... 69%Extracting and writing features... 70%Extracting and writing features... 71%Extracting and writing features... 73%Extracting and writing features... 74%Extracting and writing features... 75%Extracting and writing features... 76%Extracting and writing features... 78%Extracting and writing features... 79%Extracting and writing features... 80%Extracting and writing features... 81%Extracting and writing features... 83%Extracting and writing features... 84%Extracting and writing features... 85%Extracting and writing features... 86%Extracting and writing features... 88%Extracting and writing features... 89%Extracting and writing features... 90%Extracting and writing features... 91%Extracting and writing features... 92%Extracting and writing features... 94%Extracting and writing features... 95%Extracting and writing features... 96%Extracting and writing features... 97%Extracting and writing features... 99%Extracting and writing features... Done
+
+
+Validating against ground truth at 50 ms:
+precision 87, recall 67.7, accuracy 61.5, F 76.2  <-- main generic preset for MAPS_MUS-bach_846_AkPnBcht (norm = yes)
+
+Validating against ground truth at 100 ms:
+precision 93.9, recall 73.1, accuracy 69.8, F 82.2
+
+Validating against ground truth at 150 ms:
+precision 93.9, recall 73.1, accuracy 69.8, F 82.2
+
+
+real	4m49.100s
+user	11m1.463s
+sys	0m3.920s
