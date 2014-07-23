@@ -67,7 +67,7 @@ time for infile in $infiles; do
 
     for instrument in $intended_instrument ; do
 
-	for norm in no yes; do
+	for norm in no; do
 
 	    echo
 	    echo "For file $filename, instrument $instrument, norm $norm..."
