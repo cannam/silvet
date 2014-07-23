@@ -162,12 +162,11 @@ InstrumentPack::listInstrumentPacks()
 
 	if (isBowedString(i)) {
             instr.maxPolyphony = 2;
-//            instr.levelThreshold = 3;
+            instr.levelThreshold = 5;
 	    stringTemplates.push_back(t);
 	}
 	if (isWind(i)) {
             instr.maxPolyphony = 2;
-//            instr.levelThreshold = 5;
 	    windTemplates.push_back(t);
 	}
 	if (isOK(instr)) {
@@ -180,7 +179,7 @@ InstrumentPack::listInstrumentPacks()
 		       "Multiple or unknown instruments",
 		       allTemplates);
     all.maxPolyphony = 5;
-    all.levelThreshold = 6;//!!! but this does need to be a parameter too, or else we need to be able to detect very quiet stuff somehow
+    all.levelThreshold = 6;
     if (isOK(all)) {
 	ii.insert(ii.begin(), all);
     }
@@ -190,7 +189,7 @@ InstrumentPack::listInstrumentPacks()
 			   "String quartet",
 			   stringTemplates);
     strings.maxPolyphony = 5;
-    strings.levelThreshold = 3;
+    strings.levelThreshold = 5;
     if (isOK(strings)) {
 	ii.push_back(strings);
     }
