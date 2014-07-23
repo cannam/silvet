@@ -79,6 +79,7 @@ time for infile in $infiles; do
     
     piece=`basename \`dirname "$infile" \``
     arrangement=`basename "$infile" .wav`
+    mode=1
 
     echo
     echo "For piece $piece, arrangement $arrangement, using instrument $instrument..."
@@ -86,7 +87,9 @@ time for infile in $infiles; do
     sox "$infile" "$tmpwav" gain -n -6.020599913279624
 
     # generate the transform by interpolating the instrument parameter
-    cat transform.ttl | sed "s/INSTRUMENT_PARAMETER/$instrument/" > "$transfile"
+    cat transform.ttl | \
+	sed "s/INSTRUMENT_PARAMETER/$instrument/" | \
+	sed "s/MODE_PARAMETER/$mode/" > "$transfile"
 
     sonic-annotator \
 	--writer csv \

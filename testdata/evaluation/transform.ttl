@@ -16,6 +16,6 @@
     ] ;
     vamp:parameter_binding [
         vamp:parameter [ vamp:identifier "mode" ] ;
-        vamp:value "1"^^xsd:float ;
+        vamp:value "MODE_PARAMETER"^^xsd:float ;
     ] ;
     .

@@ -80,42 +80,47 @@ time for infile in $infiles; do
     piece=`basename \`dirname "$infile" \``
     arrangement=`basename "$infile" .wav`
 
-    echo
-    echo "For piece $piece, arrangement $arrangement, using instrument $instrument..."
+    for mode in 1 0; do
+
+	echo
+	echo "For piece $piece, arrangement $arrangement, mode $mode, using instrument $instrument..."
     
-    # unlike run.sh we don't normalise the input here
-    cp "$infile" "$tmpwav"
+	# unlike run.sh we don't normalise the input here
+	cp "$infile" "$tmpwav"
 
-    # generate the transform by interpolating the instrument parameter
-    cat transform.ttl | sed "s/INSTRUMENT_PARAMETER/$instrument/" > "$transfile"
+	# generate the transform by interpolating the instrument parameter
+	cat transform.ttl | \
+	    sed "s/INSTRUMENT_PARAMETER/$instrument/" | \
+	    sed "s/MODE_PARAMETER/$mode/" > "$transfile"
 
-    sonic-annotator \
-	--writer csv \
-	--csv-one-file "$outfile" \
-	--csv-force \
-	--transform "$transfile" \
-	"$tmpwav"
+	sonic-annotator \
+	    --writer csv \
+	    --csv-one-file "$outfile" \
+	    --csv-force \
+	    --transform "$transfile" \
+	    "$tmpwav"
 
-    cat "$outfile" | \
-	sed 's/^[^,]*,//' | \
-	while IFS=, read start duration frequency level label; do
+	cat "$outfile" | \
+	    sed 's/^[^,]*,//' | \
+	    while IFS=, read start duration frequency level label; do
 	    end=`echo "$start $duration + p" | dc`
 	    echo -e "$start\t$end\t$frequency"
-    done > "$outfile.lab"
+	done > "$outfile.lab"
 
-    for ms in 50 100; do
-	mark=""
-	if [ "$ms" = "50" ]; then mark="  <-- main $piece/$arrangement"; fi;
-	echo
-	echo "Validating against ground truth at $ms ms:"
-	"$yc" ../scripts/evaluate_lab.yeti "$ms" "../TRIOS-groundtruth/$piece/$arrangement.lab" "$outfile.lab" | sed 's,$,'"$mark"','
-	echo
-	echo "Validating against MIREX submission at $ms ms:"
-	"$yc" ../scripts/evaluate_lab.yeti "$ms" "../TRIOS-mirex2012-matlab/$piece/$arrangement.lab" "$outfile.lab"
-	echo
-	echo "Validating MIREX against ground truth at $ms ms":
-	"$yc" ../scripts/evaluate_lab.yeti "$ms" "../TRIOS-groundtruth/$piece/$arrangement.lab" "../TRIOS-mirex2012-matlab/$piece/$arrangement.lab"
-    done;
+	for ms in 50 100; do
+	    mark=""
+	    if [ "$ms" = "50" ]; then mark="  <-- main $piece/$arrangement"; fi;
+	    echo
+	    echo "Validating against ground truth at $ms ms:"
+	    "$yc" ../scripts/evaluate_lab.yeti "$ms" "../TRIOS-groundtruth/$piece/$arrangement.lab" "$outfile.lab" | sed 's,$,'"$mark"','
+	    echo
+	    echo "Validating against MIREX submission at $ms ms:"
+	    "$yc" ../scripts/evaluate_lab.yeti "$ms" "../TRIOS-mirex2012-matlab/$piece/$arrangement.lab" "$outfile.lab"
+	    echo
+	    echo "Validating MIREX against ground truth at $ms ms":
+	    "$yc" ../scripts/evaluate_lab.yeti "$ms" "../TRIOS-groundtruth/$piece/$arrangement.lab" "../TRIOS-mirex2012-matlab/$piece/$arrangement.lab"
+	done;
 
-    echo
+	echo
+    done
 done

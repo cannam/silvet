@@ -67,53 +67,58 @@ time for infile in $infiles; do
 
     for instrument in $intended_instrument ; do
 
-	for norm in no; do
+	for mode in 1 0; do 
+	    
+	    for norm in no; do
 
-	    echo
-	    echo "For file $filename, instrument $instrument, norm $norm..."
-
-	    if [ "$norm" = "no" ]; then
-		# Don't normalise; plugin is now supposed to do it
-		sox "$infile" "$tmpwav" trim 0 $duration
-	    else
-		# Normalise as reference
-		sox "$infile" "$tmpwav" trim 0 $duration gain -n -6.020599913279624
-	    fi
-
-	    # generate the transform by interpolating the instrument parameter
-	    cat transform.ttl | sed "s/INSTRUMENT_PARAMETER/$instrument/" > "$transfile"
-
-	    sonic-annotator \
-		--writer csv \
-		--csv-one-file "$outfile" \
-		--csv-force \
-		--transform "$transfile" \
-		"$tmpwav"
-
-	    cat "$outfile" | \
-		sed 's/^[^,]*,//' | \
-		while IFS=, read start duration frequency level label; do
-		end=`echo "$start $duration + p" | dc`
-		echo -e "$start\t$end\t$frequency"
-	    done > "$outfile.lab"
-
-	    for ms in 50 100 150; do
-		mark=""
-		if [ "$ms" = "50" ]; then
-		    if [ "$instrument" = "0" ]; then
-			mark="  <-- main generic preset for $filename (norm = $norm)"; 
-		    else
-			mark="  <-- main piano preset for $filename (norm = $norm)";
-		    fi
-		fi;
 		echo
-		echo "Validating against ground truth at $ms ms:"
-		egrep '(^[0-9]\.)|(^[012][0-9]\.)' "../piano-groundtruth/$filename.lab" > "$reference.lab"
-		"$yc" ../scripts/evaluate_lab.yeti "$ms" "$reference.lab" "$outfile.lab" | sed 's,$,'"$mark"','
-		cp "$reference.lab" /tmp/reference.lab
-		cp "$outfile.lab" /tmp/detected.lab
-	    done;
-	    echo
+		echo "For file $filename, instrument $instrument, norm $norm..."
+
+		if [ "$norm" = "no" ]; then
+		    # Don't normalise; plugin is now supposed to do it
+		    sox "$infile" "$tmpwav" trim 0 $duration
+		else
+		    # Normalise as reference
+		    sox "$infile" "$tmpwav" trim 0 $duration gain -n -6.020599913279624
+		fi
+
+		# generate the transform by interpolating the instrument parameter
+		cat transform.ttl | \
+		    sed "s/INSTRUMENT_PARAMETER/$instrument/" | \
+		    sed "s/MODE_PARAMETER/$mode/" > "$transfile"
+
+		sonic-annotator \
+		    --writer csv \
+		    --csv-one-file "$outfile" \
+		    --csv-force \
+		    --transform "$transfile" \
+		    "$tmpwav"
+
+		cat "$outfile" | \
+		    sed 's/^[^,]*,//' | \
+		    while IFS=, read start duration frequency level label; do
+		    end=`echo "$start $duration + p" | dc`
+		    echo -e "$start\t$end\t$frequency"
+		done > "$outfile.lab"
+
+		for ms in 50 100 150; do
+		    mark=""
+		    if [ "$ms" = "50" ]; then
+			if [ "$instrument" = "0" ]; then
+			    mark="  <-- main generic preset for $filename (norm = $norm)"; 
+			else
+			    mark="  <-- main piano preset for $filename (norm = $norm)";
+			fi
+		    fi;
+		    echo
+		    echo "Validating against ground truth at $ms ms:"
+		    egrep '(^[0-9]\.)|(^[012][0-9]\.)' "../piano-groundtruth/$filename.lab" > "$reference.lab"
+		    "$yc" ../scripts/evaluate_lab.yeti "$ms" "$reference.lab" "$outfile.lab" | sed 's,$,'"$mark"','
+		    cp "$reference.lab" /tmp/reference.lab
+		    cp "$outfile.lab" /tmp/detected.lab
+		done;
+		echo
+	    done
 	done
     done
 done
