@@ -88,7 +88,7 @@ protected:
     vector<MedianFilter<double> *> m_postFilter;
     vector<map<int, double> > m_pianoRoll;
     vector<map<int, int> > m_pianoRollShifts;
-    vector<float> m_inputGains;
+    map<Vamp::RealTime, float> m_inputGains;
 
     Grid preProcess(const Grid &);
 
@@ -100,6 +100,11 @@ protected:
 
     void emitNote(int start, int end, int note, int shiftCount,
                   FeatureList &noteFeatures);
+
+    Feature makeNoteFeature(int start, int end, int note, int shift,
+                            int shiftCount, int velocity);
+
+    float getInputGainAt(Vamp::RealTime t);
 
     FeatureSet transcribe(const Grid &);
 
