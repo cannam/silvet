@@ -122,11 +122,7 @@ InstrumentPack::listInstrumentPacks()
     vector<InstrumentPack> ii;
 
     vector<Templates> allTemplates;
-    //!!! is piano-maps-SptkBGCl the same as one of piano1, piano2, piano3?
     allTemplates.push_back(templatesFor("piano1"));
-    allTemplates.push_back(templatesFor("piano2"));
-    allTemplates.push_back(templatesFor("piano3"));
-    allTemplates.push_back(templatesFor("pianorwc"));
 
     vector<Templates> pianoTemplates;
     pianoTemplates.push_back(templatesFor("piano1"));
