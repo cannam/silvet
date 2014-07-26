@@ -133,7 +133,7 @@ Silvet::getParameterDescriptors() const
     desc.identifier = "mode";
     desc.name = "Processing mode";
     desc.unit = "";
-    desc.description = "Determines the tradeoff of processing speed against transcription quality";
+    desc.description = "Sets the tradeoff of processing speed against transcription quality. Draft mode modifies a number of internal parameters in favour of speed. Intensive mode (the default) will almost always produce better results.";
     desc.minValue = 0;
     desc.maxValue = 1;
     desc.defaultValue = 1;
@@ -146,7 +146,7 @@ Silvet::getParameterDescriptors() const
     desc.identifier = "instrument";
     desc.name = "Instrument";
     desc.unit = "";
-    desc.description = "The instrument known to be present in the recording, if there is only one";
+    desc.description = "The instrument or instruments known to be present in the recording. This affects the set of instrument templates used, as well as the expected level of polyphony in the output. Using a more limited set of instruments than the default will also make the plugin run faster.\nNote that this plugin cannot isolate instruments: you can't use this setting to request notes from only one instrument in a recording with several. Instead, use this as a hint to the plugin about which instruments are actually present.";
     desc.minValue = 0;
     desc.maxValue = m_instruments.size()-1;
     desc.defaultValue = 0;
@@ -161,7 +161,7 @@ Silvet::getParameterDescriptors() const
     desc.identifier = "finetune";
     desc.name = "Return fine pitch estimates";
     desc.unit = "";
-    desc.description = "Return pitch estimates at finer than semitone resolution (works only in Intensive mode)";
+    desc.description = "Return pitch estimates at finer than semitone resolution. This works only in Intensive mode. Notes that appear to drift in pitch will be split up into shorter notes with individually finer pitches.";
     desc.minValue = 0;
     desc.maxValue = 1;
     desc.defaultValue = 0;
@@ -224,7 +224,7 @@ Silvet::getOutputDescriptors() const
     OutputDescriptor d;
     d.identifier = "notes";
     d.name = "Note transcription";
-    d.description = "Overall note transcription across selected instruments";
+    d.description = "Overall note transcription. Each note has time, duration, estimated pitch, and a synthetic MIDI velocity (1-127) estimated from the strength of the pitch in the mixture.";
     d.unit = "Hz";
     d.hasFixedBinCount = true;
     d.binCount = 2;
@@ -240,7 +240,7 @@ Silvet::getOutputDescriptors() const
 
     d.identifier = "timefreq";
     d.name = "Time-frequency distribution";
-    d.description = "Filtered constant-Q time-frequency distribution used as input to the expectation-maximisation algorithm";
+    d.description = "Filtered constant-Q time-frequency distribution as used as input to the expectation-maximisation algorithm.";
     d.unit = "";
     d.hasFixedBinCount = true;
     d.binCount = m_instruments[0].templateHeight;

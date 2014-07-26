@@ -42,7 +42,7 @@ tmpwav="/tmp/$$.wav"
 
 transfile="/tmp/$$transform.ttl"
 
-trap 'rm -f "$outfile" "$tmpwav" "$instfile" "$transfile" "$outfile.lab"' 0
+trap 'rm -f "$outfile" "$tmpwav" "$transfile" "$reference.lab" "$outfile.lab"' 0
 
 infiles=$(find "$piano_path" -name \*.wav | sort)
 
@@ -114,8 +114,6 @@ time for infile in $infiles; do
 		    echo "Validating against ground truth at $ms ms:"
 		    egrep '(^[0-9]\.)|(^[012][0-9]\.)' "../piano-groundtruth/$filename.lab" > "$reference.lab"
 		    "$yc" ../scripts/evaluate_lab.yeti "$ms" "$reference.lab" "$outfile.lab" | sed 's,$,'"$mark"','
-		    cp "$reference.lab" /tmp/reference.lab
-		    cp "$outfile.lab" /tmp/detected.lab
 		done;
 		echo
 	    done
