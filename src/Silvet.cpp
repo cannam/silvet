@@ -35,6 +35,9 @@ using Vamp::RealTime;
 static int processingSampleRate = 44100;
 static int processingBPO = 60;
 
+static int minInputSampleRate = 100;
+static int maxInputSampleRate = 192000;
+
 Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
     m_instruments(InstrumentPack::listInstrumentPacks()),
@@ -329,8 +332,21 @@ Silvet::noteFrequency(int note, int shift, int shiftCount) const
 bool
 Silvet::initialise(size_t channels, size_t stepSize, size_t blockSize)
 {
+    if (m_inputSampleRate < minInputSampleRate ||
+        m_inputSampleRate > maxInputSampleRate) {
+	cerr << "Silvet::initialise: Unsupported input sample rate "
+             << m_inputSampleRate << " (supported min " << minInputSampleRate
+             << ", max " << maxInputSampleRate << ")" << endl;
+        return false;
+    }
+
     if (channels < getMinChannelCount() ||
-	channels > getMaxChannelCount()) return false;
+	channels > getMaxChannelCount()) {
+	cerr << "Silvet::initialise: Unsupported channel count " << channels
+             << " (supported min " << getMinChannelCount() << ", max "
+             << getMaxChannelCount() << ")" << endl;
+        return false;
+    }
 
     if (stepSize != blockSize) {
 	cerr << "Silvet::initialise: Step size must be the same as block size ("
@@ -397,6 +413,7 @@ Silvet::reset()
     m_pianoRoll.clear();
     m_inputGains.clear();
     m_columnCount = 0;
+    m_resampledCount = 0;
     m_startTime = RealTime::zeroTime;
 }
 
@@ -426,9 +443,24 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
     }
 
     if (m_resampler) {
+
 	data = m_resampler->process(data.data(), data.size());
+
+        int hadCount = m_resampledCount;
+        m_resampledCount += data.size();
+
+        int resamplerLatency = m_resampler->getLatency();
+
+        if (hadCount < resamplerLatency) {
+            int stillToDrop = resamplerLatency - hadCount;
+            if (stillToDrop >= int(data.size())) {
+                return FeatureSet();
+            } else {
+                data = vector<double>(data.begin() + stillToDrop, data.end());
+            }
+        }
     }
- 
+
     Grid cqout = m_cq->process(data);
     FeatureSet fs = transcribe(cqout);
     return fs;
@@ -465,7 +497,6 @@ Silvet::transcribe(const Grid &cqout)
 
     int iterations = m_hqMode ? 20 : 10;
 
-    //!!! pitches or notes? [terminology]
     Grid localPitches(width, vector<double>(pack.templateNoteCount, 0.0));
 
     bool wantShifts = m_hqMode && m_fineTuning;

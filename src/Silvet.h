@@ -113,6 +113,7 @@ protected:
 
     int m_blockSize;
     int m_columnCount;
+    int m_resampledCount;
     Vamp::RealTime m_startTime;
 
     mutable int m_notesOutputNo;
