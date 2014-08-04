@@ -97,9 +97,6 @@ private:
     float m_shiftSparsity;
     float m_sourceSparsity;
 
-    const int m_lowestPitch;
-    const int m_highestPitch;
-
     void normaliseColumn(float *column, int size);
     void normaliseGrid(float **grid, int size1, int size2);
 
