@@ -10,9 +10,8 @@ PLUGIN_LDFLAGS := -lgomp -shared -Wl,-Bsymbolic -Wl,-z,defs -Wl,--version-script
 
 PLUGIN_EXT := .so
 
+MAKEFILE_EXT  := .linux
+
 include Makefile.inc
 
-.PHONY: constant-q-cpp
-constant-q-cpp: 
-	$(MAKE) -C $@ -f Makefile.linux libcq.a
 

@@ -38,11 +38,16 @@ LIBS	:= $(CQ_DIR)/libcq.a $(VAMPSDK_DIR)/libvamp-sdk.a
 
 all: constant-q-cpp $(PLUGIN)
 
+.PHONY: constant-q-cpp
+constant-q-cpp: 
+	$(MAKE) -C $@ -f Makefile$(MAKEFILE_EXT) libcq.a
+
 $(PLUGIN):	$(OBJECTS) $(LIBS)
 	$(CXX) -o $@ $^ $(LIBS) $(PLUGIN_LDFLAGS)
 
 clean:		
 	rm -f $(OBJECTS)
+	$(MAKE) -C constant-q-cpp -f Makefile$(MAKEFILE_EXT) clean
 
 distclean:	clean
 	rm -f $(PLUGIN)
