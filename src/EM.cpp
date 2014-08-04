@@ -40,9 +40,7 @@ EM::EM(const InstrumentPack *pack, bool useShifts) :
     m_sourceCount(pack->templates.size()),
     m_pitchSparsity(1.1),
     m_shiftSparsity(1.1),
-    m_sourceSparsity(1.2),
-    m_lowestPitch(pack->lowestNote),
-    m_highestPitch(pack->highestNote)
+    m_sourceSparsity(1.2)
 {
     m_pitches = allocate<float>(m_noteCount);
     m_updatePitches = allocate<float>(m_noteCount);
