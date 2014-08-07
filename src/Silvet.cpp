@@ -848,7 +848,7 @@ Silvet::makeNoteFeature(int start,
     Feature f;
 
     f.hasTimestamp = true;
-    f.timestamp = RealTime::fromSeconds
+    f.timestamp = m_startTime + RealTime::fromSeconds
         (columnDuration * (start - postFilterLatency) + 0.02);
 
     f.hasDuration = true;
