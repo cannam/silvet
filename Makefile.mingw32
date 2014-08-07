@@ -6,8 +6,8 @@ LD		= $(TOOLPREFIX)g++
 AR		= $(TOOLPREFIX)ar
 RANLIB		= $(TOOLPREFIX)ranlib
 
-CXXFLAGS 	:= $(CXXFLAGS) -DNDEBUG -O3 -msse -msse2 -ffast-math -mfpmath=sse -Wall -Wextra 
-PLUGIN_LDFLAGS 	:= $(LDFLAGS) -shared -static -Wl,--retain-symbols-file=vamp-plugin.list
+CXXFLAGS 	:= $(CXXFLAGS) -DNDEBUG -O3 -fopenmp -msse -msse2 -ffast-math -mfpmath=sse -Wall -Wextra 
+PLUGIN_LDFLAGS 	:= $(LDFLAGS) -shared -static -fopenmp -Wl,--retain-symbols-file=vamp-plugin.list
 
 VAMPSDK_DIR 	:= ../vamp-plugin-sdk
 PLUGIN_EXT 	:= .dll
