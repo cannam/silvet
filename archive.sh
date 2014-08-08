@@ -6,4 +6,4 @@ if [ -z "$tag" ]; then
     echo "ERROR: No tag found!"
     exit 1
 fi
-hg archive -r"$tag" -S --exclude notes --exclude papers --exclude mirex2012-matlab --exclude testdata --exclude yeti "$out"
+hg archive -r"$tag" -S --exclude notes --exclude papers --exclude mirex2012-matlab --exclude testdata --exclude yeti --exclude constant-q-cpp/misc "$out"
