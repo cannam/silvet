@@ -249,7 +249,7 @@ Silvet::getOutputDescriptors() const
     d.binCount = m_instruments[0].templateHeight;
     d.binNames.clear();
     if (m_cq) {
-        char name[20];
+        char name[50];
         for (int i = 0; i < m_instruments[0].templateHeight; ++i) {
             // We have a 600-bin (10 oct 60-bin CQ) of which the
             // lowest-frequency 55 bins have been dropped, for a
@@ -268,6 +268,26 @@ Silvet::getOutputDescriptors() const
     d.sampleRate = m_colsPerSec;
     d.hasDuration = false;
     m_fcqOutputNo = list.size();
+    list.push_back(d);
+
+    d.identifier = "pitchactivation";
+    d.name = "Pitch activation distribution";
+    d.description = "Pitch activation distribution resulting from expectation-maximisation algorithm, prior to note extraction.";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = m_instruments[0].templateNoteCount;
+    d.binNames.clear();
+    if (m_cq) {
+        for (int i = 0; i < m_instruments[0].templateNoteCount; ++i) {
+            d.binNames.push_back(noteName(i, 0, 1));
+        }
+    }
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::FixedSampleRate;
+    d.sampleRate = m_colsPerSec;
+    d.hasDuration = false;
+    m_pitchOutputNo = list.size();
     list.push_back(d);
 
     return list;
@@ -569,7 +589,16 @@ Silvet::transcribe(const Grid &cqout)
             continue;
         }
 
-        postProcess(localPitches[i], localBestShifts[i], wantShifts);
+        vector<double> filtered = postProcess
+            (localPitches[i], localBestShifts[i], wantShifts);
+
+        Feature f;
+        for (int j = 0; j < (int)filtered.size(); ++j) {
+            float v(filtered[j]);
+            if (v < pack.levelThreshold) v = 0.f;
+            f.values.push_back(v);
+        }
+        fs[m_pitchOutputNo].push_back(f);
         
         FeatureList noteFeatures = noteTrack(shiftCount);
 
@@ -666,7 +695,7 @@ Silvet::preProcess(const Grid &in)
     return out;
 }
     
-void
+vector<double>
 Silvet::postProcess(const vector<double> &pitches,
                     const vector<int> &bestShifts,
                     bool wantShifts)
@@ -716,6 +745,8 @@ Silvet::postProcess(const vector<double> &pitches,
     if (wantShifts) {
         m_pianoRollShifts.push_back(activeShifts);
     }
+
+    return filtered;
 }
 
 Vamp::Plugin::FeatureList
