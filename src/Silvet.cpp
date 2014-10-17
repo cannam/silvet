@@ -88,7 +88,7 @@ Silvet::getMaker() const
 int
 Silvet::getPluginVersion() const
 {
-    return 1;
+    return 2;
 }
 
 string
