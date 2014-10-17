@@ -59,6 +59,7 @@ plugbase:silvet a vamp:Plugin ;
 
     vamp:output      plugbase:silvet_output_notes ;
     vamp:output      plugbase:silvet_output_timefreq ;
+    vamp:output      plugbase:silvet_output_pitchactivation ;
     .
 plugbase:silvet_param_mode a  vamp:QuantizedParameter ;
     vamp:identifier     "mode" ;
@@ -76,7 +77,7 @@ plugbase:silvet_param_instrument a  vamp:QuantizedParameter ;
     dc:title            "Instrument" ;
     dc:format           "" ;
     vamp:min_value       0 ;
-    vamp:max_value       12 ;
+    vamp:max_value       13 ;
     vamp:unit           "" ;
     vamp:quantize_step   1  ;
     vamp:default_value   0 ;
@@ -96,7 +97,7 @@ plugbase:silvet_param_finetune a  vamp:QuantizedParameter ;
 plugbase:silvet_output_notes a  vamp:SparseOutput ;
     vamp:identifier       "notes" ;
     dc:title              "Note transcription" ;
-    dc:description        """Overall note transcription across selected instruments"""  ;
+    dc:description        """Overall note transcription. Each note has time, duration, estimated pitch, and a synthetic MIDI velocity (1-127) estimated from the strength of the pitch in the mixture."""  ;
     vamp:fixed_bin_count  "true" ;
     vamp:unit             "Hz" ;
     vamp:bin_count        2 ;
@@ -107,9 +108,18 @@ plugbase:silvet_output_notes a  vamp:SparseOutput ;
 plugbase:silvet_output_timefreq a  vamp:DenseOutput ;
     vamp:identifier       "timefreq" ;
     dc:title              "Time-frequency distribution" ;
-    dc:description        """Filtered constant-Q time-frequency distribution used as input to the expectation-maximisation algorithm"""  ;
+    dc:description        """Filtered constant-Q time-frequency distribution as used as input to the expectation-maximisation algorithm"""  ;
     vamp:fixed_bin_count  "true" ;
+    vamp:bin_count        545 ;
     vamp:unit             "" ;
     vamp:computes_signal_type  af:Spectrogram ;
     .
-
+plugbase:silvet_output_pitchactivation a  vamp:DenseOutput ;
+    vamp:identifier       "pitchactivation" ;
+    dc:title              "Pitch activation distribution" ;
+    dc:description        """Pitch activation distribution resulting from expectation-maximisation algorithm, prior to note extraction."""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "" ;
+    vamp:bin_count        88 ;
+    vamp:computes_signal_type  af:Spectrogram ;
+    .
