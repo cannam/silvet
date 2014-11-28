@@ -21,6 +21,7 @@
 #include "MedianFilter.h"
 #include "constant-q-cpp/src/dsp/Resampler.h"
 #include "flattendynamics-ladspa.h"
+#include "LiveInstruments.h"
 
 #include <vector>
 
@@ -33,7 +34,9 @@ using std::endl;
 using Vamp::RealTime;
 
 static int processingSampleRate = 44100;
-static int processingBPO = 60;
+
+static int binsPerSemitoneLive = 1;
+static int binsPerSemitoneNormal = 5;
 
 static int minInputSampleRate = 100;
 static int maxInputSampleRate = 192000;
@@ -41,6 +44,7 @@ static int maxInputSampleRate = 192000;
 Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
     m_instruments(InstrumentPack::listInstrumentPacks()),
+    m_liveInstruments(LiveAdapter::adaptAll(m_instruments)),
     m_resampler(0),
     m_flattener(0),
     m_cq(0),
@@ -247,18 +251,18 @@ Silvet::getOutputDescriptors() const
     d.description = "Filtered constant-Q time-frequency distribution as used as input to the expectation-maximisation algorithm.";
     d.unit = "";
     d.hasFixedBinCount = true;
-    d.binCount = m_instruments[0].templateHeight;
+    d.binCount = getPack(0).templateHeight;
     d.binNames.clear();
     if (m_cq) {
         char name[50];
-        for (int i = 0; i < m_instruments[0].templateHeight; ++i) {
+        for (int i = 0; i < getPack(0).templateHeight; ++i) {
             // We have a 600-bin (10 oct 60-bin CQ) of which the
             // lowest-frequency 55 bins have been dropped, for a
             // 545-bin template. The native CQ bins go high->low
             // frequency though, so these are still the first 545 bins
             // as reported by getBinFrequency, though in reverse order
             float freq = m_cq->getBinFrequency
-                (m_instruments[0].templateHeight - i - 1);
+                (getPack(0).templateHeight - i - 1);
             sprintf(name, "%.1f Hz", freq);
             d.binNames.push_back(name);
         }
@@ -276,10 +280,10 @@ Silvet::getOutputDescriptors() const
     d.description = "Pitch activation distribution resulting from expectation-maximisation algorithm, prior to note extraction.";
     d.unit = "";
     d.hasFixedBinCount = true;
-    d.binCount = m_instruments[0].templateNoteCount;
+    d.binCount = getPack(0).templateNoteCount;
     d.binNames.clear();
     if (m_cq) {
-        for (int i = 0; i < m_instruments[0].templateNoteCount; ++i) {
+        for (int i = 0; i < getPack(0).templateNoteCount; ++i) {
             d.binNames.push_back(noteName(i, 0, 1));
         }
     }
@@ -406,10 +410,13 @@ Silvet::reset()
         minFreq *= 2;
     }
 
+    int bpo = 12 *
+        (m_mode == LiveMode ? binsPerSemitoneLive : binsPerSemitoneNormal);
+        
     CQParameters params(processingSampleRate,
                         minFreq, 
                         processingSampleRate / 3,
-                        processingBPO);
+                        bpo);
 
     params.q = 0.95; // MIREX code uses 0.8, but it seems 0.9 or lower
                      // drops the FFT size to 512 from 1024 and alters
@@ -430,7 +437,7 @@ Silvet::reset()
         delete m_postFilter[i];
     }
     m_postFilter.clear();
-    for (int i = 0; i < m_instruments[0].templateNoteCount; ++i) {
+    for (int i = 0; i < getPack(0).templateNoteCount; ++i) {
         m_postFilter.push_back(new MedianFilter<double>(3));
     }
     m_pianoRoll.clear();
@@ -506,7 +513,7 @@ Silvet::transcribe(const Grid &cqout)
 
     if (filtered.empty()) return fs;
     
-    const InstrumentPack &pack = m_instruments[m_instrument];
+    const InstrumentPack &pack(getPack(m_instrument));
 
     for (int i = 0; i < (int)filtered.size(); ++i) {
         Feature f;
@@ -633,7 +640,7 @@ Silvet::preProcess(const Grid &in)
     // size we reduce to in a moment
     int latentColumns = m_cq->getLatency() / m_cq->getColumnHop();
 
-    const InstrumentPack &pack = m_instruments[m_instrument];
+    const InstrumentPack &pack(getPack(m_instrument));
 
     for (int i = 0; i < width; ++i) {
 
@@ -652,7 +659,7 @@ Silvet::preProcess(const Grid &in)
             vector<double> outCol(pack.templateHeight);
 
             // In HQ mode, the CQ returns 600 bins and we ignore the
-            // lowest 55 of them.
+            // lowest 55 of them (assuming binsPerSemitone == 5).
             // 
             // In draft and live mode the CQ is an octave shorter,
             // returning 540 bins, so we instead pad them with an
@@ -662,29 +669,32 @@ Silvet::preProcess(const Grid &in)
             // raw CQ has the high frequencies first and we need it
             // the other way around.
 
+            int bps = (m_mode == LiveMode ?
+                       binsPerSemitoneLive : binsPerSemitoneNormal);
+            
             if (m_mode == HighQualityMode) {
                 for (int j = 0; j < pack.templateHeight; ++j) {
-                    int ix = inCol.size() - j - 55;
+                    int ix = inCol.size() - j - (11 * bps);
                     outCol[j] = inCol[ix];
                 }
             } else {
-                for (int j = 0; j < 5; ++j) {
+                for (int j = 0; j < bps; ++j) {
                     outCol[j] = 0.0;
                 }
-                for (int j = 5; j < pack.templateHeight; ++j) {
-                    int ix = inCol.size() - j + 4;
+                for (int j = bps; j < pack.templateHeight; ++j) {
+                    int ix = inCol.size() - j + (bps-1);
                     outCol[j] = inCol[ix];
                 }
             }
 
             vector<double> noiseLevel1 = 
-                MedianFilter<double>::filter(40, outCol);
+                MedianFilter<double>::filter(8 * bps, outCol);
             for (int j = 0; j < pack.templateHeight; ++j) {
                 noiseLevel1[j] = std::min(outCol[j], noiseLevel1[j]);
             }
 
             vector<double> noiseLevel2 = 
-                MedianFilter<double>::filter(40, noiseLevel1);
+                MedianFilter<double>::filter(8 * bps, noiseLevel1);
             for (int j = 0; j < pack.templateHeight; ++j) {
                 outCol[j] = std::max(outCol[j] - noiseLevel2[j], 0.0);
             }
@@ -703,7 +713,7 @@ Silvet::postProcess(const vector<double> &pitches,
                     const vector<int> &bestShifts,
                     bool wantShifts)
 {
-    const InstrumentPack &pack = m_instruments[m_instrument];
+    const InstrumentPack &pack(getPack(m_instrument));
 
     vector<double> filtered;
 

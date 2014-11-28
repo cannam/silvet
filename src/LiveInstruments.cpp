@@ -1,0 +1,71 @@
+/* -*- c-basic-offset: 4 indent-tabs-mode: nil -*-  vi:set ts=8 sts=4 sw=4: */
+
+/*
+  Silvet
+
+  A Vamp plugin for note transcription.
+  Centre for Digital Music, Queen Mary University of London.
+    
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License as
+  published by the Free Software Foundation; either version 2 of the
+  License, or (at your option) any later version.  See the file
+  COPYING included with this distribution for more information.
+*/
+
+#include "LiveInstruments.h"
+
+#include "data/include/templates.h"
+
+using namespace std;
+
+InstrumentPack
+LiveAdapter::adapt(const InstrumentPack &original)
+{
+    vector<InstrumentPack::Templates> templates;
+
+    for (vector<InstrumentPack::Templates>::const_iterator i =
+	     original.templates.begin();
+	 i != original.templates.end(); ++i) {
+
+	InstrumentPack::Templates t;
+	t.lowestNote = i->lowestNote;
+	t.highestNote = i->highestNote;
+	t.data.resize(i->data.size());
+
+	for (int j = 0; j < int(i->data.size()); ++j) {
+	    t.data[j].resize(SILVET_TEMPLATE_HEIGHT/5);
+	    for (int k = 0; k < SILVET_TEMPLATE_HEIGHT/5; ++k) {
+		t.data[j][k] = i->data[j][k * 5 + 2 - SILVET_TEMPLATE_MAX_SHIFT];
+	    }
+	}
+	templates.push_back(t);
+    }
+    
+    InstrumentPack live(original.lowestNote,
+			original.highestNote,
+			original.name,
+			templates);
+
+    live.templateHeight = SILVET_TEMPLATE_HEIGHT/5;
+    live.templateMaxShift = 0;
+    live.templateSize = live.templateHeight;
+    
+    live.maxPolyphony = original.maxPolyphony;
+    live.pitchSparsity = original.pitchSparsity;
+    live.sourceSparsity = original.sourceSparsity;
+    live.levelThreshold = original.levelThreshold;
+
+    return live;
+}
+
+vector<InstrumentPack>
+LiveAdapter::adaptAll(const vector<InstrumentPack> &v)
+{
+    vector<InstrumentPack> out;
+    for (int i = 0; i < (int)v.size(); ++i) {
+        InstrumentPack p(LiveAdapter::adapt(v[i]));
+        out.push_back(p);
+    }
+    return out;
+}

@@ -19,15 +19,27 @@
 
 #include <iostream>
 
-const int InstrumentPack::templateNoteCount = SILVET_TEMPLATE_NOTE_COUNT;
-const int InstrumentPack::templateHeight = SILVET_TEMPLATE_HEIGHT;
-const int InstrumentPack::templateMaxShift = SILVET_TEMPLATE_MAX_SHIFT;
-const int InstrumentPack::templateSize = SILVET_TEMPLATE_SIZE;
-
 using std::string;
 using std::vector;
 using std::cerr;
 using std::endl;
+
+InstrumentPack::InstrumentPack(int lowest, int highest,
+                               std::string n, std::vector<Templates> tt) :
+    templateNoteCount(SILVET_TEMPLATE_NOTE_COUNT),
+    templateHeight(SILVET_TEMPLATE_HEIGHT),
+    templateMaxShift(SILVET_TEMPLATE_MAX_SHIFT),
+    templateSize(SILVET_TEMPLATE_SIZE),
+    lowestNote(lowest),
+    highestNote(highest),
+    maxPolyphony(5),
+    pitchSparsity(1.1),
+    sourceSparsity(1.2),
+    levelThreshold(5),
+    name(n),
+    templates(tt)
+{
+}
 
 const char *simpleInstruments[] = {
     // Each instrument has two consecutive slots, one for the pack

@@ -73,7 +73,16 @@ public:
 
 protected:
     const std::vector<InstrumentPack> m_instruments;
+    const std::vector<InstrumentPack> m_liveInstruments;
 
+    const InstrumentPack &getPack(int instrument) const {
+        if (m_mode == LiveMode) {
+            return m_liveInstruments[instrument];
+        } else {
+            return m_instruments[instrument];
+        }
+    }
+    
     Resampler *m_resampler;
     FlattenDynamics *m_flattener;
     CQSpectrogram *m_cq;
