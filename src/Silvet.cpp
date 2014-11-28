@@ -44,7 +44,7 @@ Silvet::Silvet(float inputSampleRate) :
     m_resampler(0),
     m_flattener(0),
     m_cq(0),
-    m_hqMode(true),
+    m_mode(HighQualityMode),
     m_fineTuning(false),
     m_instrument(0),
     m_colsPerSec(50)
@@ -136,14 +136,15 @@ Silvet::getParameterDescriptors() const
     desc.identifier = "mode";
     desc.name = "Processing mode";
     desc.unit = "";
-    desc.description = "Sets the tradeoff of processing speed against transcription quality. Draft mode modifies a number of internal parameters in favour of speed. Intensive mode (the default) will almost always produce better results.";
+    desc.description = "Sets the tradeoff of processing speed against transcription quality. Draft mode is tuned in favour of overall speed; Live mode is tuned in favour of lower latency; while Intensive mode (the default) will almost always produce the best results.";
     desc.minValue = 0;
-    desc.maxValue = 1;
+    desc.maxValue = 2;
     desc.defaultValue = 1;
     desc.isQuantized = true;
     desc.quantizeStep = 1;
     desc.valueNames.push_back("Draft (faster)"); 
     desc.valueNames.push_back("Intensive (higher quality)");
+    desc.valueNames.push_back("Live (lower latency)");
     list.push_back(desc);
 
     desc.identifier = "instrument";
@@ -180,7 +181,7 @@ float
 Silvet::getParameter(string identifier) const
 {
     if (identifier == "mode") {
-        return m_hqMode ? 1.f : 0.f;
+        return (float)(int)m_mode;
     } else if (identifier == "finetune") {
         return m_fineTuning ? 1.f : 0.f;
     } else if (identifier == "instrument") {
@@ -193,7 +194,7 @@ void
 Silvet::setParameter(string identifier, float value) 
 {
     if (identifier == "mode") {
-        m_hqMode = (value > 0.5);
+        m_mode = (ProcessingMode)(int)(value + 0.5);
     } else if (identifier == "finetune") {
         m_fineTuning = (value > 0.5);
     } else if (identifier == "instrument") {
@@ -399,7 +400,7 @@ Silvet::reset()
 
     double minFreq = 27.5;
 
-    if (!m_hqMode) {
+    if (m_mode != HighQualityMode) {
         // We don't actually return any notes from the bottom octave,
         // so we can just pad with zeros
         minFreq *= 2;
@@ -421,7 +422,9 @@ Silvet::reset()
 
     m_cq = new CQSpectrogram(params, CQSpectrogram::InterpolateLinear);
 
-    m_colsPerSec = m_hqMode ? 50 : 25;
+    cerr << "cq latency = " << m_cq->getLatency() << endl;
+    
+    m_colsPerSec = (m_mode == DraftMode ? 25 : 50);
 
     for (int i = 0; i < (int)m_postFilter.size(); ++i) {
         delete m_postFilter[i];
@@ -515,11 +518,11 @@ Silvet::transcribe(const Grid &cqout)
 
     int width = filtered.size();
 
-    int iterations = m_hqMode ? 20 : 10;
+    int iterations = (m_mode == HighQualityMode ? 20 : 10);
 
     Grid localPitches(width, vector<double>(pack.templateNoteCount, 0.0));
 
-    bool wantShifts = m_hqMode && m_fineTuning;
+    bool wantShifts = (m_mode == HighQualityMode) && m_fineTuning;
     int shiftCount = 1;
     if (wantShifts) {
         shiftCount = pack.templateMaxShift * 2 + 1;
@@ -544,7 +547,7 @@ Silvet::transcribe(const Grid &cqout)
 
         present[i] = true;
 
-        EM em(&pack, m_hqMode);
+        EM em(&pack, m_mode == HighQualityMode);
 
         em.setPitchSparsity(pack.pitchSparsity);
         em.setSourceSparsity(pack.sourceSparsity);
@@ -651,15 +654,15 @@ Silvet::preProcess(const Grid &in)
             // In HQ mode, the CQ returns 600 bins and we ignore the
             // lowest 55 of them.
             // 
-            // In draft mode the CQ is an octave shorter, returning
-            // 540 bins, so we instead pad them with an additional 5
-            // zeros.
+            // In draft and live mode the CQ is an octave shorter,
+            // returning 540 bins, so we instead pad them with an
+            // additional 5 zeros.
             // 
             // We also need to reverse the column as we go, since the
             // raw CQ has the high frequencies first and we need it
             // the other way around.
 
-            if (m_hqMode) {
+            if (m_mode == HighQualityMode) {
                 for (int j = 0; j < pack.templateHeight; ++j) {
                     int ix = inCol.size() - j - 55;
                     outCol[j] = inCol[ix];

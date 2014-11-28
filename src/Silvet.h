@@ -78,7 +78,13 @@ protected:
     FlattenDynamics *m_flattener;
     CQSpectrogram *m_cq;
 
-    bool m_hqMode;
+    enum ProcessingMode { // ordered so draft==0 and hq==1 as in prior releases
+        DraftMode = 0,
+        HighQualityMode = 1,
+        LiveMode = 2,
+    };
+    ProcessingMode m_mode;
+    
     bool m_fineTuning;
     int m_instrument;
     int m_colsPerSec;
