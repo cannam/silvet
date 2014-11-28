@@ -662,8 +662,8 @@ Silvet::preProcess(const Grid &in)
             // lowest 55 of them (assuming binsPerSemitone == 5).
             // 
             // In draft and live mode the CQ is an octave shorter,
-            // returning 540 bins, so we instead pad them with an
-            // additional 5 zeros.
+            // returning 540 bins or equivalent, so we instead pad
+            // them with an additional 5 or equivalent zeros.
             // 
             // We also need to reverse the column as we go, since the
             // raw CQ has the high frequencies first and we need it
