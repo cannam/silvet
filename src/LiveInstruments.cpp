@@ -35,10 +35,17 @@ LiveAdapter::adapt(const InstrumentPack &original)
 
 	for (int j = 0; j < int(i->data.size()); ++j) {
 	    t.data[j].resize(SILVET_TEMPLATE_HEIGHT/5);
+            float sum = 0.f;
 	    for (int k = 0; k < SILVET_TEMPLATE_HEIGHT/5; ++k) {
 		t.data[j][k] = i->data[j][k * 5 + 2 - SILVET_TEMPLATE_MAX_SHIFT];
+                sum += t.data[j][k];
 	    }
+	    // re-normalise
+	    for (int k = 0; k < (int)t.data[j].size(); ++k) {
+                t.data[j][k] *= 1.f / sum;
+            }
 	}
+
 	templates.push_back(t);
     }
     
