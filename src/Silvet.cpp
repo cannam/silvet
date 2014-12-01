@@ -351,7 +351,12 @@ Silvet::noteFrequency(int note, int shift, int shiftCount) const
             float((shiftCount - shift) - int(shiftCount / 2) - 1) / shiftCount;
     }
 
-    return float(27.5 * pow(2.0, (note + pshift) / 12.0));
+    float freq = float(27.5 * pow(2.0, (note + pshift) / 12.0));
+
+    cerr << "note = " << note << ", shift = " << shift << ", shiftCount = "
+         << shiftCount << ", obtained freq = " << freq << endl;
+    
+    return freq;
 }
 
 bool
@@ -402,6 +407,17 @@ Silvet::reset()
     m_flattener = new FlattenDynamics(m_inputSampleRate); // before resampling
     m_flattener->reset();
 
+    // this happens to be processingSampleRate / 3, and is the top
+    // freq used for the EM templates:
+    double maxFreq = 14700;
+
+    if (m_mode == LiveMode) {
+        // We only have 12 bpo rather than 60, so we need the top bin
+        // to be the middle one of the top 5, i.e. 2/5 of a semitone
+        // lower than 14700
+        maxFreq *= powf(2.0, -1.0 / 30.0);
+    }
+    
     double minFreq = 27.5;
 
     if (m_mode != HighQualityMode) {
@@ -412,7 +428,7 @@ Silvet::reset()
 
     int bpo = 12 *
         (m_mode == LiveMode ? binsPerSemitoneLive : binsPerSemitoneNormal);
-        
+
     CQParameters params(processingSampleRate,
                         minFreq, 
                         processingSampleRate / 3,
@@ -429,7 +445,8 @@ Silvet::reset()
 
     m_cq = new CQSpectrogram(params, CQSpectrogram::InterpolateLinear);
 
-    cerr << "cq latency = " << m_cq->getLatency() << endl;
+    cerr << "CQ bins = " << m_cq->getTotalBins() << endl;
+    cerr << "CQ min freq = " << m_cq->getMinFrequency() << " (and for confirmation, freq of bin 0 = " << m_cq->getBinFrequency(0) << ")" << endl;
     
     m_colsPerSec = (m_mode == DraftMode ? 25 : 50);
 

@@ -17,6 +17,8 @@
 
 #include "data/include/templates.h"
 
+#include <iostream>
+
 using namespace std;
 
 InstrumentPack
@@ -24,6 +26,8 @@ LiveAdapter::adapt(const InstrumentPack &original)
 {
     vector<InstrumentPack::Templates> templates;
 
+            cerr << "LiveAdapter: reduced template height is " << SILVET_TEMPLATE_HEIGHT/5 << endl;
+            
     for (vector<InstrumentPack::Templates>::const_iterator i =
 	     original.templates.begin();
 	 i != original.templates.end(); ++i) {
@@ -34,12 +38,22 @@ LiveAdapter::adapt(const InstrumentPack &original)
 	t.data.resize(i->data.size());
 
 	for (int j = 0; j < int(i->data.size()); ++j) {
+
 	    t.data[j].resize(SILVET_TEMPLATE_HEIGHT/5);
+
             float sum = 0.f;
+
 	    for (int k = 0; k < SILVET_TEMPLATE_HEIGHT/5; ++k) {
-		t.data[j][k] = i->data[j][k * 5 + 2 - SILVET_TEMPLATE_MAX_SHIFT];
+
+                t.data[j][k] = 0.f;
+
+                for (int m = 0; m < 5; ++m) {
+                    t.data[j][k] += i->data[j][k * 5 + m + 2];
+                }
+                
                 sum += t.data[j][k];
 	    }
+            
 	    // re-normalise
 	    for (int k = 0; k < (int)t.data[j].size(); ++k) {
                 t.data[j][k] *= 1.f / sum;
