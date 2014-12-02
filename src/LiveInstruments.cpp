@@ -55,8 +55,10 @@ LiveAdapter::adapt(const InstrumentPack &original)
 	    }
             
 	    // re-normalise
-	    for (int k = 0; k < (int)t.data[j].size(); ++k) {
-                t.data[j][k] *= 1.f / sum;
+            if (sum > 0.f) {
+                for (int k = 0; k < (int)t.data[j].size(); ++k) {
+                    t.data[j][k] *= 1.f / sum;
+                }
             }
 	}
 

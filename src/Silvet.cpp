@@ -295,6 +295,35 @@ Silvet::getOutputDescriptors() const
     m_pitchOutputNo = list.size();
     list.push_back(d);
 
+    d.identifier = "templates";
+    d.name = "Templates";
+    d.description = "Constant-Q spectral templates for the selected instrument pack.";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = getPack(0).templateHeight;
+    d.binNames.clear();
+    if (m_cq) {
+        char name[50];
+        for (int i = 0; i < getPack(0).templateHeight; ++i) {
+            // We have a 600-bin (10 oct 60-bin CQ) of which the
+            // lowest-frequency 55 bins have been dropped, for a
+            // 545-bin template. The native CQ bins go high->low
+            // frequency though, so these are still the first 545 bins
+            // as reported by getBinFrequency, though in reverse order
+            float freq = m_cq->getBinFrequency
+                (getPack(0).templateHeight - i - 1);
+            sprintf(name, "%.1f Hz", freq);
+            d.binNames.push_back(name);
+        }
+    }
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::FixedSampleRate;
+    d.sampleRate = m_colsPerSec;
+    d.hasDuration = false;
+    m_templateOutputNo = list.size();
+    list.push_back(d);
+
     return list;
 }
 
@@ -467,8 +496,11 @@ Silvet::reset()
 Silvet::FeatureSet
 Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 {
+    FeatureSet fs;
+    
     if (m_columnCount == 0) {
         m_startTime = timestamp;
+        insertTemplateFeatures(fs);
     }
 
     vector<float> flattened(m_blockSize);
@@ -501,7 +533,7 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
         if (hadCount < resamplerLatency) {
             int stillToDrop = resamplerLatency - hadCount;
             if (stillToDrop >= int(data.size())) {
-                return FeatureSet();
+                return fs;
             } else {
                 data = vector<double>(data.begin() + stillToDrop, data.end());
             }
@@ -509,7 +541,7 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
     }
 
     Grid cqout = m_cq->process(data);
-    FeatureSet fs = transcribe(cqout);
+    transcribe(cqout, fs);
     return fs;
 }
 
@@ -517,18 +549,40 @@ Silvet::FeatureSet
 Silvet::getRemainingFeatures()
 {
     Grid cqout = m_cq->getRemainingOutput();
-    FeatureSet fs = transcribe(cqout);
+    FeatureSet fs;
+    if (m_columnCount == 0) {
+        // process() was never called, but we still want these
+        insertTemplateFeatures(fs);
+    } else {
+        transcribe(cqout, fs);
+    }
     return fs;
 }
 
-Silvet::FeatureSet
-Silvet::transcribe(const Grid &cqout)
+void
+Silvet::insertTemplateFeatures(FeatureSet &fs)
+{
+    const InstrumentPack &pack = getPack(m_instrument);
+    for (int i = 0; i < int(pack.templates.size()) * pack.templateNoteCount; ++i) {
+        RealTime timestamp = RealTime::fromSeconds(double(i) / m_colsPerSec);
+        Feature f;
+        char buffer[50];
+        sprintf(buffer, "Note %d", i + 1);
+        f.label = buffer;
+        f.hasTimestamp = true;
+        f.timestamp = timestamp;
+        f.values = pack.templates[i / pack.templateNoteCount]
+            .data[i % pack.templateNoteCount];
+        fs[m_templateOutputNo].push_back(f);
+    }
+}        
+
+void
+Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
 {
     Grid filtered = preProcess(cqout);
 
-    FeatureSet fs;
-
-    if (filtered.empty()) return fs;
+    if (filtered.empty()) return;
     
     const InstrumentPack &pack(getPack(m_instrument));
 
@@ -634,8 +688,6 @@ Silvet::transcribe(const Grid &cqout)
             fs[m_notesOutputNo].push_back(*fi);
         }
     }
-
-    return fs;
 }
 
 Silvet::Grid

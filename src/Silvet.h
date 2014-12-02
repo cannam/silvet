@@ -121,7 +121,9 @@ protected:
 
     float getInputGainAt(Vamp::RealTime t);
 
-    FeatureSet transcribe(const Grid &);
+    void insertTemplateFeatures(FeatureSet &);
+    
+    void transcribe(const Grid &, FeatureSet &);
 
     string noteName(int n, int shift, int shiftCount) const;
     float noteFrequency(int n, int shift, int shiftCount) const;
@@ -134,6 +136,7 @@ protected:
     mutable int m_notesOutputNo;
     mutable int m_fcqOutputNo;
     mutable int m_pitchOutputNo;
+    mutable int m_templateOutputNo;
 };
 
 #endif
