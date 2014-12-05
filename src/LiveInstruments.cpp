@@ -26,7 +26,7 @@ LiveAdapter::adapt(const InstrumentPack &original)
 {
     vector<InstrumentPack::Templates> templates;
 
-            cerr << "LiveAdapter: reduced template height is " << SILVET_TEMPLATE_HEIGHT/5 << endl;
+//            cerr << "LiveAdapter: reduced template height is " << SILVET_TEMPLATE_HEIGHT/5 << endl;
             
     for (vector<InstrumentPack::Templates>::const_iterator i =
 	     original.templates.begin();
@@ -77,7 +77,7 @@ LiveAdapter::adapt(const InstrumentPack &original)
     live.maxPolyphony = original.maxPolyphony;
     live.pitchSparsity = original.pitchSparsity;
     live.sourceSparsity = original.sourceSparsity;
-    live.levelThreshold = original.levelThreshold/10; //!!! but why?
+    live.levelThreshold = original.levelThreshold / 20;
 
     return live;
 }

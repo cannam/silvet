@@ -382,8 +382,8 @@ Silvet::noteFrequency(int note, int shift, int shiftCount) const
 
     float freq = float(27.5 * pow(2.0, (note + pshift) / 12.0));
 
-    cerr << "note = " << note << ", shift = " << shift << ", shiftCount = "
-         << shiftCount << ", obtained freq = " << freq << endl;
+//    cerr << "note = " << note << ", shift = " << shift << ", shiftCount = "
+//         << shiftCount << ", obtained freq = " << freq << endl;
     
     return freq;
 }
@@ -460,7 +460,7 @@ Silvet::reset()
 
     CQParameters params(processingSampleRate,
                         minFreq, 
-                        processingSampleRate / 3,
+                        maxFreq,
                         bpo);
 
     params.q = 0.95; // MIREX code uses 0.8, but it seems 0.9 or lower
@@ -474,8 +474,8 @@ Silvet::reset()
 
     m_cq = new CQSpectrogram(params, CQSpectrogram::InterpolateLinear);
 
-    cerr << "CQ bins = " << m_cq->getTotalBins() << endl;
-    cerr << "CQ min freq = " << m_cq->getMinFrequency() << " (and for confirmation, freq of bin 0 = " << m_cq->getBinFrequency(0) << ")" << endl;
+//    cerr << "CQ bins = " << m_cq->getTotalBins() << endl;
+//    cerr << "CQ min freq = " << m_cq->getMinFrequency() << " (and for confirmation, freq of bin 0 = " << m_cq->getBinFrequency(0) << ")" << endl;
     
     m_colsPerSec = (m_mode == DraftMode ? 25 : 50);
 
@@ -483,8 +483,9 @@ Silvet::reset()
         delete m_postFilter[i];
     }
     m_postFilter.clear();
+    int postFilterLength = 3;
     for (int i = 0; i < getPack(0).templateNoteCount; ++i) {
-        m_postFilter.push_back(new MedianFilter<double>(3));
+        m_postFilter.push_back(new MedianFilter<double>(postFilterLength));
     }
     m_pianoRoll.clear();
     m_inputGains.clear();
@@ -931,7 +932,12 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
             }
         }
 
-        int v = round(strength * 2);
+        int v;
+        if (m_mode == LiveMode) {
+            v = round(strength * 30);
+        } else {
+            v = round(strength * 2);
+        }
         if (v > partVelocity) {
             partVelocity = v;
         }
