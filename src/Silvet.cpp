@@ -613,8 +613,8 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
             vector<vector<int> >(width, vector<int>(pack.templateNoteCount, 0));
     }
 
-    vector<bool> present(width, false);
-
+    double columnThreshold = 1e-5;
+    
 #pragma omp parallel for
     for (int i = 0; i < width; ++i) {
 
@@ -622,9 +622,7 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
         for (int j = 0; j < pack.templateHeight; ++j) {
             sum += filtered.at(i).at(j);
         }
-        if (sum < 1e-5) continue;
-
-        present[i] = true;
+        if (sum < columnThreshold) continue;
 
         EM em(&pack, m_mode == HighQualityMode);
 
@@ -658,18 +656,6 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
     }
         
     for (int i = 0; i < width; ++i) {
-
-        if (!present[i]) {
-            // silent column
-            for (int j = 0; j < pack.templateNoteCount; ++j) {
-                m_postFilter[j]->push(0.0);
-            }
-            m_pianoRoll.push_back(map<int, double>());
-            if (wantShifts) {
-                m_pianoRollShifts.push_back(map<int, int>());
-            }
-            continue;
-        }
 
         vector<double> filtered = postProcess
             (localPitches[i], localBestShifts[i], wantShifts);
