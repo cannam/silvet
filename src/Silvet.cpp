@@ -614,6 +614,10 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
     }
 
     double columnThreshold = 1e-5;
+
+    if (m_mode == LiveMode) {
+        columnThreshold /= 20;
+    }
     
 #pragma omp parallel for
     for (int i = 0; i < width; ++i) {
