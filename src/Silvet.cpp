@@ -88,7 +88,7 @@ Silvet::getMaker() const
 int
 Silvet::getPluginVersion() const
 {
-    return 2;
+    return 3;
 }
 
 string
@@ -290,17 +290,43 @@ Silvet::getOutputDescriptors() const
     m_pitchOutputNo = list.size();
     list.push_back(d);
 
+    d.identifier = "chroma";
+    d.name = "Pitch chroma distribution";
+    d.description = "Pitch chroma distribution formed by wrapping the un-thresholded pitch activation distribution into a single octave of semitone bins.";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = 12;
+    d.binNames.clear();
+    if (m_cq) {
+        for (int i = 0; i < 12; ++i) {
+            d.binNames.push_back(chromaName(i));
+        }
+    }
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::FixedSampleRate;
+    d.sampleRate = m_colsPerSec;
+    d.hasDuration = false;
+    m_chromaOutputNo = list.size();
+    list.push_back(d);
+
     return list;
 }
 
 std::string
-Silvet::noteName(int note, int shift, int shiftCount) const
+Silvet::chromaName(int pitch) const
 {
     static const char *names[] = {
         "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"
     };
 
-    const char *n = names[note % 12];
+    return names[pitch];
+}
+    
+std::string
+Silvet::noteName(int note, int shift, int shiftCount) const
+{
+    string n = chromaName(note % 12);
 
     int oct = (note + 9) / 12; 
     
@@ -314,11 +340,11 @@ Silvet::noteName(int note, int shift, int shiftCount) const
     }
 
     if (pshift > 0.f) {
-        sprintf(buf, "%s%d+%dc", n, oct, int(round(pshift * 100)));
+        sprintf(buf, "%s%d+%dc", n.c_str(), oct, int(round(pshift * 100)));
     } else if (pshift < 0.f) {
-        sprintf(buf, "%s%d-%dc", n, oct, int(round((-pshift) * 100)));
+        sprintf(buf, "%s%d-%dc", n.c_str(), oct, int(round((-pshift) * 100)));
     } else {
-        sprintf(buf, "%s%d", n, oct);
+        sprintf(buf, "%s%d", n.c_str(), oct);
     }
 
     return buf;
@@ -575,16 +601,28 @@ Silvet::transcribe(const Grid &cqout)
         
     for (int i = 0; i < width; ++i) {
 
+        // This returns a filtered column, and pushes the
+        // up-to-max-polyphony activation column to m_pianoRoll
         vector<double> filtered = postProcess
             (localPitches[i], localBestShifts[i], wantShifts);
 
+        RealTime timestamp = getColumnTimestamp(m_pianoRoll.size() - 1);
+        float inputGain = getInputGainAt(timestamp);
+
         Feature f;
         for (int j = 0; j < (int)filtered.size(); ++j) {
-            float v(filtered[j]);
+            float v = filtered[j];
             if (v < pack.levelThreshold) v = 0.f;
-            f.values.push_back(v);
+            f.values.push_back(v / inputGain);
         }
         fs[m_pitchOutputNo].push_back(f);
+
+        f.values.clear();
+        f.values.resize(12);
+        for (int j = 0; j < (int)filtered.size(); ++j) {
+            f.values[j % 12] += filtered[j] / inputGain;
+        }
+        fs[m_chromaOutputNo].push_back(f);
         
         FeatureList noteFeatures = noteTrack(shiftCount);
 
@@ -851,6 +889,16 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
     }
 }
 
+RealTime
+Silvet::getColumnTimestamp(int column)
+{
+    double columnDuration = 1.0 / m_colsPerSec;
+    int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
+
+    return m_startTime + RealTime::fromSeconds
+        (columnDuration * (column - postFilterLatency) + 0.02);
+}
+
 Silvet::Feature
 Silvet::makeNoteFeature(int start,
                         int end,
@@ -859,18 +907,13 @@ Silvet::makeNoteFeature(int start,
                         int shiftCount,
                         int velocity)
 {
-    double columnDuration = 1.0 / m_colsPerSec;
-    int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
-
     Feature f;
 
     f.hasTimestamp = true;
-    f.timestamp = m_startTime + RealTime::fromSeconds
-        (columnDuration * (start - postFilterLatency) + 0.02);
+    f.timestamp = getColumnTimestamp(start);
 
     f.hasDuration = true;
-    f.duration = RealTime::fromSeconds
-        (columnDuration * (end - start));
+    f.duration = getColumnTimestamp(end) - f.timestamp;
 
     f.values.clear();
 

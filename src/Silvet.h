@@ -100,7 +100,9 @@ protected:
 
     void emitNote(int start, int end, int note, int shiftCount,
                   FeatureList &noteFeatures);
-
+    
+    Vamp::RealTime getColumnTimestamp(int column);
+    
     Feature makeNoteFeature(int start, int end, int note, int shift,
                             int shiftCount, int velocity);
 
@@ -108,6 +110,7 @@ protected:
 
     FeatureSet transcribe(const Grid &);
 
+    string chromaName(int n) const;
     string noteName(int n, int shift, int shiftCount) const;
     float noteFrequency(int n, int shift, int shiftCount) const;
 
@@ -119,6 +122,7 @@ protected:
     mutable int m_notesOutputNo;
     mutable int m_fcqOutputNo;
     mutable int m_pitchOutputNo;
+    mutable int m_chromaOutputNo;
 };
 
 #endif
