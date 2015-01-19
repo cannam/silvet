@@ -20,8 +20,9 @@
 
 #include <iostream>
 
-#include "VectorOps.h"
-#include "Allocators.h"
+#include "bqvec/VectorOps.h"
+#include "bqvec/Allocators.h"
+
 #include "Instruments.h"
 
 using std::vector;
