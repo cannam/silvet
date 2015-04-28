@@ -505,6 +505,9 @@ Silvet::reset()
     params.q = (m_mode == HighQualityMode ? 0.95 : 0.8);
     params.atomHopFactor = (m_mode == HighQualityMode ? 0.3 : 1.0);
     params.threshold = 0.0005;
+    params.decimator =
+        (m_mode == LiveMode ?
+         CQParameters::FasterDecimator : CQParameters::BetterDecimator);
     params.window = CQParameters::Hann;
 
     m_cq = new CQSpectrogram(params, CQSpectrogram::InterpolateLinear);
@@ -653,31 +656,41 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
 #define MAX_EM_THREADS 8
 #endif
 
-#if (defined(MAX_EM_THREADS) && (MAX_EM_THREADS > 1))
-    for (int i = 0; i < width; ) {
-        typedef future<pair<vector<double>, vector<int>>> EMFuture;
-        vector<EMFuture> results;
-        for (int j = 0; j < MAX_EM_THREADS && i + j < width; ++j) {
-            results.push_back
-                (async(std::launch::async,
-                       [&](int index) {
-                           return applyEM(pack, filtered.at(index), wantShifts);
-                       }, i + j));
-        }
-        for (int j = 0; j < MAX_EM_THREADS && i + j < width; ++j) {
-            auto out = results[j].get();
-            localPitches[i+j] = out.first;
-            if (wantShifts) localBestShifts[i+j] = out.second;
-        }
-        i += MAX_EM_THREADS;
+    int emThreadCount = MAX_EM_THREADS;
+    if (m_mode == LiveMode && pack.templates.size() == 1) {
+        // The EM step is probably not slow enough to merit it
+        emThreadCount = 1;
     }
-#else
-    for (int i = 0; i < width; ++i) {
-        auto out = applyEM(pack, filtered.at(i), wantShifts);
-        localPitches[i] = out.first;
-        if (wantShifts) localBestShifts[i] = out.second;
+
+#if (defined(MAX_EM_THREADS) && (MAX_EM_THREADS > 1))
+    if (emThreadCount > 1) {
+        for (int i = 0; i < width; ) {
+            typedef future<pair<vector<double>, vector<int>>> EMFuture;
+            vector<EMFuture> results;
+            for (int j = 0; j < emThreadCount && i + j < width; ++j) {
+                results.push_back
+                    (async(std::launch::async,
+                           [&](int index) {
+                               return applyEM(pack, filtered.at(index), wantShifts);
+                           }, i + j));
+            }
+            for (int j = 0; j < emThreadCount && i + j < width; ++j) {
+                auto out = results[j].get();
+                localPitches[i+j] = out.first;
+                if (wantShifts) localBestShifts[i+j] = out.second;
+            }
+            i += emThreadCount;
+        }
     }
 #endif
+
+    if (emThreadCount == 1) {
+        for (int i = 0; i < width; ++i) {
+            auto out = applyEM(pack, filtered.at(i), wantShifts);
+            localPitches[i] = out.first;
+            if (wantShifts) localBestShifts[i] = out.second;
+        }
+    }
         
     for (int i = 0; i < width; ++i) {
 
