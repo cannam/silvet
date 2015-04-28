@@ -63,6 +63,12 @@ LiveAdapter::adapt(const InstrumentPack &original)
 	}
 
 	templates.push_back(t);
+
+        // The live template for piano has only one piano in it, so as
+        // to process faster
+        if (original.name == "Piano") {
+            break;
+        }
     }
     
     InstrumentPack live(original.lowestNote,

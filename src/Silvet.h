@@ -71,6 +71,12 @@ public:
 
     FeatureSet getRemainingFeatures();
 
+    enum ProcessingMode { // ordered so draft==0 and hq==1 as in prior releases
+        DraftMode = 0,
+        HighQualityMode = 1,
+        LiveMode = 2,
+    };
+
 protected:
     const std::vector<InstrumentPack> m_instruments;
     const std::vector<InstrumentPack> m_liveInstruments;
@@ -87,11 +93,6 @@ protected:
     FlattenDynamics *m_flattener;
     CQSpectrogram *m_cq;
 
-    enum ProcessingMode { // ordered so draft==0 and hq==1 as in prior releases
-        DraftMode = 0,
-        HighQualityMode = 1,
-        LiveMode = 2,
-    };
     ProcessingMode m_mode;
     
     bool m_fineTuning;
@@ -107,6 +108,10 @@ protected:
 
     Grid preProcess(const Grid &);
 
+    std::pair<vector<double>, vector<int> > applyEM(const InstrumentPack &pack,
+                                                    const vector<double> &column,
+                                                    bool wantShifts);
+    
     vector<double> postProcess(const vector<double> &pitches,
                                const vector<int> &bestShifts,
                                bool wantShifts); // -> piano roll column
@@ -115,7 +120,9 @@ protected:
 
     void emitNote(int start, int end, int note, int shiftCount,
                   FeatureList &noteFeatures);
-
+    
+    Vamp::RealTime getColumnTimestamp(int column);
+    
     Feature makeNoteFeature(int start, int end, int note, int shift,
                             int shiftCount, int velocity);
 
@@ -125,6 +132,7 @@ protected:
     
     void transcribe(const Grid &, FeatureSet &);
 
+    string chromaName(int n) const;
     string noteName(int n, int shift, int shiftCount) const;
     float noteFrequency(int n, int shift, int shiftCount) const;
 
@@ -132,11 +140,13 @@ protected:
     int m_columnCount;
     int m_resampledCount;
     Vamp::RealTime m_startTime;
+    bool m_haveStartTime;
 
     mutable int m_notesOutputNo;
     mutable int m_fcqOutputNo;
     mutable int m_pitchOutputNo;
     mutable int m_templateOutputNo;
+    mutable int m_chromaOutputNo;
 };
 
 #endif

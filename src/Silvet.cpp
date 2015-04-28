@@ -24,6 +24,7 @@
 #include "LiveInstruments.h"
 
 #include <vector>
+#include <future>
 
 #include <cstdio>
 
@@ -31,6 +32,9 @@ using std::vector;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::pair;
+using std::future;
+using std::async;
 using Vamp::RealTime;
 
 static int processingSampleRate = 44100;
@@ -41,6 +45,8 @@ static int binsPerSemitoneNormal = 5;
 static int minInputSampleRate = 100;
 static int maxInputSampleRate = 192000;
 
+static const Silvet::ProcessingMode defaultMode = Silvet::HighQualityMode;
+
 Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
     m_instruments(InstrumentPack::listInstrumentPacks()),
@@ -48,10 +54,11 @@ Silvet::Silvet(float inputSampleRate) :
     m_resampler(0),
     m_flattener(0),
     m_cq(0),
-    m_mode(HighQualityMode),
+    m_mode(defaultMode),
     m_fineTuning(false),
     m_instrument(0),
-    m_colsPerSec(50)
+    m_colsPerSec(50),
+    m_haveStartTime(false)
 {
 }
 
@@ -143,7 +150,7 @@ Silvet::getParameterDescriptors() const
     desc.description = "Sets the tradeoff of processing speed against transcription quality. Draft mode is tuned in favour of overall speed; Live mode is tuned in favour of lower latency; while Intensive mode (the default) will almost always produce the best results.";
     desc.minValue = 0;
     desc.maxValue = 2;
-    desc.defaultValue = 1;
+    desc.defaultValue = int(defaultMode);
     desc.isQuantized = true;
     desc.quantizeStep = 1;
     desc.valueNames.push_back("Draft (faster)"); 
@@ -295,6 +302,26 @@ Silvet::getOutputDescriptors() const
     m_pitchOutputNo = list.size();
     list.push_back(d);
 
+    d.identifier = "chroma";
+    d.name = "Pitch chroma distribution";
+    d.description = "Pitch chroma distribution formed by wrapping the un-thresholded pitch activation distribution into a single octave of semitone bins.";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = 12;
+    d.binNames.clear();
+    if (m_cq) {
+        for (int i = 0; i < 12; ++i) {
+            d.binNames.push_back(chromaName(i));
+        }
+    }
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::FixedSampleRate;
+    d.sampleRate = m_colsPerSec;
+    d.hasDuration = false;
+    m_chromaOutputNo = list.size();
+    list.push_back(d);
+
     d.identifier = "templates";
     d.name = "Templates";
     d.description = "Constant-Q spectral templates for the selected instrument pack.";
@@ -328,13 +355,19 @@ Silvet::getOutputDescriptors() const
 }
 
 std::string
-Silvet::noteName(int note, int shift, int shiftCount) const
+Silvet::chromaName(int pitch) const
 {
     static const char *names[] = {
         "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"
     };
 
-    const char *n = names[note % 12];
+    return names[pitch];
+}
+    
+std::string
+Silvet::noteName(int note, int shift, int shiftCount) const
+{
+    string n = chromaName(note % 12);
 
     int oct = (note + 9) / 12; 
     
@@ -348,11 +381,11 @@ Silvet::noteName(int note, int shift, int shiftCount) const
     }
 
     if (pshift > 0.f) {
-        sprintf(buf, "%s%d+%dc", n, oct, int(round(pshift * 100)));
+        sprintf(buf, "%s%d+%dc", n.c_str(), oct, int(round(pshift * 100)));
     } else if (pshift < 0.f) {
-        sprintf(buf, "%s%d-%dc", n, oct, int(round((-pshift) * 100)));
+        sprintf(buf, "%s%d-%dc", n.c_str(), oct, int(round((-pshift) * 100)));
     } else {
-        sprintf(buf, "%s%d", n, oct);
+        sprintf(buf, "%s%d", n.c_str(), oct);
     }
 
     return buf;
@@ -463,13 +496,18 @@ Silvet::reset()
                         maxFreq,
                         bpo);
 
-    params.q = 0.95; // MIREX code uses 0.8, but it seems 0.9 or lower
-                     // drops the FFT size to 512 from 1024 and alters
-                     // some other processing parameters, making
-                     // everything much, much slower. Could be a flaw
-                     // in the CQ parameter calculations, must check
-    params.atomHopFactor = 0.3;
+    // For params.q, the MIREX code uses 0.8, but it seems that with
+    // atomHopFactor of 0.3, using q == 0.9 or lower drops the FFT
+    // size to 512 from 1024 and alters some other processing
+    // parameters, making everything much, much slower. Could be a
+    // flaw in the CQ parameter calculations, must check. For
+    // atomHopFactor == 1, q == 0.8 is fine
+    params.q = (m_mode == HighQualityMode ? 0.95 : 0.8);
+    params.atomHopFactor = (m_mode == HighQualityMode ? 0.3 : 1.0);
     params.threshold = 0.0005;
+    params.decimator =
+        (m_mode == LiveMode ?
+         CQParameters::FasterDecimator : CQParameters::BetterDecimator);
     params.window = CQParameters::Hann;
 
     m_cq = new CQSpectrogram(params, CQSpectrogram::InterpolateLinear);
@@ -492,6 +530,7 @@ Silvet::reset()
     m_columnCount = 0;
     m_resampledCount = 0;
     m_startTime = RealTime::zeroTime;
+    m_haveStartTime = false;
 }
 
 Silvet::FeatureSet
@@ -499,8 +538,11 @@ Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 {
     FeatureSet fs;
     
-    if (m_columnCount == 0) {
+    if (!m_haveStartTime) {
+
         m_startTime = timestamp;
+        m_haveStartTime = true;
+
         insertTemplateFeatures(fs);
     }
 
@@ -597,9 +639,7 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
 
     int width = filtered.size();
 
-    int iterations = (m_mode == HighQualityMode ? 20 : 10);
-
-    Grid localPitches(width, vector<double>(pack.templateNoteCount, 0.0));
+    Grid localPitches(width);
 
     bool wantShifts = (m_mode == HighQualityMode) && m_fineTuning;
     int shiftCount = 1;
@@ -609,68 +649,73 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
 
     vector<vector<int> > localBestShifts;
     if (wantShifts) {
-        localBestShifts = 
-            vector<vector<int> >(width, vector<int>(pack.templateNoteCount, 0));
+        localBestShifts = vector<vector<int> >(width);
     }
 
-    double columnThreshold = 1e-5;
+#ifndef MAX_EM_THREADS
+#define MAX_EM_THREADS 8
+#endif
 
-    if (m_mode == LiveMode) {
-        columnThreshold /= 20;
+    int emThreadCount = MAX_EM_THREADS;
+    if (m_mode == LiveMode && pack.templates.size() == 1) {
+        // The EM step is probably not slow enough to merit it
+        emThreadCount = 1;
     }
-    
-#pragma omp parallel for
-    for (int i = 0; i < width; ++i) {
 
-        double sum = 0.0;
-        for (int j = 0; j < pack.templateHeight; ++j) {
-            sum += filtered.at(i).at(j);
+#if (defined(MAX_EM_THREADS) && (MAX_EM_THREADS > 1))
+    if (emThreadCount > 1) {
+        for (int i = 0; i < width; ) {
+            typedef future<pair<vector<double>, vector<int>>> EMFuture;
+            vector<EMFuture> results;
+            for (int j = 0; j < emThreadCount && i + j < width; ++j) {
+                results.push_back
+                    (async(std::launch::async,
+                           [&](int index) {
+                               return applyEM(pack, filtered.at(index), wantShifts);
+                           }, i + j));
+            }
+            for (int j = 0; j < emThreadCount && i + j < width; ++j) {
+                auto out = results[j].get();
+                localPitches[i+j] = out.first;
+                if (wantShifts) localBestShifts[i+j] = out.second;
+            }
+            i += emThreadCount;
         }
-        if (sum < columnThreshold) continue;
+    }
+#endif
 
-        EM em(&pack, m_mode == HighQualityMode);
-
-        em.setPitchSparsity(pack.pitchSparsity);
-        em.setSourceSparsity(pack.sourceSparsity);
-
-        for (int j = 0; j < iterations; ++j) {
-            em.iterate(filtered.at(i).data());
-        }
-
-        const float *pitchDist = em.getPitchDistribution();
-        const float *const *shiftDist = em.getShifts();
-
-        for (int j = 0; j < pack.templateNoteCount; ++j) {
-
-            localPitches[i][j] = pitchDist[j] * sum;
-
-            int bestShift = 0;
-            float bestShiftValue = 0.0;
-            if (wantShifts) {
-                for (int k = 0; k < shiftCount; ++k) {
-                    float value = shiftDist[k][j];
-                    if (k == 0 || value > bestShiftValue) {
-                        bestShiftValue = value;
-                        bestShift = k;
-                    }
-                }
-                localBestShifts[i][j] = bestShift;
-            }                
+    if (emThreadCount == 1) {
+        for (int i = 0; i < width; ++i) {
+            auto out = applyEM(pack, filtered.at(i), wantShifts);
+            localPitches[i] = out.first;
+            if (wantShifts) localBestShifts[i] = out.second;
         }
     }
         
     for (int i = 0; i < width; ++i) {
 
+        // This returns a filtered column, and pushes the
+        // up-to-max-polyphony activation column to m_pianoRoll
         vector<double> filtered = postProcess
             (localPitches[i], localBestShifts[i], wantShifts);
 
+        RealTime timestamp = getColumnTimestamp(m_pianoRoll.size() - 1);
+        float inputGain = getInputGainAt(timestamp);
+
         Feature f;
         for (int j = 0; j < (int)filtered.size(); ++j) {
-            float v(filtered[j]);
+            float v = filtered[j];
             if (v < pack.levelThreshold) v = 0.f;
-            f.values.push_back(v);
+            f.values.push_back(v / inputGain);
         }
         fs[m_pitchOutputNo].push_back(f);
+
+        f.values.clear();
+        f.values.resize(12);
+        for (int j = 0; j < (int)filtered.size(); ++j) {
+            f.values[j % 12] += filtered[j] / inputGain;
+        }
+        fs[m_chromaOutputNo].push_back(f);
         
         FeatureList noteFeatures = noteTrack(shiftCount);
 
@@ -679,6 +724,66 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
             fs[m_notesOutputNo].push_back(*fi);
         }
     }
+}
+
+pair<vector<double>, vector<int> >
+Silvet::applyEM(const InstrumentPack &pack,
+                const vector<double> &column,
+                bool wantShifts)
+{
+    double columnThreshold = 1e-5;
+    
+    if (m_mode == LiveMode) {
+        columnThreshold /= 20;
+    }
+    
+    vector<double> pitches(pack.templateNoteCount, 0.0);
+    vector<int> bestShifts;
+    
+    double sum = 0.0;
+    for (int j = 0; j < pack.templateHeight; ++j) {
+        sum += column.at(j);
+    }
+    if (sum < columnThreshold) return { pitches, bestShifts };
+
+    EM em(&pack, m_mode == HighQualityMode);
+
+    em.setPitchSparsity(pack.pitchSparsity);
+    em.setSourceSparsity(pack.sourceSparsity);
+
+    int iterations = (m_mode == HighQualityMode ? 20 : 10);
+
+    for (int j = 0; j < iterations; ++j) {
+        em.iterate(column.data());
+    }
+
+    const float *pitchDist = em.getPitchDistribution();
+    const float *const *shiftDist = em.getShifts();
+
+    int shiftCount = 1;
+    if (wantShifts) {
+        shiftCount = pack.templateMaxShift * 2 + 1;
+    }
+    
+    for (int j = 0; j < pack.templateNoteCount; ++j) {
+
+        pitches[j] = pitchDist[j] * sum;
+
+        int bestShift = 0;
+        float bestShiftValue = 0.0;
+        if (wantShifts) {
+            for (int k = 0; k < shiftCount; ++k) {
+                float value = shiftDist[k][j];
+                if (k == 0 || value > bestShiftValue) {
+                    bestShiftValue = value;
+                    bestShift = k;
+                }
+            }
+            bestShifts.push_back(bestShift);
+        }                
+    }
+
+    return { pitches, bestShifts };
 }
 
 Silvet::Grid
@@ -780,6 +885,23 @@ Silvet::postProcess(const vector<double> &pitches,
     for (int j = 0; j < pack.templateNoteCount; ++j) {
         m_postFilter[j]->push(pitches[j]);
         filtered.push_back(m_postFilter[j]->get());
+    }
+
+    if (m_mode == LiveMode) {
+        // In live mode with only a 12-bpo CQ, we are very likely to
+        // get clusters of two or three high scores at a time for
+        // neighbouring semitones. Eliminate these by picking only the
+        // peaks. This means we can't recognise actual semitone chords
+        // if they ever appear, but it's not as if live mode is good
+        // enough for that to be a big deal anyway.
+        for (int j = 0; j < pack.templateNoteCount; ++j) {
+            if (j > 0 && j + 1 < pack.templateNoteCount &&
+                filtered[j] >= filtered[j-1] &&
+                filtered[j] >= filtered[j+1]) {
+            } else {
+                filtered[j] = 0.0;
+            }
+        }
     }
 
     // Threshold for level and reduce number of candidate pitches
@@ -924,7 +1046,7 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
 
         int v;
         if (m_mode == LiveMode) {
-            v = round(strength * 30);
+            v = round(strength * 20);
         } else {
             v = round(strength * 2);
         }
@@ -943,6 +1065,16 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
     }
 }
 
+RealTime
+Silvet::getColumnTimestamp(int column)
+{
+    double columnDuration = 1.0 / m_colsPerSec;
+    int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
+
+    return m_startTime + RealTime::fromSeconds
+        (columnDuration * (column - postFilterLatency) + 0.02);
+}
+
 Silvet::Feature
 Silvet::makeNoteFeature(int start,
                         int end,
@@ -951,18 +1083,13 @@ Silvet::makeNoteFeature(int start,
                         int shiftCount,
                         int velocity)
 {
-    double columnDuration = 1.0 / m_colsPerSec;
-    int postFilterLatency = int(m_postFilter[0]->getSize() / 2);
-
     Feature f;
 
     f.hasTimestamp = true;
-    f.timestamp = m_startTime + RealTime::fromSeconds
-        (columnDuration * (start - postFilterLatency) + 0.02);
+    f.timestamp = getColumnTimestamp(start);
 
     f.hasDuration = true;
-    f.duration = RealTime::fromSeconds
-        (columnDuration * (end - start));
+    f.duration = getColumnTimestamp(end) - f.timestamp;
 
     f.values.clear();
 
