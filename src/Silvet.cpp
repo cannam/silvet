@@ -30,6 +30,7 @@ using std::vector;
 using std::cout;
 using std::cerr;
 using std::endl;
+using std::pair;
 using Vamp::RealTime;
 
 static int processingSampleRate = 44100;
@@ -541,9 +542,7 @@ Silvet::transcribe(const Grid &cqout)
 
     int width = filtered.size();
 
-    int iterations = m_hqMode ? 20 : 10;
-
-    Grid localPitches(width, vector<double>(pack.templateNoteCount, 0.0));
+    Grid localPitches(width);
 
     bool wantShifts = m_hqMode && m_fineTuning;
     int shiftCount = 1;
@@ -553,50 +552,13 @@ Silvet::transcribe(const Grid &cqout)
 
     vector<vector<int> > localBestShifts;
     if (wantShifts) {
-        localBestShifts = 
-            vector<vector<int> >(width, vector<int>(pack.templateNoteCount, 0));
+        localBestShifts = vector<vector<int> >(width);
     }
 
-    double columnThreshold = 1e-5;
-    
-#pragma omp parallel for
     for (int i = 0; i < width; ++i) {
-
-        double sum = 0.0;
-        for (int j = 0; j < pack.templateHeight; ++j) {
-            sum += filtered.at(i).at(j);
-        }
-        if (sum < columnThreshold) continue;
-
-        EM em(&pack, m_hqMode);
-
-        em.setPitchSparsity(pack.pitchSparsity);
-        em.setSourceSparsity(pack.sourceSparsity);
-
-        for (int j = 0; j < iterations; ++j) {
-            em.iterate(filtered.at(i).data());
-        }
-
-        const float *pitchDist = em.getPitchDistribution();
-        const float *const *shiftDist = em.getShifts();
-
-        for (int j = 0; j < pack.templateNoteCount; ++j) {
-
-            localPitches[i][j] = pitchDist[j] * sum;
-
-            int bestShift = 0;
-            float bestShiftValue = 0.0;
-            if (wantShifts) {
-                for (int k = 0; k < shiftCount; ++k) {
-                    float value = shiftDist[k][j];
-                    if (k == 0 || value > bestShiftValue) {
-                        bestShiftValue = value;
-                        bestShift = k;
-                    }
-                }
-                localBestShifts[i][j] = bestShift;
-            }                
-        }
+        auto out = applyEM(pack, filtered.at(i), wantShifts);
+        localPitches[i] = out.first;
+        if (wantShifts) localBestShifts[i] = out.second;
     }
         
     for (int i = 0; i < width; ++i) {
@@ -633,6 +595,62 @@ Silvet::transcribe(const Grid &cqout)
     }
 
     return fs;
+}
+
+pair<vector<double>, vector<int> >
+Silvet::applyEM(const InstrumentPack &pack,
+                const vector<double> &column,
+                bool wantShifts)
+{
+    double columnThreshold = 1e-5;
+    
+    vector<double> pitches(pack.templateNoteCount, 0.0);
+    vector<int> bestShifts;
+    
+    double sum = 0.0;
+    for (int j = 0; j < pack.templateHeight; ++j) {
+        sum += column.at(j);
+    }
+    if (sum < columnThreshold) return { pitches, bestShifts };
+
+    EM em(&pack, m_hqMode);
+
+    em.setPitchSparsity(pack.pitchSparsity);
+    em.setSourceSparsity(pack.sourceSparsity);
+
+    int iterations = m_hqMode ? 20 : 10;
+
+    for (int j = 0; j < iterations; ++j) {
+        em.iterate(column.data());
+    }
+
+    const float *pitchDist = em.getPitchDistribution();
+    const float *const *shiftDist = em.getShifts();
+
+    int shiftCount = 1;
+    if (wantShifts) {
+        shiftCount = pack.templateMaxShift * 2 + 1;
+    }
+    
+    for (int j = 0; j < pack.templateNoteCount; ++j) {
+
+        pitches[j] = pitchDist[j] * sum;
+
+        int bestShift = 0;
+        float bestShiftValue = 0.0;
+        if (wantShifts) {
+            for (int k = 0; k < shiftCount; ++k) {
+                float value = shiftDist[k][j];
+                if (k == 0 || value > bestShiftValue) {
+                    bestShiftValue = value;
+                    bestShift = k;
+                }
+            }
+            bestShifts.push_back(bestShift);
+        }                
+    }
+
+    return { pitches, bestShifts };
 }
 
 Silvet::Grid

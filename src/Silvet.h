@@ -92,6 +92,10 @@ protected:
 
     Grid preProcess(const Grid &);
 
+    std::pair<vector<double>, vector<int> > applyEM(const InstrumentPack &pack,
+                                                    const vector<double> &column,
+                                                    bool wantShifts);
+    
     vector<double> postProcess(const vector<double> &pitches,
                                const vector<int> &bestShifts,
                                bool wantShifts); // -> piano roll column
