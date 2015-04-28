@@ -51,7 +51,8 @@ Silvet::Silvet(float inputSampleRate) :
     m_hqMode(true),
     m_fineTuning(false),
     m_instrument(0),
-    m_colsPerSec(50)
+    m_colsPerSec(50),
+    m_haveStartTime(false)
 {
 }
 
@@ -465,13 +466,15 @@ Silvet::reset()
     m_columnCount = 0;
     m_resampledCount = 0;
     m_startTime = RealTime::zeroTime;
+    m_haveStartTime = false;
 }
 
 Silvet::FeatureSet
 Silvet::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
 {
-    if (m_columnCount == 0) {
+    if (!m_haveStartTime) {
         m_startTime = timestamp;
+        m_haveStartTime = true;
     }
 
     vector<float> flattened(m_blockSize);

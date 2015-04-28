@@ -122,6 +122,7 @@ protected:
     int m_columnCount;
     int m_resampledCount;
     Vamp::RealTime m_startTime;
+    bool m_haveStartTime;
 
     mutable int m_notesOutputNo;
     mutable int m_fcqOutputNo;
