@@ -45,6 +45,8 @@ static int binsPerSemitoneNormal = 5;
 static int minInputSampleRate = 100;
 static int maxInputSampleRate = 192000;
 
+static const Silvet::ProcessingMode defaultMode = Silvet::HighQualityMode;
+
 Silvet::Silvet(float inputSampleRate) :
     Plugin(inputSampleRate),
     m_instruments(InstrumentPack::listInstrumentPacks()),
@@ -52,7 +54,7 @@ Silvet::Silvet(float inputSampleRate) :
     m_resampler(0),
     m_flattener(0),
     m_cq(0),
-    m_mode(HighQualityMode),
+    m_mode(defaultMode),
     m_fineTuning(false),
     m_instrument(0),
     m_colsPerSec(50),
@@ -148,7 +150,7 @@ Silvet::getParameterDescriptors() const
     desc.description = "Sets the tradeoff of processing speed against transcription quality. Draft mode is tuned in favour of overall speed; Live mode is tuned in favour of lower latency; while Intensive mode (the default) will almost always produce the best results.";
     desc.minValue = 0;
     desc.maxValue = 2;
-    desc.defaultValue = 1;
+    desc.defaultValue = int(defaultMode);
     desc.isQuantized = true;
     desc.quantizeStep = 1;
     desc.valueNames.push_back("Draft (faster)"); 
@@ -494,12 +496,14 @@ Silvet::reset()
                         maxFreq,
                         bpo);
 
-    params.q = 0.95; // MIREX code uses 0.8, but it seems 0.9 or lower
-                     // drops the FFT size to 512 from 1024 and alters
-                     // some other processing parameters, making
-                     // everything much, much slower. Could be a flaw
-                     // in the CQ parameter calculations, must check
-    params.atomHopFactor = 0.3;
+    // For params.q, the MIREX code uses 0.8, but it seems that with
+    // atomHopFactor of 0.3, using q == 0.9 or lower drops the FFT
+    // size to 512 from 1024 and alters some other processing
+    // parameters, making everything much, much slower. Could be a
+    // flaw in the CQ parameter calculations, must check. For
+    // atomHopFactor == 1, q == 0.8 is fine
+    params.q = (m_mode == HighQualityMode ? 0.95 : 0.8);
+    params.atomHopFactor = (m_mode == HighQualityMode ? 0.3 : 1.0);
     params.threshold = 0.0005;
     params.window = CQParameters::Hann;
 
@@ -870,6 +874,23 @@ Silvet::postProcess(const vector<double> &pitches,
         filtered.push_back(m_postFilter[j]->get());
     }
 
+    if (m_mode == LiveMode) {
+        // In live mode with only a 12-bpo CQ, we are very likely to
+        // get clusters of two or three high scores at a time for
+        // neighbouring semitones. Eliminate these by picking only the
+        // peaks. This means we can't recognise actual semitone chords
+        // if they ever appear, but it's not as if live mode is good
+        // enough for that to be a big deal anyway.
+        for (int j = 0; j < pack.templateNoteCount; ++j) {
+            if (j > 0 && j + 1 < pack.templateNoteCount &&
+                filtered[j] >= filtered[j-1] &&
+                filtered[j] >= filtered[j+1]) {
+            } else {
+                filtered[j] = 0.0;
+            }
+        }
+    }
+
     // Threshold for level and reduce number of candidate pitches
 
     typedef std::multimap<double, int> ValueIndexMap;
@@ -1012,7 +1033,7 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
 
         int v;
         if (m_mode == LiveMode) {
-            v = round(strength * 30);
+            v = round(strength * 20);
         } else {
             v = round(strength * 2);
         }

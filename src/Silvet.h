@@ -71,6 +71,12 @@ public:
 
     FeatureSet getRemainingFeatures();
 
+    enum ProcessingMode { // ordered so draft==0 and hq==1 as in prior releases
+        DraftMode = 0,
+        HighQualityMode = 1,
+        LiveMode = 2,
+    };
+
 protected:
     const std::vector<InstrumentPack> m_instruments;
     const std::vector<InstrumentPack> m_liveInstruments;
@@ -87,11 +93,6 @@ protected:
     FlattenDynamics *m_flattener;
     CQSpectrogram *m_cq;
 
-    enum ProcessingMode { // ordered so draft==0 and hq==1 as in prior releases
-        DraftMode = 0,
-        HighQualityMode = 1,
-        LiveMode = 2,
-    };
     ProcessingMode m_mode;
     
     bool m_fineTuning;
