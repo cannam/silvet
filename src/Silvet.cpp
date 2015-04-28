@@ -232,7 +232,7 @@ Silvet::getOutputDescriptors() const
     OutputDescriptor d;
     d.identifier = "notes";
     d.name = "Note transcription";
-    d.description = "Overall note transcription. Each note has time, duration, estimated pitch, and a synthetic MIDI velocity (1-127) estimated from the strength of the pitch in the mixture.";
+    d.description = "Overall note transcription. Each note has time, duration, estimated fundamental frequency, and a synthetic MIDI velocity (1-127) estimated from the strength of the pitch in the mixture.";
     d.unit = "Hz";
     d.hasFixedBinCount = true;
     d.binCount = 2;
