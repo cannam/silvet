@@ -23,6 +23,7 @@
 #include "flattendynamics-ladspa.h"
 
 #include <vector>
+#include <future>
 
 #include <cstdio>
 
@@ -31,6 +32,8 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::pair;
+using std::future;
+using std::async;
 using Vamp::RealTime;
 
 static int processingSampleRate = 44100;
@@ -555,12 +558,36 @@ Silvet::transcribe(const Grid &cqout)
         localBestShifts = vector<vector<int> >(width);
     }
 
+#ifndef MAX_EM_THREADS
+#define MAX_EM_THREADS 8
+#endif
+
+#if (defined(MAX_EM_THREADS) && (MAX_EM_THREADS > 1))
+    for (int i = 0; i < width; ) {
+        typedef future<pair<vector<double>, vector<int>>> EMFuture;
+        vector<EMFuture> results;
+        for (int j = 0; j < MAX_EM_THREADS && i + j < width; ++j) {
+            results.push_back
+                (async(std::launch::async,
+                       [&](int index) {
+                           return applyEM(pack, filtered.at(index), wantShifts);
+                       }, i + j));
+        }
+        for (int j = 0; j < MAX_EM_THREADS && i + j < width; ++j) {
+            auto out = results[j].get();
+            localPitches[i+j] = out.first;
+            if (wantShifts) localBestShifts[i+j] = out.second;
+        }
+        i += MAX_EM_THREADS;
+    }
+#else
     for (int i = 0; i < width; ++i) {
         auto out = applyEM(pack, filtered.at(i), wantShifts);
         localPitches[i] = out.first;
         if (wantShifts) localBestShifts[i] = out.second;
     }
-        
+#endif
+    
     for (int i = 0; i < width; ++i) {
 
         // This returns a filtered column, and pushes the
