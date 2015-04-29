@@ -27,47 +27,57 @@ LiveAdapter::adapt(const InstrumentPack &original)
     vector<InstrumentPack::Templates> templates;
 
 //            cerr << "LiveAdapter: reduced template height is " << SILVET_TEMPLATE_HEIGHT/5 << endl;
-            
-    for (vector<InstrumentPack::Templates>::const_iterator i =
-	     original.templates.begin();
-	 i != original.templates.end(); ++i) {
 
-	InstrumentPack::Templates t;
-	t.lowestNote = i->lowestNote;
-	t.highestNote = i->highestNote;
-	t.data.resize(i->data.size());
+    bool merge = false;
+    // The live template for piano has only one piano in it, so as
+    // to process faster. We make it by averaging the originals
+    if (original.name == "Piano") {
+        merge = true;
+    }
 
-	for (int j = 0; j < int(i->data.size()); ++j) {
+    InstrumentPack::Templates t;
+    bool first = true;
+    
+    for (const auto &origt: original.templates) {
+
+	t.lowestNote = origt.lowestNote;
+	t.highestNote = origt.highestNote;
+        t.data.resize(origt.data.size());
+
+	for (int j = 0; j < int(origt.data.size()); ++j) {
 
 	    t.data[j].resize(SILVET_TEMPLATE_HEIGHT/5);
 
-            float sum = 0.f;
-
 	    for (int k = 0; k < SILVET_TEMPLATE_HEIGHT/5; ++k) {
 
-                t.data[j][k] = 0.f;
+                if (!merge || first) {
+                    t.data[j][k] = 0.f;
+                }
 
                 for (int m = 0; m < 5; ++m) {
-                    t.data[j][k] += i->data[j][k * 5 + m + 2];
+                    t.data[j][k] += origt.data[j][k * 5 + m + 2];
                 }
-                
-                sum += t.data[j][k];
 	    }
-            
-	    // re-normalise
-            if (sum > 0.f) {
-                for (int k = 0; k < (int)t.data[j].size(); ++k) {
-                    t.data[j][k] *= 1.f / sum;
-                }
-            }
 	}
 
-	templates.push_back(t);
+        if (!merge) {
+            templates.push_back(t);
+            t = InstrumentPack::Templates();
+        }
 
-        // The live template for piano has only one piano in it, so as
-        // to process faster
-        if (original.name == "Piano") {
-            break;
+        first = false;
+    }
+
+    if (merge) {
+        templates.push_back(t);
+    }
+
+    // re-normalise
+    for (auto &t: templates) {
+        for (auto &d: t.data) {
+            float sum = 0.f;
+            for (auto v: d) sum += v;
+            for (auto &v: d) v /= sum;
         }
     }
     

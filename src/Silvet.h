@@ -112,29 +112,36 @@ protected:
                                                     const vector<double> &column,
                                                     bool wantShifts);
     
-    vector<double> postProcess(const vector<double> &pitches,
-                               const vector<int> &bestShifts,
-                               bool wantShifts); // -> piano roll column
+    void postProcess(const vector<double> &pitches,
+                     const vector<int> &bestShifts,
+                     bool wantShifts); // -> piano roll column
 
-    FeatureList noteTrack(int shiftCount);
+    std::pair<FeatureList, FeatureList> noteTrack(int shiftCount); // notes, onsets
 
     void emitNote(int start, int end, int note, int shiftCount,
+                  FeatureList &noteFeatures);
+
+    void emitOnset(int start, int note, int shiftCount,
                   FeatureList &noteFeatures);
     
     Vamp::RealTime getColumnTimestamp(int column);
     
     Feature makeNoteFeature(int start, int end, int note, int shift,
-                            int shiftCount, int velocity);
+                            int shiftCount, double strength);
+    Feature makeOnsetFeature(int start, int note, int shift,
+                             int shiftCount, double strength);
 
+    int getVelocityFor(double strength, int column);
+    
     float getInputGainAt(Vamp::RealTime t);
 
     void insertTemplateFeatures(FeatureSet &);
     
     void transcribe(const Grid &, FeatureSet &);
 
-    string chromaName(int n) const;
-    string noteName(int n, int shift, int shiftCount) const;
-    float noteFrequency(int n, int shift, int shiftCount) const;
+    string getChromaName(int n) const;
+    string getNoteName(int n, int shift, int shiftCount) const;
+    float getNoteFrequency(int n, int shift, int shiftCount) const;
 
     int m_blockSize;
     int m_columnCount;
@@ -143,6 +150,7 @@ protected:
     bool m_haveStartTime;
 
     mutable int m_notesOutputNo;
+    mutable int m_onsetsOutputNo;
     mutable int m_fcqOutputNo;
     mutable int m_pitchOutputNo;
     mutable int m_templateOutputNo;
