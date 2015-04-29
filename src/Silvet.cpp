@@ -255,7 +255,7 @@ Silvet::getOutputDescriptors() const
 
     d.identifier = "onsets";
     d.name = "Note onsets";
-    d.description = "Note onsets, without durations. These can be calculated sooner than complete notes as it isn't necessary to wait for the note to finish. Each event has time, estimated fundamental frequency in Hz, and a synthetic MIDI velocity (1-127) estimated from the strength of the pitch in the mixture.";
+    d.description = "Note onsets, without durations. These can be calculated sooner than complete notes, because it isn't necessary to wait for a note to finish before returning its feature. Each event has time, estimated fundamental frequency in Hz, and a synthetic MIDI velocity (1-127) estimated from the strength of the pitch in the mixture.";
     d.unit = "Hz";
     d.hasFixedBinCount = true;
     d.binCount = 2;
@@ -737,7 +737,7 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
 
         // This pushes the up-to-max-polyphony activation column to
         // m_pianoRoll
-        postProcess(localPitches[i], localBestShifts[i], wantShifts);
+        postProcess(filtered, localBestShifts[i], wantShifts);
 
         auto events = noteTrack(shiftCount);
 
@@ -927,13 +927,14 @@ Silvet::postProcess(const vector<double> &pitches,
         // if they ever appear, but it's not as if live mode is good
         // enough for that to be a big deal anyway.
         if (m_mode == LiveMode) {
-            if (j == 0 || j + 1 == pack.templateNoteCount ||
+            if (j == 0 ||
+                j + 1 == pack.templateNoteCount ||
                 pitches[j] < pitches[j-1] ||
                 pitches[j] < pitches[j+1]) {
                 continue;
             }
         }
-        
+
         strengths.insert(ValueIndexMap::value_type(strength, j));
     }
 
@@ -982,9 +983,9 @@ Silvet::noteTrack(int shiftCount)
     double columnDuration = 1.0 / m_colsPerSec;
 
     // only keep notes >= 100ms or thereabouts
-    double durationThreshSec = 0.1;
-    if (m_mode == LiveMode) durationThreshSec = 0.07;
-    int durationThreshold = floor(durationThreshSec / columnDuration); // in cols
+    double durationThrSec = 0.1;
+    if (m_mode == LiveMode) durationThrSec = 0.07;
+    int durationThreshold = floor(durationThrSec / columnDuration); // in cols
     if (durationThreshold < 1) durationThreshold = 1;
 
     FeatureList noteFeatures, onsetFeatures;
