@@ -112,9 +112,9 @@ protected:
                                                     const vector<double> &column,
                                                     bool wantShifts);
     
-    vector<double> postProcess(const vector<double> &pitches,
-                               const vector<int> &bestShifts,
-                               bool wantShifts); // -> piano roll column
+    void postProcess(const vector<double> &pitches,
+                     const vector<int> &bestShifts,
+                     bool wantShifts); // -> piano roll column
 
     std::pair<FeatureList, FeatureList> noteTrack(int shiftCount); // notes, onsets
 

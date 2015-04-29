@@ -710,10 +710,12 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
         
     for (int i = 0; i < width; ++i) {
 
-        // This returns a filtered column, and pushes the
-        // up-to-max-polyphony activation column to m_pianoRoll
-        vector<double> filtered = postProcess
-            (localPitches[i], localBestShifts[i], wantShifts);
+        vector<double> filtered;
+
+        for (int j = 0; j < pack.templateNoteCount; ++j) {
+            m_postFilter[j]->push(localPitches[i][j]);
+            filtered.push_back(m_postFilter[j]->get());
+        }
 
         RealTime timestamp = getColumnTimestamp(m_pianoRoll.size() - 1);
         float inputGain = getInputGainAt(timestamp);
@@ -732,6 +734,10 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
             f.values[j % 12] += filtered[j] / inputGain;
         }
         fs[m_chromaOutputNo].push_back(f);
+
+        // This pushes the up-to-max-polyphony activation column to
+        // m_pianoRoll
+        postProcess(localPitches[i], localBestShifts[i], wantShifts);
 
         auto events = noteTrack(shiftCount);
 
@@ -896,36 +902,12 @@ Silvet::preProcess(const Grid &in)
     return out;
 }
     
-vector<double>
+void
 Silvet::postProcess(const vector<double> &pitches,
                     const vector<int> &bestShifts,
                     bool wantShifts)
 {
     const InstrumentPack &pack(getPack(m_instrument));
-
-    vector<double> filtered;
-
-    for (int j = 0; j < pack.templateNoteCount; ++j) {
-        m_postFilter[j]->push(pitches[j]);
-        filtered.push_back(m_postFilter[j]->get());
-    }
-
-    if (m_mode == LiveMode) {
-        // In live mode with only a 12-bpo CQ, we are very likely to
-        // get clusters of two or three high scores at a time for
-        // neighbouring semitones. Eliminate these by picking only the
-        // peaks. This means we can't recognise actual semitone chords
-        // if they ever appear, but it's not as if live mode is good
-        // enough for that to be a big deal anyway.
-        for (int j = 0; j < pack.templateNoteCount; ++j) {
-            if (j > 0 && j + 1 < pack.templateNoteCount &&
-                filtered[j] >= filtered[j-1] &&
-                filtered[j] >= filtered[j+1]) {
-            } else {
-                filtered[j] = 0.0;
-            }
-        }
-    }
 
     // Threshold for level and reduce number of candidate pitches
 
@@ -934,8 +916,24 @@ Silvet::postProcess(const vector<double> &pitches,
     ValueIndexMap strengths;
 
     for (int j = 0; j < pack.templateNoteCount; ++j) {
-        double strength = filtered[j];
+
+        double strength = pitches[j];
         if (strength < pack.levelThreshold) continue;
+        
+        // In live mode with only a 12-bpo CQ, we are very likely to
+        // get clusters of two or three high scores at a time for
+        // neighbouring semitones. Eliminate these by picking only the
+        // peaks. This means we can't recognise actual semitone chords
+        // if they ever appear, but it's not as if live mode is good
+        // enough for that to be a big deal anyway.
+        if (m_mode == LiveMode) {
+            if (j == 0 || j + 1 == pack.templateNoteCount ||
+                pitches[j] < pitches[j-1] ||
+                pitches[j] < pitches[j+1]) {
+                continue;
+            }
+        }
+        
         strengths.insert(ValueIndexMap::value_type(strength, j));
     }
 
@@ -964,7 +962,7 @@ Silvet::postProcess(const vector<double> &pitches,
         m_pianoRollShifts.push_back(activeShifts);
     }
 
-    return filtered;
+    return;
 }
 
 pair<Vamp::Plugin::FeatureList, Vamp::Plugin::FeatureList>
@@ -984,7 +982,9 @@ Silvet::noteTrack(int shiftCount)
     double columnDuration = 1.0 / m_colsPerSec;
 
     // only keep notes >= 100ms or thereabouts
-    int durationThreshold = floor(0.1 / columnDuration); // columns
+    double durationThreshSec = 0.1;
+    if (m_mode == LiveMode) durationThreshSec = 0.07;
+    int durationThreshold = floor(durationThreshSec / columnDuration); // in cols
     if (durationThreshold < 1) durationThreshold = 1;
 
     FeatureList noteFeatures, onsetFeatures;
