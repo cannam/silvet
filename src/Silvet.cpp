@@ -307,7 +307,7 @@ Silvet::getOutputDescriptors() const
     d.binNames.clear();
     if (m_cq) {
         for (int i = 0; i < getPack(0).templateNoteCount; ++i) {
-            d.binNames.push_back(noteName(i, 0, 1));
+            d.binNames.push_back(getNoteName(i, 0, 1));
         }
     }
     d.hasKnownExtents = false;
@@ -327,7 +327,7 @@ Silvet::getOutputDescriptors() const
     d.binNames.clear();
     if (m_cq) {
         for (int i = 0; i < 12; ++i) {
-            d.binNames.push_back(chromaName(i));
+            d.binNames.push_back(getChromaName(i));
         }
     }
     d.hasKnownExtents = false;
@@ -371,7 +371,7 @@ Silvet::getOutputDescriptors() const
 }
 
 std::string
-Silvet::chromaName(int pitch) const
+Silvet::getChromaName(int pitch) const
 {
     static const char *names[] = {
         "A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"
@@ -381,9 +381,9 @@ Silvet::chromaName(int pitch) const
 }
     
 std::string
-Silvet::noteName(int note, int shift, int shiftCount) const
+Silvet::getNoteName(int note, int shift, int shiftCount) const
 {
-    string n = chromaName(note % 12);
+    string n = getChromaName(note % 12);
 
     int oct = (note + 9) / 12; 
     
@@ -391,7 +391,7 @@ Silvet::noteName(int note, int shift, int shiftCount) const
 
     float pshift = 0.f;
     if (shiftCount > 1) {
-        // see noteFrequency below
+        // see getNoteFrequency below
         pshift = 
             float((shiftCount - shift) - int(shiftCount / 2) - 1) / shiftCount;
     }
@@ -408,7 +408,7 @@ Silvet::noteName(int note, int shift, int shiftCount) const
 }
 
 float
-Silvet::noteFrequency(int note, int shift, int shiftCount) const
+Silvet::getNoteFrequency(int note, int shift, int shiftCount) const
 {
     // Convert shift number to a pitch shift. The given shift number
     // is an offset into the template array, which starts with some
@@ -1035,7 +1035,7 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
 {
     int partStart = start;
     int partShift = 0;
-    int partVelocity = 0;
+    double partStrength = 0;
 
     int partThreshold = floor(0.05 * m_colsPerSec);
 
@@ -1063,21 +1063,15 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
                                                        note,
                                                        partShift,
                                                        shiftCount,
-                                                       partVelocity));
+                                                       partStrength));
                 partStart = i;
                 partShift = shift;
-                partVelocity = 0;
+                partStrength = 0;
             }
         }
 
-        int v;
-        if (m_mode == LiveMode) {
-            v = round(strength * 20);
-        } else {
-            v = round(strength * 2);
-        }
-        if (v > partVelocity) {
-            partVelocity = v;
+        if (strength > partStrength) {
+            partStrength = strength;
         }
     }
 
@@ -1087,7 +1081,7 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
                                                note,
                                                partShift,
                                                shiftCount,
-                                               partVelocity));
+                                               partStrength));
     }
 }
 
@@ -1096,7 +1090,8 @@ Silvet::emitOnset(int start, int note, int shiftCount,
                   FeatureList &onsetFeatures)
 {
     int len = int(m_pianoRoll.size());
-    int velocity = 0;
+
+    double onsetStrength = 0;
 
     int shift = 0;
     if (shiftCount > 1) {
@@ -1104,17 +1099,9 @@ Silvet::emitOnset(int start, int note, int shiftCount,
     }
     
     for (int i = start; i < len; ++i) {
-        
         double strength = m_pianoRoll[i][note];
-
-        int v;
-        if (m_mode == LiveMode) {
-            v = round(strength * 20);
-        } else {
-            v = round(strength * 2);
-        }
-        if (v > velocity) {
-            velocity = v;
+        if (strength > onsetStrength) {
+            onsetStrength = strength;
         }
     }
 
@@ -1122,7 +1109,7 @@ Silvet::emitOnset(int start, int note, int shiftCount,
                                              note,
                                              shift,
                                              shiftCount,
-                                             velocity));
+                                             onsetStrength));
 }
 
 RealTime
@@ -1141,7 +1128,7 @@ Silvet::makeNoteFeature(int start,
                         int note,
                         int shift,
                         int shiftCount,
-                        int velocity)
+                        double strength)
 {
     Feature f;
 
@@ -1152,18 +1139,10 @@ Silvet::makeNoteFeature(int start,
     f.duration = getColumnTimestamp(end) - f.timestamp;
 
     f.values.clear();
+    f.values.push_back(getNoteFrequency(note, shift, shiftCount));
+    f.values.push_back(getVelocityFor(strength, start));
 
-    f.values.push_back
-        (noteFrequency(note, shift, shiftCount));
-
-    float inputGain = getInputGainAt(f.timestamp);
-//    cerr << "adjusting velocity from " << velocity << " to " << round(velocity/inputGain) << endl;
-    velocity = round(velocity / inputGain);
-    if (velocity > 127) velocity = 127;
-    if (velocity < 1) velocity = 1;
-    f.values.push_back(velocity);
-
-    f.label = noteName(note, shift, shiftCount);
+    f.label = getNoteName(note, shift, shiftCount);
 
     return f;
 }
@@ -1173,7 +1152,7 @@ Silvet::makeOnsetFeature(int start,
                          int note,
                          int shift,
                          int shiftCount,
-                         int velocity)
+                         double strength)
 {
     Feature f;
 
@@ -1183,19 +1162,30 @@ Silvet::makeOnsetFeature(int start,
     f.hasDuration = false;
 
     f.values.clear();
+    f.values.push_back(getNoteFrequency(note, shift, shiftCount));
+    f.values.push_back(getVelocityFor(strength, start));
 
-    f.values.push_back
-        (noteFrequency(note, shift, shiftCount));
-
-    float inputGain = getInputGainAt(f.timestamp);
-    velocity = round(velocity / inputGain);
-    if (velocity > 127) velocity = 127;
-    if (velocity < 1) velocity = 1;
-    f.values.push_back(velocity);
-
-    f.label = noteName(note, shift, shiftCount);
+    f.label = getNoteName(note, shift, shiftCount);
 
     return f;
+}
+
+int
+Silvet::getVelocityFor(double strength, int column)
+{
+    RealTime rt = getColumnTimestamp(column + 1);
+
+    float inputGain = getInputGainAt(rt);
+
+    double scale = 2.0;
+    if (m_mode == LiveMode) scale = 20.0;
+        
+    double velocity = round((strength * scale) / inputGain);
+    
+    if (velocity > 127.0) velocity = 127.0;
+    if (velocity < 1.0) velocity = 1.0; // assume surpassed 0 threshold already
+
+    return int(velocity);
 }
 
 float

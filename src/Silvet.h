@@ -127,19 +127,21 @@ protected:
     Vamp::RealTime getColumnTimestamp(int column);
     
     Feature makeNoteFeature(int start, int end, int note, int shift,
-                            int shiftCount, int velocity);
+                            int shiftCount, double strength);
     Feature makeOnsetFeature(int start, int note, int shift,
-                             int shiftCount, int velocity);
+                             int shiftCount, double strength);
 
+    int getVelocityFor(double strength, int column);
+    
     float getInputGainAt(Vamp::RealTime t);
 
     void insertTemplateFeatures(FeatureSet &);
     
     void transcribe(const Grid &, FeatureSet &);
 
-    string chromaName(int n) const;
-    string noteName(int n, int shift, int shiftCount) const;
-    float noteFrequency(int n, int shift, int shiftCount) const;
+    string getChromaName(int n) const;
+    string getNoteName(int n, int shift, int shiftCount) const;
+    float getNoteFrequency(int n, int shift, int shiftCount) const;
 
     int m_blockSize;
     int m_columnCount;
