@@ -105,6 +105,7 @@ protected:
     vector<map<int, double> > m_pianoRoll;
     vector<map<int, int> > m_pianoRollShifts;
     map<Vamp::RealTime, float> m_inputGains;
+    set<int> m_current;
 
     Grid preProcess(const Grid &);
 

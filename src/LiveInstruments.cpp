@@ -93,7 +93,7 @@ LiveAdapter::adapt(const InstrumentPack &original)
     live.maxPolyphony = original.maxPolyphony;
     live.pitchSparsity = original.pitchSparsity;
     live.sourceSparsity = original.sourceSparsity;
-    live.levelThreshold = original.levelThreshold / 20;
+    live.levelThreshold = original.levelThreshold / 15;
 
     return live;
 }

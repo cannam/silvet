@@ -512,14 +512,8 @@ Silvet::reset()
                         maxFreq,
                         bpo);
 
-    // For params.q, the MIREX code uses 0.8, but it seems that with
-    // atomHopFactor of 0.3, using q == 0.9 or lower drops the FFT
-    // size to 512 from 1024 and alters some other processing
-    // parameters, making everything much, much slower. Could be a
-    // flaw in the CQ parameter calculations, must check. For
-    // atomHopFactor == 1, q == 0.8 is fine
-    params.q = (m_mode == HighQualityMode ? 0.95 : 0.8);
-    params.atomHopFactor = (m_mode == HighQualityMode ? 0.3 : 1.0);
+    params.q = 0.8;
+    params.atomHopFactor = (m_mode == LiveMode ? 1.0 : 0.3);
     params.threshold = 0.0005;
     params.decimator =
         (m_mode == LiveMode ?
@@ -645,16 +639,32 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
     
     const InstrumentPack &pack(getPack(m_instrument));
 
-    for (int i = 0; i < (int)filtered.size(); ++i) {
-        Feature f;
-        for (int j = 0; j < pack.templateHeight; ++j) {
-            f.values.push_back(float(filtered[i][j]));
-        }
-        fs[m_fcqOutputNo].push_back(f);
-    }
-
     int width = filtered.size();
 
+    double silenceThreshold = 0.01;
+    
+    for (int i = 0; i < width; ++i) {
+
+        RealTime timestamp = getColumnTimestamp(m_pianoRoll.size() - 1 + i);
+        float inputGain = getInputGainAt(timestamp);
+
+        Feature f;
+        double rms = 0.0;
+
+        for (int j = 0; j < pack.templateHeight; ++j) {
+            double v = filtered[i][j];
+            rms += v * v;
+            f.values.push_back(float(v));
+        }
+
+        rms = sqrt(rms / pack.templateHeight);
+        if (rms / inputGain < silenceThreshold) {
+            filtered[i].clear();
+        }
+        
+        fs[m_fcqOutputNo].push_back(f);
+    }
+    
     Grid localPitches(width);
 
     bool wantShifts = (m_mode == HighQualityMode) && m_fineTuning;
@@ -687,7 +697,8 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
                 results.push_back
                     (async(std::launch::async,
                            [&](int index) {
-                               return applyEM(pack, filtered.at(index), wantShifts);
+                               return applyEM
+                                   (pack, filtered.at(index), wantShifts);
                            }, i + j));
             }
             for (int j = 0; j < emThreadCount && i + j < width; ++j) {
@@ -763,11 +774,13 @@ Silvet::applyEM(const InstrumentPack &pack,
     double columnThreshold = 1e-5;
     
     if (m_mode == LiveMode) {
-        columnThreshold /= 20;
+        columnThreshold /= 15;
     }
     
     vector<double> pitches(pack.templateNoteCount, 0.0);
     vector<int> bestShifts;
+
+    if (column.empty()) return { pitches, bestShifts };
     
     double sum = 0.0;
     for (int j = 0; j < pack.templateHeight; ++j) {
@@ -923,14 +936,18 @@ Silvet::postProcess(const vector<double> &pitches,
         // In live mode with only a 12-bpo CQ, we are very likely to
         // get clusters of two or three high scores at a time for
         // neighbouring semitones. Eliminate these by picking only the
-        // peaks. This means we can't recognise actual semitone chords
-        // if they ever appear, but it's not as if live mode is good
-        // enough for that to be a big deal anyway.
+        // peaks (except that we never eliminate a note that has
+        // already been established as currently playing). This means
+        // we can't recognise actual semitone chords if they ever
+        // appear, but it's not as if live mode is good enough for
+        // that to be a big deal anyway.
         if (m_mode == LiveMode) {
-            if (j == 0 ||
-                j + 1 == pack.templateNoteCount ||
-                pitches[j] < pitches[j-1] ||
-                pitches[j] < pitches[j+1]) {
+            if (m_current.find(j) == m_current.end() &&
+                (j == 0 ||
+                 j + 1 == pack.templateNoteCount ||
+                 pitches[j] < pitches[j-1] ||
+                 pitches[j] < pitches[j+1])) {
+                // not a peak or a currently-playing note: skip it
                 continue;
             }
         }
@@ -1016,11 +1033,13 @@ Silvet::noteTrack(int shiftCount)
         }
 
         if (duration == durationThreshold) {
+            m_current.insert(note);
             emitOnset(start, note, shiftCount, onsetFeatures);
         }            
         
         if (active.find(note) == active.end()) {
             // the note was playing but just ended
+            m_current.erase(note);
             emitNote(start, end, note, shiftCount, noteFeatures);
         }
     }

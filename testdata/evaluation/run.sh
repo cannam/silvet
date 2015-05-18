@@ -98,7 +98,7 @@ time for infile in $infiles; do
 	--csv-one-file "$outfile" \
 	--csv-force \
 	--transform "$transfile" \
-	"$tmpwav"
+	"$tmpwav" 2>/dev/null
 
     cat "$outfile" | \
 	sed 's/^[^,]*,//' | \
