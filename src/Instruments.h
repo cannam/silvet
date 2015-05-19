@@ -35,7 +35,7 @@ public:
     int templateNoteCount;
     int templateHeight;
     int templateMaxShift;
-    int templateSize;
+    int templateSize; // height plus space for shift at either end
 
     int lowestNote;
     int highestNote;

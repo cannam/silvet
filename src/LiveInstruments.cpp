@@ -37,25 +37,29 @@ LiveAdapter::adapt(const InstrumentPack &original)
 
     InstrumentPack::Templates t;
     bool first = true;
+
+    // The live instrument template is one octave shorter than the
+    // original, as well as having only 12 bpo instead of 60
+    int height = SILVET_TEMPLATE_HEIGHT/5 - 12;
     
     for (const auto &origt: original.templates) {
 
-	t.lowestNote = origt.lowestNote;
+	t.lowestNote = origt.lowestNote + 12;
 	t.highestNote = origt.highestNote;
         t.data.resize(origt.data.size());
 
 	for (int j = 0; j < int(origt.data.size()); ++j) {
 
-	    t.data[j].resize(SILVET_TEMPLATE_HEIGHT/5);
+	    t.data[j].resize(height);
 
-	    for (int k = 0; k < SILVET_TEMPLATE_HEIGHT/5; ++k) {
+	    for (int k = 0; k < height; ++k) {
 
                 if (!merge || first) {
                     t.data[j][k] = 0.f;
                 }
 
-                for (int m = 0; m < 5; ++m) {
-                    t.data[j][k] += origt.data[j][k * 5 + m + 2];
+                for (int m = 2; m < 3; ++m) {
+                    t.data[j][k] += origt.data[j][60 + k * 5 + m + 2];
                 }
 	    }
 	}
@@ -73,6 +77,7 @@ LiveAdapter::adapt(const InstrumentPack &original)
     }
 
     // re-normalise
+
     for (auto &t: templates) {
         for (auto &d: t.data) {
             float sum = 0.f;
@@ -80,20 +85,20 @@ LiveAdapter::adapt(const InstrumentPack &original)
             for (auto &v: d) v /= sum;
         }
     }
-    
+
     InstrumentPack live(original.lowestNote,
 			original.highestNote,
 			original.name,
 			templates);
 
-    live.templateHeight = SILVET_TEMPLATE_HEIGHT/5;
+    live.templateHeight = height;
     live.templateMaxShift = 0;
-    live.templateSize = live.templateHeight;
+    live.templateSize = height;
     
     live.maxPolyphony = original.maxPolyphony;
     live.pitchSparsity = original.pitchSparsity;
     live.sourceSparsity = original.sourceSparsity;
-    live.levelThreshold = original.levelThreshold / 15;
+    live.levelThreshold = original.levelThreshold / 20;
 
     return live;
 }

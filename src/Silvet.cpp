@@ -500,8 +500,14 @@ Silvet::reset()
 
     if (m_mode != HighQualityMode) {
         // We don't actually return any notes from the bottom octave,
-        // so we can just pad with zeros
-        minFreq *= 2;
+        // so we can just pad with zeros. In live mode the template is
+        // an octave shorter as well. Each octave the min frequency is
+        // raised by halves the processing latency.
+        if (m_mode == LiveMode) {
+            minFreq *= 4;
+        } else {
+            minFreq *= 2;
+        }
     }
 
     int bpo = 12 *
@@ -774,7 +780,7 @@ Silvet::applyEM(const InstrumentPack &pack,
     double columnThreshold = 1e-5;
     
     if (m_mode == LiveMode) {
-        columnThreshold /= 15;
+        columnThreshold /= 20;
     }
     
     vector<double> pitches(pack.templateNoteCount, 0.0);
@@ -865,12 +871,22 @@ Silvet::preProcess(const Grid &in)
             vector<double> inCol = in[i];
             vector<double> outCol(pack.templateHeight);
 
-            // In HQ mode, the CQ returns 600 bins and we ignore the
-            // lowest 55 of them (assuming binsPerSemitone == 5).
-            // 
-            // In draft and live mode the CQ is an octave shorter,
-            // returning 540 bins or equivalent, so we instead pad
-            // them with an additional 5 or equivalent zeros.
+            // In HQ mode, the CQ returns 600 bins (10 octaves at 5
+            // bins per semitone) and we ignore the lowest 55 of them,
+            // giving us 545 bins total, which matches the height of
+            // each of our instrument templates.
+            //
+            // In draft mode the CQ is an octave shorter, returning
+            // 540 bins, so we instead pad with an additional 5 zeros
+            // at the lowest frequencies to get the same 545 bins.
+            //
+            // In live mode the CQ is two octaves shorter and only has
+            // 1 bin per semitone, and the template is also an octave
+            // shorter. So we get 96 bins (= 8 * 12) and want 97 (=
+            // (545 / 5) - 12), meaning we have to pad with one extra
+            // bin at the lowest frequency position. Essentially this
+            // is the same as draft mode (pad with bins-per-semitone
+            // bins), just that the result is a shorter vector.
             // 
             // We also need to reverse the column as we go, since the
             // raw CQ has the high frequencies first and we need it
@@ -885,11 +901,12 @@ Silvet::preProcess(const Grid &in)
                     outCol[j] = inCol[ix];
                 }
             } else {
-                for (int j = 0; j < bps; ++j) {
+                int pad = bps;
+                for (int j = 0; j < pad; ++j) {
                     outCol[j] = 0.0;
                 }
-                for (int j = bps; j < pack.templateHeight; ++j) {
-                    int ix = inCol.size() - j + (bps-1);
+                for (int j = pad; j < pack.templateHeight; ++j) {
+                    int ix = inCol.size() - j + (pad-1);
                     outCol[j] = inCol[ix];
                 }
             }
