@@ -44,25 +44,25 @@ LiveAdapter::adapt(const InstrumentPack &original)
     
     for (const auto &origt: original.templates) {
 
-	t.lowestNote = origt.lowestNote + 12;
+	t.lowestNote = origt.lowestNote;
 	t.highestNote = origt.highestNote;
-        t.data.resize(origt.data.size());
 
-	for (int j = 0; j < int(origt.data.size()); ++j) {
+        t.data.resize(SILVET_TEMPLATE_NOTE_COUNT);
+
+	for (int j = 0; j < SILVET_TEMPLATE_NOTE_COUNT; ++j) {
 
 	    t.data[j].resize(height);
 
-	    for (int k = 0; k < height; ++k) {
-
-                if (!merge || first) {
-                    t.data[j][k] = 0.f;
+            if (j >= t.lowestNote && j <= t.highestNote) {
+                for (int k = 0; k < height; ++k) {
+                    // This is the index of the middle template, no. 2
+                    // of 5, in each 5-bin semitone series. (We add 4
+                    // because there are 2 blank shift-space slots at
+                    // the start of the template data.)
+                    t.data[j][k] += origt.data[j][60 + k * 5 + 4];
                 }
-
-                for (int m = 2; m < 3; ++m) {
-                    t.data[j][k] += origt.data[j][60 + k * 5 + m + 2];
-                }
-	    }
-	}
+            }
+        }
 
         if (!merge) {
             templates.push_back(t);
@@ -86,8 +86,8 @@ LiveAdapter::adapt(const InstrumentPack &original)
         }
     }
 
-    InstrumentPack live(original.lowestNote,
-			original.highestNote,
+    InstrumentPack live(templates[0].lowestNote,
+			templates[0].highestNote,
 			original.name,
 			templates);
 
