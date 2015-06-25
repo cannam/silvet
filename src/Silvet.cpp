@@ -1011,8 +1011,6 @@ Silvet::noteTrack(int shiftCount)
         return { noteFeatures, onsetFeatures };
     }
     
-    //!!! try: repeated note detection? (look for change in first derivative of the pitch matrix)
-
     for (map<int, double>::const_iterator ni = m_pianoRoll[width-1].begin();
          ni != m_pianoRoll[width-1].end(); ++ni) {
 
@@ -1041,6 +1039,20 @@ Silvet::noteTrack(int shiftCount)
             // the note was playing but just ended
             m_current.erase(note);
             emitNote(start, end, note, shiftCount, noteFeatures);
+        } else { // still playing
+            // repeated note detection: if level is greater than this
+            // multiple of its previous value, then we end the note and
+            // restart it with the same pitch
+            double restartFactor = 1.5;
+            if (duration >= durationThreshold * 2 &&
+                (active.find(note)->second >
+                 restartFactor * m_pianoRoll[width-1][note])) {
+                m_current.erase(note);
+                emitNote(start, end-1, note, shiftCount, noteFeatures);
+                // and remove this so that we start counting the new
+                // note's duration from the current position
+                m_pianoRoll[width-1].erase(note);
+            }
         }
     }
 
