@@ -1001,7 +1001,6 @@ Silvet::noteTrack(int shiftCount)
 
     // only keep notes >= 100ms or thereabouts
     double durationThrSec = 0.1;
-    if (m_mode == LiveMode) durationThrSec = 0.07;
     int durationThreshold = floor(durationThrSec / columnDuration); // in cols
     if (durationThreshold < 1) durationThreshold = 1;
 
