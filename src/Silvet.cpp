@@ -269,6 +269,22 @@ Silvet::getOutputDescriptors() const
     m_onsetsOutputNo = list.size();
     list.push_back(d);
 
+    d.identifier = "onoffsets";
+    d.name = "Note onsets and offsets";
+    d.description = "Note onsets and offsets as separate events. Each onset event has time, estimated fundamental frequency in Hz, and a synthetic MIDI velocity (1-127) estimated from the strength of the pitch in the mixture. Offsets are represented in the same way but with a velocity of 0.";
+    d.unit = "Hz";
+    d.hasFixedBinCount = true;
+    d.binCount = 2;
+    d.binNames.push_back("Frequency");
+    d.binNames.push_back("Velocity");
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::VariableSampleRate;
+    d.sampleRate = processingSampleRate / (m_cq ? m_cq->getColumnHop() : 62);
+    d.hasDuration = false;
+    m_onOffsetsOutputNo = list.size();
+    list.push_back(d);
+
     d.identifier = "timefreq";
     d.name = "Time-frequency distribution";
     d.description = "Filtered constant-Q time-frequency distribution as used as input to the expectation-maximisation algorithm.";
@@ -307,7 +323,7 @@ Silvet::getOutputDescriptors() const
     d.binNames.clear();
     if (m_cq) {
         for (int i = 0; i < getPack(0).templateNoteCount; ++i) {
-            d.binNames.push_back(getNoteName(i, 0, 1));
+            d.binNames.push_back(getNoteName(i, 0));
         }
     }
     d.hasKnownExtents = false;
@@ -381,7 +397,7 @@ Silvet::getChromaName(int pitch) const
 }
     
 std::string
-Silvet::getNoteName(int note, int shift, int shiftCount) const
+Silvet::getNoteName(int note, int shift) const
 {
     string n = getChromaName(note % 12);
 
@@ -390,6 +406,7 @@ Silvet::getNoteName(int note, int shift, int shiftCount) const
     char buf[30];
 
     float pshift = 0.f;
+    int shiftCount = getShiftCount();
     if (shiftCount > 1) {
         // see getNoteFrequency below
         pshift = 
@@ -408,7 +425,7 @@ Silvet::getNoteName(int note, int shift, int shiftCount) const
 }
 
 float
-Silvet::getNoteFrequency(int note, int shift, int shiftCount) const
+Silvet::getNoteFrequency(int note, int shift) const
 {
     // Convert shift number to a pitch shift. The given shift number
     // is an offset into the template array, which starts with some
@@ -424,6 +441,7 @@ Silvet::getNoteFrequency(int note, int shift, int shiftCount) const
     // down in pitch, for a negative pitch shift.
 
     float pshift = 0.f;
+    int shiftCount = getShiftCount();
     if (shiftCount > 1) {
         pshift = 
             float((shiftCount - shift) - int(shiftCount / 2) - 1) / shiftCount;
@@ -603,12 +621,35 @@ Silvet::getRemainingFeatures()
 {
     Grid cqout = m_cq->getRemainingOutput();
     FeatureSet fs;
+
     if (m_columnCount == 0) {
         // process() was never called, but we still want these
         insertTemplateFeatures(fs);
     } else {
+
+        // Complete the transcription
+
         transcribe(cqout, fs);
+
+        // And make sure any extant playing notes are finished and returned
+
+        m_pianoRoll.push_back({});
+
+        auto events = noteTrack();
+    
+        for (const auto &f : events.notes) {
+            fs[m_notesOutputNo].push_back(f);
+        }
+    
+        for (const auto &f : events.onsets) {
+            fs[m_onsetsOutputNo].push_back(f);
+        }
+    
+        for (const auto &f : events.onOffsets) {
+            fs[m_onOffsetsOutputNo].push_back(f);
+        }
     }
+
     return fs;
 }
 
@@ -629,6 +670,18 @@ Silvet::insertTemplateFeatures(FeatureSet &fs)
         fs[m_templateOutputNo].push_back(f);
     }
 }        
+
+int
+Silvet::getShiftCount() const
+{
+    bool wantShifts = (m_mode == HighQualityMode) && m_fineTuning;
+    int shiftCount = 1;
+    if (wantShifts) {
+        const InstrumentPack &pack(getPack(m_instrument));
+        shiftCount = pack.templateMaxShift * 2 + 1;
+    }
+    return shiftCount;
+}
 
 void
 Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
@@ -667,11 +720,8 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
     
     Grid localPitches(width);
 
-    bool wantShifts = (m_mode == HighQualityMode) && m_fineTuning;
-    int shiftCount = 1;
-    if (wantShifts) {
-        shiftCount = pack.templateMaxShift * 2 + 1;
-    }
+    int shiftCount = getShiftCount();
+    bool wantShifts = (shiftCount > 1);
 
     vector<vector<int> > localBestShifts;
     if (wantShifts) {
@@ -697,8 +747,7 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
                 results.push_back
                     (async(std::launch::async,
                            [&](int index) {
-                               return applyEM
-                                   (pack, filtered.at(index), wantShifts);
+                               return applyEM(pack, filtered.at(index));
                            }, i + j));
             }
             for (int j = 0; j < emThreadCount && i + j < width; ++j) {
@@ -713,7 +762,7 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
 
     if (emThreadCount == 1) {
         for (int i = 0; i < width; ++i) {
-            auto out = applyEM(pack, filtered.at(i), wantShifts);
+            auto out = applyEM(pack, filtered.at(i));
             localPitches[i] = out.first;
             if (wantShifts) localBestShifts[i] = out.second;
         }
@@ -748,28 +797,27 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
 
         // This pushes the up-to-max-polyphony activation column to
         // m_pianoRoll
-        postProcess(filtered, localBestShifts[i], wantShifts);
+        postProcess(filtered, localBestShifts[i]);
 
-        auto events = noteTrack(shiftCount);
+        auto events = noteTrack();
 
-        FeatureList noteFeatures = events.first;
-        for (FeatureList::const_iterator fi = noteFeatures.begin();
-             fi != noteFeatures.end(); ++fi) {
-            fs[m_notesOutputNo].push_back(*fi);
+        for (const auto &f : events.notes) {
+            fs[m_notesOutputNo].push_back(f);
         }
 
-        FeatureList onsetFeatures = events.second;
-        for (FeatureList::const_iterator fi = onsetFeatures.begin();
-             fi != onsetFeatures.end(); ++fi) {
-            fs[m_onsetsOutputNo].push_back(*fi);
+        for (const auto &f : events.onsets) {
+            fs[m_onsetsOutputNo].push_back(f);
+        }
+
+        for (const auto &f : events.onOffsets) {
+            fs[m_onOffsetsOutputNo].push_back(f);
         }
     }
 }
 
 pair<vector<double>, vector<int> >
 Silvet::applyEM(const InstrumentPack &pack,
-                const vector<double> &column,
-                bool wantShifts)
+                const vector<double> &column)
 {
     double columnThreshold = 1e-5;
     
@@ -802,10 +850,7 @@ Silvet::applyEM(const InstrumentPack &pack,
     const float *pitchDist = em.getPitchDistribution();
     const float *const *shiftDist = em.getShifts();
 
-    int shiftCount = 1;
-    if (wantShifts) {
-        shiftCount = pack.templateMaxShift * 2 + 1;
-    }
+    int shiftCount = getShiftCount();
     
     for (int j = 0; j < pack.templateNoteCount; ++j) {
 
@@ -813,7 +858,7 @@ Silvet::applyEM(const InstrumentPack &pack,
 
         int bestShift = 0;
         float bestShiftValue = 0.0;
-        if (wantShifts) {
+        if (shiftCount > 1) {
             for (int k = 0; k < shiftCount; ++k) {
                 float value = shiftDist[k][j];
                 if (k == 0 || value > bestShiftValue) {
@@ -917,8 +962,7 @@ Silvet::preProcess(const Grid &in)
     
 void
 Silvet::postProcess(const vector<double> &pitches,
-                    const vector<int> &bestShifts,
-                    bool wantShifts)
+                    const vector<int> &bestShifts)
 {
     const InstrumentPack &pack(getPack(m_instrument));
 
@@ -960,6 +1004,8 @@ Silvet::postProcess(const vector<double> &pitches,
     map<int, double> active;
     map<int, int> activeShifts;
 
+    int shiftCount = getShiftCount();
+    
     while (int(active.size()) < pack.maxPolyphony && si != strengths.begin()) {
 
         --si;
@@ -969,22 +1015,22 @@ Silvet::postProcess(const vector<double> &pitches,
 
         active[j] = strength;
 
-        if (wantShifts) {
+        if (shiftCount > 1) {
             activeShifts[j] = bestShifts[j];
         }
     }
 
     m_pianoRoll.push_back(active);
 
-    if (wantShifts) {
+    if (shiftCount > 1) {
         m_pianoRollShifts.push_back(activeShifts);
     }
 
     return;
 }
 
-pair<Vamp::Plugin::FeatureList, Vamp::Plugin::FeatureList>
-Silvet::noteTrack(int shiftCount)
+Silvet::FeatureChunk
+Silvet::noteTrack()
 {        
     // Minimum duration pruning, and conversion to notes. We can only
     // report notes that have just ended (i.e. that are absent in the
@@ -1004,10 +1050,10 @@ Silvet::noteTrack(int shiftCount)
     int durationThreshold = floor(durationThrSec / columnDuration); // in cols
     if (durationThreshold < 1) durationThreshold = 1;
 
-    FeatureList noteFeatures, onsetFeatures;
+    FeatureList noteFeatures, onsetFeatures, onOffsetFeatures;
 
     if (width < durationThreshold + 1) {
-        return { noteFeatures, onsetFeatures };
+        return { noteFeatures, onsetFeatures, onOffsetFeatures };
     }
     
     for (map<int, double>::const_iterator ni = m_pianoRoll[width-1].begin();
@@ -1031,13 +1077,15 @@ Silvet::noteTrack(int shiftCount)
 
         if (duration == durationThreshold) {
             m_current.insert(note);
-            emitOnset(start, note, shiftCount, onsetFeatures);
+            emitOnset(start, note, onsetFeatures);
+            emitOnset(start, note, onOffsetFeatures);
         }            
         
         if (active.find(note) == active.end()) {
             // the note was playing but just ended
             m_current.erase(note);
-            emitNote(start, end, note, shiftCount, noteFeatures);
+            emitNote(start, end, note, noteFeatures);
+            emitOffset(start, end, note, onOffsetFeatures);
         } else { // still playing
             // repeated note detection: if level is greater than this
             // multiple of its previous value, then we end the note and
@@ -1047,7 +1095,8 @@ Silvet::noteTrack(int shiftCount)
                 (active.find(note)->second >
                  restartFactor * m_pianoRoll[width-1][note])) {
                 m_current.erase(note);
-                emitNote(start, end-1, note, shiftCount, noteFeatures);
+                emitNote(start, end-1, note, noteFeatures);
+                emitOffset(start, end-1, note, onOffsetFeatures);
                 // and remove this so that we start counting the new
                 // note's duration from the current position
                 m_pianoRoll[width-1].erase(note);
@@ -1057,12 +1106,11 @@ Silvet::noteTrack(int shiftCount)
 
 //    cerr << "returning " << noteFeatures.size() << " complete note(s) " << endl;
 
-    return { noteFeatures, onsetFeatures };
+    return { noteFeatures, onsetFeatures, onOffsetFeatures };
 }
 
 void
-Silvet::emitNote(int start, int end, int note, int shiftCount,
-                 FeatureList &noteFeatures)
+Silvet::emitNote(int start, int end, int note, FeatureList &noteFeatures)
 {
     int partStart = start;
     int partShift = 0;
@@ -1076,7 +1124,7 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
 
         int shift = 0;
 
-        if (shiftCount > 1) {
+        if (getShiftCount() > 1) {
 
             shift = m_pianoRollShifts[i][note];
 
@@ -1093,7 +1141,6 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
                                                        i,
                                                        note,
                                                        partShift,
-                                                       shiftCount,
                                                        partStrength));
                 partStart = i;
                 partShift = shift;
@@ -1111,21 +1158,19 @@ Silvet::emitNote(int start, int end, int note, int shiftCount,
                                                end,
                                                note,
                                                partShift,
-                                               shiftCount,
                                                partStrength));
     }
 }
 
 void
-Silvet::emitOnset(int start, int note, int shiftCount,
-                  FeatureList &onsetFeatures)
+Silvet::emitOnset(int start, int note, FeatureList &onOffsetFeatures)
 {
     int len = int(m_pianoRoll.size());
 
     double onsetStrength = 0;
 
     int shift = 0;
-    if (shiftCount > 1) {
+    if (getShiftCount() > 1) {
         shift = m_pianoRollShifts[start][note];
     }
     
@@ -1136,11 +1181,25 @@ Silvet::emitOnset(int start, int note, int shiftCount,
         }
     }
 
-    onsetFeatures.push_back(makeOnsetFeature(start,
-                                             note,
-                                             shift,
-                                             shiftCount,
-                                             onsetStrength));
+    if (onsetStrength == 0) return;
+    
+    onOffsetFeatures.push_back(makeOnsetFeature(start,
+                                                note,
+                                                shift,
+                                                onsetStrength));
+}
+
+void
+Silvet::emitOffset(int start, int end, int note, FeatureList &onOffsetFeatures)
+{
+    int shift = 0;
+    if (getShiftCount() > 1) {
+        shift = m_pianoRollShifts[start][note];
+    }
+    
+    onOffsetFeatures.push_back(makeOffsetFeature(end,
+                                                 note,
+                                                 shift));
 }
 
 RealTime
@@ -1158,7 +1217,6 @@ Silvet::makeNoteFeature(int start,
                         int end,
                         int note,
                         int shift,
-                        int shiftCount,
                         double strength)
 {
     Feature f;
@@ -1170,10 +1228,10 @@ Silvet::makeNoteFeature(int start,
     f.duration = getColumnTimestamp(end) - f.timestamp;
 
     f.values.clear();
-    f.values.push_back(getNoteFrequency(note, shift, shiftCount));
+    f.values.push_back(getNoteFrequency(note, shift));
     f.values.push_back(getVelocityFor(strength, start));
 
-    f.label = getNoteName(note, shift, shiftCount);
+    f.label = getNoteName(note, shift);
 
     return f;
 }
@@ -1182,7 +1240,6 @@ Silvet::Feature
 Silvet::makeOnsetFeature(int start,
                          int note,
                          int shift,
-                         int shiftCount,
                          double strength)
 {
     Feature f;
@@ -1193,10 +1250,31 @@ Silvet::makeOnsetFeature(int start,
     f.hasDuration = false;
 
     f.values.clear();
-    f.values.push_back(getNoteFrequency(note, shift, shiftCount));
+    f.values.push_back(getNoteFrequency(note, shift));
     f.values.push_back(getVelocityFor(strength, start));
 
-    f.label = getNoteName(note, shift, shiftCount);
+    f.label = getNoteName(note, shift);
+
+    return f;
+}
+
+Silvet::Feature
+Silvet::makeOffsetFeature(int col,
+                          int note,
+                          int shift)
+{
+    Feature f;
+    
+    f.hasTimestamp = true;
+    f.timestamp = getColumnTimestamp(col);
+
+    f.hasDuration = false;
+
+    f.values.clear();
+    f.values.push_back(getNoteFrequency(note, shift));
+    f.values.push_back(0); // velocity 0 for offset
+
+    f.label = getNoteName(note, shift) + " off";
 
     return f;
 }

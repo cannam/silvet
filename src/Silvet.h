@@ -110,27 +110,35 @@ protected:
     Grid preProcess(const Grid &);
 
     std::pair<vector<double>, vector<int> > applyEM(const InstrumentPack &pack,
-                                                    const vector<double> &column,
-                                                    bool wantShifts);
+                                                    const vector<double> &column);
     
     void postProcess(const vector<double> &pitches,
-                     const vector<int> &bestShifts,
-                     bool wantShifts); // -> piano roll column
+                     const vector<int> &bestShifts); // -> piano roll column
 
-    std::pair<FeatureList, FeatureList> noteTrack(int shiftCount); // notes, onsets
+    struct FeatureChunk {
+        FeatureList notes;
+        FeatureList onsets;
+        FeatureList onOffsets;
+    };
 
-    void emitNote(int start, int end, int note, int shiftCount,
+    int getShiftCount() const;
+    
+    FeatureChunk noteTrack(); // notes, on/offsets
+
+    void emitNote(int start, int end, int note,
                   FeatureList &noteFeatures);
 
-    void emitOnset(int start, int note, int shiftCount,
-                  FeatureList &noteFeatures);
+    void emitOnset(int start, int note,
+                  FeatureList &onOffsetFeatures);
+
+    void emitOffset(int start, int end, int note,
+                    FeatureList &onOffsetFeatures);
     
     Vamp::RealTime getColumnTimestamp(int column);
     
-    Feature makeNoteFeature(int start, int end, int note, int shift,
-                            int shiftCount, double strength);
-    Feature makeOnsetFeature(int start, int note, int shift,
-                             int shiftCount, double strength);
+    Feature makeNoteFeature(int start, int end, int note, int shift, double strength);
+    Feature makeOnsetFeature(int start, int note, int shift, double strength);
+    Feature makeOffsetFeature(int col, int note, int shift);
 
     int getVelocityFor(double strength, int column);
     
@@ -141,8 +149,8 @@ protected:
     void transcribe(const Grid &, FeatureSet &);
 
     string getChromaName(int n) const;
-    string getNoteName(int n, int shift, int shiftCount) const;
-    float getNoteFrequency(int n, int shift, int shiftCount) const;
+    string getNoteName(int n, int shift) const;
+    float getNoteFrequency(int n, int shift) const;
 
     int m_blockSize;
     int m_columnCount;
@@ -152,6 +160,7 @@ protected:
 
     mutable int m_notesOutputNo;
     mutable int m_onsetsOutputNo;
+    mutable int m_onOffsetsOutputNo;
     mutable int m_fcqOutputNo;
     mutable int m_pitchOutputNo;
     mutable int m_templateOutputNo;
