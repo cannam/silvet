@@ -106,7 +106,7 @@ protected:
     vector<map<int, int> > m_pianoRollShifts;
     map<Vamp::RealTime, float> m_inputGains;
     set<int> m_current;
-
+    
     Grid preProcess(const Grid &);
 
     std::pair<vector<double>, vector<int> > applyEM(const InstrumentPack &pack,
@@ -119,6 +119,7 @@ protected:
         FeatureList notes;
         FeatureList onsets;
         FeatureList onOffsets;
+        FeatureList simultaneities;
     };
 
     int getShiftCount() const;
@@ -133,6 +134,8 @@ protected:
 
     void emitOffset(int start, int end, int note,
                     FeatureList &onOffsetFeatures);
+
+    void emitSimultaneity(int start, FeatureList &simultaneities);
     
     Vamp::RealTime getColumnTimestamp(int column);
     
@@ -161,6 +164,7 @@ protected:
     mutable int m_notesOutputNo;
     mutable int m_onsetsOutputNo;
     mutable int m_onOffsetsOutputNo;
+    mutable int m_simultaneitiesOutputNo;
     mutable int m_fcqOutputNo;
     mutable int m_pitchOutputNo;
     mutable int m_templateOutputNo;

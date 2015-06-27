@@ -285,6 +285,20 @@ Silvet::getOutputDescriptors() const
     m_onOffsetsOutputNo = list.size();
     list.push_back(d);
 
+    d.identifier = "simultaneities";
+    d.name = "Simultaneities";
+    d.description = "Events indicating which notes are active together. Whenever a note begins, it is collected with any other notes which begin during a short period of time immediately after, and the set of currently playing notes is reported as an event with the timestamp of the first note. Each feature has a variable number of values, depending on how many simultaneous notes are active.";
+    d.unit = "Hz";
+    d.hasFixedBinCount = false;
+    d.binNames.clear();
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::VariableSampleRate;
+    d.sampleRate = processingSampleRate / (m_cq ? m_cq->getColumnHop() : 62);
+    d.hasDuration = false;
+    m_simultaneitiesOutputNo = list.size();
+    list.push_back(d);
+    
     d.identifier = "timefreq";
     d.name = "Time-frequency distribution";
     d.description = "Filtered constant-Q time-frequency distribution as used as input to the expectation-maximisation algorithm.";
@@ -555,6 +569,7 @@ Silvet::reset()
     }
     m_pianoRoll.clear();
     m_inputGains.clear();
+    m_simultaneity = Simultaneity();
     m_columnCount = 0;
     m_resampledCount = 0;
     m_startTime = RealTime::zeroTime;
@@ -647,6 +662,10 @@ Silvet::getRemainingFeatures()
     
         for (const auto &f : events.onOffsets) {
             fs[m_onOffsetsOutputNo].push_back(f);
+        }
+    
+        for (const auto &f : events.simultaneities) {
+            fs[m_simultaneitiesOutputNo].push_back(f);
         }
     }
 
@@ -811,6 +830,10 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
 
         for (const auto &f : events.onOffsets) {
             fs[m_onOffsetsOutputNo].push_back(f);
+        }
+
+        for (const auto &f : events.simultaneities) {
+            fs[m_simultaneitiesOutputNo].push_back(f);
         }
     }
 }
@@ -1050,10 +1073,10 @@ Silvet::noteTrack()
     int durationThreshold = floor(durationThrSec / columnDuration); // in cols
     if (durationThreshold < 1) durationThreshold = 1;
 
-    FeatureList noteFeatures, onsetFeatures, onOffsetFeatures;
+    FeatureList noteFeatures, onsetFeatures, onOffsetFeatures, simultaneousFeatures;
 
     if (width < durationThreshold + 1) {
-        return { noteFeatures, onsetFeatures, onOffsetFeatures };
+        return { noteFeatures, onsetFeatures, onOffsetFeatures, simultaneousFeatures };
     }
     
     for (map<int, double>::const_iterator ni = m_pianoRoll[width-1].begin();
@@ -1106,7 +1129,7 @@ Silvet::noteTrack()
 
 //    cerr << "returning " << noteFeatures.size() << " complete note(s) " << endl;
 
-    return { noteFeatures, onsetFeatures, onOffsetFeatures };
+    return { noteFeatures, onsetFeatures, onOffsetFeatures, simultaneousFeatures };
 }
 
 void
@@ -1200,6 +1223,25 @@ Silvet::emitOffset(int start, int end, int note, FeatureList &onOffsetFeatures)
     onOffsetFeatures.push_back(makeOffsetFeature(end,
                                                  note,
                                                  shift));
+}
+
+void
+Silvet::emitSimultaneity(int start, FeatureList &simultaneousFeatures)
+{
+    Feature f;
+    f.hasTimestamp = true;
+    f.timestamp = getColumnTimestamp(start);
+    f.hasDuration = false;
+    f.values.clear();
+    for (auto &noteShift : m_simultaneity.notesShifts) {
+        f.values.push_back(getNoteFrequency(noteShift.first, noteShift.second));
+    }
+    f.label = "";
+    for (auto &noteShift : m_simultaneity.notesShifts) {
+        if (f.label != "") f.label += ",";
+        f.label += getNoteName(noteShift.first, noteShift.second);
+    }
+    simultaneousFeatures.push_back(f);
 }
 
 RealTime
