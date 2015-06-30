@@ -1,7 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 
 # Assumption: instrument parameter value 0 of the Silvet plugin is
 # always "multiple or unknown instruments" and 1 is always "piano".
+
+set -eu
 
 piano_path="/home/cannam/Music/piano_small_dataset"
 yc="/home/cannam/code/may/bin/yc"
@@ -65,14 +67,14 @@ time for infile in $infiles; do
 
     duration=30
 
-    for instrument in $intended_instrument ; do
+    for instrument in $intended_instrument 0 ; do
 
-	for mode in 1 0; do 
+	for mode in 2 1 0; do 
 	    
 	    for norm in no; do
 
 		echo
-		echo "For file $filename, instrument $instrument, norm $norm..."
+		echo "For mode $mode, file $filename, instrument $instrument, norm $norm..."
 
 		if [ "$norm" = "no" ]; then
 		    # Don't normalise; plugin is now supposed to do it
@@ -105,15 +107,15 @@ time for infile in $infiles; do
 		    mark=""
 		    if [ "$ms" = "50" ]; then
 			if [ "$instrument" = "0" ]; then
-			    mark="  <-- main generic preset for $filename (norm = $norm)"; 
+			    mark="  <-- main generic preset for $filename (mode = $mode, norm = $norm)"; 
 			else
-			    mark="  <-- main piano preset for $filename (norm = $norm)";
+			    mark="  <-- main piano preset for $filename (mode = $mode, norm = $norm)";
 			fi
 		    fi;
 		    echo
 		    echo "Validating against ground truth at $ms ms:"
 		    egrep '(^[0-9]\.)|(^[012][0-9]\.)' "../piano-groundtruth/$filename.lab" > "$reference.lab"
-		    "$yc" ../scripts/evaluate_lab.yeti "$ms" "$reference.lab" "$outfile.lab" | sed 's,$,'"$mark"','
+		    "$yc" ../scripts/evaluate_lab.yeti "$ms" "$reference.lab" "$outfile.lab" | sed 's#$#'"$mark"'#'
 		done;
 		echo
 	    done

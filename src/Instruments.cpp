@@ -146,7 +146,7 @@ InstrumentPack::listInstrumentPacks()
 			 "Piano",
 			 pianoTemplates);
     piano.maxPolyphony = 6;
-    piano.levelThreshold = 6;
+    piano.levelThreshold = 5;
     piano.pitchSparsity = 1.0;
     piano.sourceSparsity = 1.0;
     if (isOK(piano)) {
