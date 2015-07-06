@@ -147,15 +147,14 @@ Silvet::getParameterDescriptors() const
     desc.identifier = "mode";
     desc.name = "Processing mode";
     desc.unit = "";
-    desc.description = "Sets the tradeoff of processing speed against transcription quality. Draft mode is tuned in favour of overall speed; Live mode is tuned in favour of lower latency; while Intensive mode (the default) will almost always produce the best results.";
+    desc.description = "Sets the tradeoff of processing speed against transcription quality. Live mode is much faster and detects notes with relatively low latency; Intensive mode (the default) is slower but will almost always produce better results.";
     desc.minValue = 0;
     desc.maxValue = 2;
     desc.defaultValue = int(defaultMode);
     desc.isQuantized = true;
     desc.quantizeStep = 1;
-    desc.valueNames.push_back("Draft (faster)"); 
+    desc.valueNames.push_back("Live (faster and lower latency)");
     desc.valueNames.push_back("Intensive (higher quality)");
-    desc.valueNames.push_back("Live (lower latency)");
     list.push_back(desc);
 
     desc.identifier = "instrument";
@@ -516,7 +515,7 @@ Silvet::reset()
     
     double minFreq = 27.5;
 
-    if (m_mode != HighQualityMode) {
+    if (m_mode == LiveMode) {
         // We don't actually return any notes from the bottom octave,
         // so we can just pad with zeros
         minFreq *= 2;
@@ -543,7 +542,7 @@ Silvet::reset()
 //    cerr << "CQ bins = " << m_cq->getTotalBins() << endl;
 //    cerr << "CQ min freq = " << m_cq->getMinFrequency() << " (and for confirmation, freq of bin 0 = " << m_cq->getBinFrequency(0) << ")" << endl;
     
-    m_colsPerSec = (m_mode == DraftMode ? 25 : 50);
+    m_colsPerSec = 50;
 
     for (int i = 0; i < (int)m_postFilter.size(); ++i) {
         delete m_postFilter[i];
@@ -913,9 +912,9 @@ Silvet::preProcess(const Grid &in)
             // In HQ mode, the CQ returns 600 bins and we ignore the
             // lowest 55 of them (assuming binsPerSemitone == 5).
             // 
-            // In draft and live mode the CQ is an octave shorter,
-            // returning 540 bins or equivalent, so we instead pad
-            // them with an additional 5 or equivalent zeros.
+            // In live mode the CQ is an octave shorter, returning 540
+            // bins or equivalent, so we instead pad them with an
+            // additional 5 or equivalent zeros.
             // 
             // We also need to reverse the column as we go, since the
             // raw CQ has the high frequencies first and we need it

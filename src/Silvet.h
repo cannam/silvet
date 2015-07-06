@@ -71,10 +71,9 @@ public:
 
     FeatureSet getRemainingFeatures();
 
-    enum ProcessingMode { // ordered so draft==0 and hq==1 as in prior releases
-        DraftMode = 0,
+    enum ProcessingMode {
+        LiveMode = 0,
         HighQualityMode = 1,
-        LiveMode = 2,
     };
 
 protected:
