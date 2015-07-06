@@ -32,10 +32,10 @@
 class InstrumentPack
 {
 public:
-    static const int templateNoteCount;
-    static const int templateHeight;
-    static const int templateMaxShift;
-    static const int templateSize;
+    int templateNoteCount;
+    int templateHeight;
+    int templateMaxShift;
+    int templateSize;
 
     int lowestNote;
     int highestNote;
@@ -60,15 +60,9 @@ public:
 
 private:
     InstrumentPack(int lowest, int highest, std::string n,
-		   std::vector<Templates> tt) :
-	lowestNote(lowest),
-	highestNote(highest),
-        maxPolyphony(5),
-        pitchSparsity(1.1),
-        sourceSparsity(1.2),
-        levelThreshold(5),
-	name(n),
-	templates(tt) { }
+		   std::vector<Templates> tt);
+    
+    friend class LiveAdapter;
 };
 
 #endif

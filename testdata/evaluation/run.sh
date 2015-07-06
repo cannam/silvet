@@ -79,6 +79,8 @@ time for infile in $infiles; do
     
     piece=`basename \`dirname "$infile" \``
     arrangement=`basename "$infile" .wav`
+
+    # Change this to the processing mode you want to test (e.g. 0 for draft)
     mode=1
 
     echo
@@ -96,7 +98,7 @@ time for infile in $infiles; do
 	--csv-one-file "$outfile" \
 	--csv-force \
 	--transform "$transfile" \
-	"$tmpwav"
+	"$tmpwav" 2>/dev/null
 
     cat "$outfile" | \
 	sed 's/^[^,]*,//' | \

@@ -44,17 +44,13 @@ EM::EM(const InstrumentPack *pack, bool useShifts) :
 {
     m_pitches = allocate<float>(m_noteCount);
     m_updatePitches = allocate<float>(m_noteCount);
-    for (int n = 0; n < m_noteCount; ++n) {
-        m_pitches[n] = float(rand()) / RAND_MAX;
-    }
+    v_set(m_pitches, 1.f, m_noteCount);
 
     if (useShifts) {
         m_shifts = allocate_channels<float>(m_shiftCount, m_noteCount);
         m_updateShifts = allocate_channels<float>(m_shiftCount, m_noteCount);
         for (int f = 0; f < m_shiftCount; ++f) {
-            for (int n = 0; n < m_noteCount; ++n) {
-                m_shifts[f][n] = float(rand()) / RAND_MAX;
-            }
+            v_set(m_shifts[f], 1.f, m_noteCount);
         }
     } else {
         m_shifts = 0;
@@ -65,7 +61,7 @@ EM::EM(const InstrumentPack *pack, bool useShifts) :
     m_updateSources = allocate_channels<float>(m_sourceCount, m_noteCount);
     for (int i = 0; i < m_sourceCount; ++i) {
         for (int n = 0; n < m_noteCount; ++n) {
-            m_sources[i][n] = (inRange(i, n) ? 1.0 : 0.0);
+            m_sources[i][n] = (inRange(i, n) ? 1.f : 0.f);
         }
     }
 

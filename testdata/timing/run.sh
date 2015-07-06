@@ -20,6 +20,8 @@ fi
 VAMP_PATH=../..
 export VAMP_PATH
 
+tfile=transform.ttl
+
 outfile="/tmp/$$"
 
 tmpwav="/tmp/$$norm.wav"
@@ -32,7 +34,7 @@ time sonic-annotator \
     --writer csv \
     --csv-one-file "$outfile" \
     --csv-force \
-    --default vamp:silvet:silvet:notes \
+    --transform "$tfile" \
     "$tmpwav"
 
 cat "$outfile" | \

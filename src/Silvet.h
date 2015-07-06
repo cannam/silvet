@@ -71,14 +71,29 @@ public:
 
     FeatureSet getRemainingFeatures();
 
+    enum ProcessingMode {
+        LiveMode = 0,
+        HighQualityMode = 1,
+    };
+
 protected:
     const std::vector<InstrumentPack> m_instruments;
+    const std::vector<InstrumentPack> m_liveInstruments;
 
+    const InstrumentPack &getPack(int instrument) const {
+        if (m_mode == LiveMode) {
+            return m_liveInstruments[instrument];
+        } else {
+            return m_instruments[instrument];
+        }
+    }
+    
     Resampler *m_resampler;
     FlattenDynamics *m_flattener;
     CQSpectrogram *m_cq;
 
-    bool m_hqMode;
+    ProcessingMode m_mode;
+    
     bool m_fineTuning;
     int m_instrument;
     int m_colsPerSec;
@@ -89,34 +104,52 @@ protected:
     vector<map<int, double> > m_pianoRoll;
     vector<map<int, int> > m_pianoRollShifts;
     map<Vamp::RealTime, float> m_inputGains;
+    set<int> m_current;
 
     Grid preProcess(const Grid &);
 
     std::pair<vector<double>, vector<int> > applyEM(const InstrumentPack &pack,
-                                                    const vector<double> &column,
-                                                    bool wantShifts);
+                                                    const vector<double> &column);
     
-    vector<double> postProcess(const vector<double> &pitches,
-                               const vector<int> &bestShifts,
-                               bool wantShifts); // -> piano roll column
+    void postProcess(const vector<double> &pitches,
+                     const vector<int> &bestShifts); // -> piano roll column
 
-    FeatureList noteTrack(int shiftCount);
+    struct FeatureChunk {
+        FeatureList notes;
+        FeatureList onsets;
+        FeatureList onOffsets;
+    };
 
-    void emitNote(int start, int end, int note, int shiftCount,
+    int getShiftCount() const;
+    
+    FeatureChunk noteTrack(); // notes, on/offsets
+
+    void emitNote(int start, int end, int note,
                   FeatureList &noteFeatures);
+
+    void emitOnset(int start, int note,
+                  FeatureList &onOffsetFeatures);
+
+    void emitOffset(int start, int end, int note,
+                    FeatureList &onOffsetFeatures);
     
     Vamp::RealTime getColumnTimestamp(int column);
     
-    Feature makeNoteFeature(int start, int end, int note, int shift,
-                            int shiftCount, int velocity);
+    Feature makeNoteFeature(int start, int end, int note, int shift, double strength);
+    Feature makeOnsetFeature(int start, int note, int shift, double strength);
+    Feature makeOffsetFeature(int col, int note, int shift);
 
+    int getVelocityFor(double strength, int column);
+    
     float getInputGainAt(Vamp::RealTime t);
 
-    FeatureSet transcribe(const Grid &);
+    void insertTemplateFeatures(FeatureSet &);
+    
+    void transcribe(const Grid &, FeatureSet &);
 
-    string chromaName(int n) const;
-    string noteName(int n, int shift, int shiftCount) const;
-    float noteFrequency(int n, int shift, int shiftCount) const;
+    string getChromaName(int n) const;
+    string getNoteName(int n, int shift) const;
+    float getNoteFrequency(int n, int shift) const;
 
     int m_blockSize;
     int m_columnCount;
@@ -125,8 +158,11 @@ protected:
     bool m_haveStartTime;
 
     mutable int m_notesOutputNo;
+    mutable int m_onsetsOutputNo;
+    mutable int m_onOffsetsOutputNo;
     mutable int m_fcqOutputNo;
     mutable int m_pitchOutputNo;
+    mutable int m_templateOutputNo;
     mutable int m_chromaOutputNo;
 };
 

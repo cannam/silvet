@@ -6,7 +6,7 @@
 /* note: intended to parse as both C and C++ */
 
 #define SILVET_TEMPLATE_COUNT      14   /* Number of instruments */
-#define SILVET_TEMPLATE_NOTE_COUNT 88   /* Number of notes per instrument */ 
+#define SILVET_TEMPLATE_NOTE_COUNT 88   /* Number of notes per instrument */
 #define SILVET_TEMPLATE_HEIGHT     545  /* Frequency bins per template */
 #define SILVET_TEMPLATE_MAX_SHIFT  2    /* Zeros at either end of template */ 
 #define SILVET_TEMPLATE_SIZE       549  /* Height + 2 * max shift space */ 
