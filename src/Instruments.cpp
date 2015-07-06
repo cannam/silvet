@@ -200,8 +200,8 @@ InstrumentPack::listInstrumentPacks()
 			   silvet_templates_highest_note, // violin
 			   "String quartet",
 			   stringTemplates);
-    strings.maxPolyphony = 5;
-    strings.levelThreshold = 5;
+    strings.maxPolyphony = 6;
+    strings.levelThreshold = 3;
     if (isOK(strings)) {
 	ii.push_back(strings);
     }
