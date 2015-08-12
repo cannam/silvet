@@ -1182,6 +1182,13 @@ Silvet::emitNoteAndOffset(int start, int end, int note,
         onOffsetFeatures.push_back(makeOffsetFeature(end,
                                                      note,
                                                      partShift));
+
+    } else if (partStart > start) {
+
+        // we have emitted an onset for this, so must add an offset
+        onOffsetFeatures.push_back(makeOffsetFeature(end,
+                                                     note,
+                                                     partShift));
     }
 }
 
