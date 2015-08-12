@@ -149,7 +149,7 @@ Silvet::getParameterDescriptors() const
     desc.unit = "";
     desc.description = "Sets the tradeoff of processing speed against transcription quality. Live mode is much faster and detects notes with relatively low latency; Intensive mode (the default) is slower but will almost always produce better results.";
     desc.minValue = 0;
-    desc.maxValue = 2;
+    desc.maxValue = 1;
     desc.defaultValue = int(defaultMode);
     desc.isQuantized = true;
     desc.quantizeStep = 1;
