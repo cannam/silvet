@@ -1083,8 +1083,7 @@ Silvet::noteTrack()
         if (active.find(note) == active.end()) {
             // the note was playing but just ended
             m_current.erase(note);
-            emitNote(start, end, note, noteFeatures);
-            emitOffset(start, end, note, onOffsetFeatures);
+            emitNoteAndOffset(start, end, note, noteFeatures, onOffsetFeatures);
         } else { // still playing
             // repeated note detection: if level is greater than this
             // multiple of its previous value, then we end the note and
@@ -1094,8 +1093,7 @@ Silvet::noteTrack()
                 (active.find(note)->second >
                  restartFactor * m_pianoRoll[width-1][note])) {
                 m_current.erase(note);
-                emitNote(start, end-1, note, noteFeatures);
-                emitOffset(start, end-1, note, onOffsetFeatures);
+                emitNoteAndOffset(start, end-1, note, noteFeatures, onOffsetFeatures);
                 // and remove this so that we start counting the new
                 // note's duration from the current position
                 m_pianoRoll[width-1].erase(note);
@@ -1109,12 +1107,22 @@ Silvet::noteTrack()
 }
 
 void
-Silvet::emitNote(int start, int end, int note, FeatureList &noteFeatures)
+Silvet::emitNoteAndOffset(int start, int end, int note,
+                          FeatureList &noteFeatures,
+                          FeatureList &onOffsetFeatures)
 {
+    // Emit the complete note-event feature, and its offset. We have
+    // already emitted the note onset when it started -- that process
+    // is separated out in order to get a faster response during live
+    // tracking. However, if the note shift changes within the note
+    // (which can happen only if we have fine-tuning switched on), we
+    // emit an offset and then a new onset with the new shift.
+    
     int partStart = start;
     int partShift = 0;
     double partStrength = 0;
 
+    // NB this *must* be less than durationThreshold above
     int partThreshold = floor(0.05 * m_colsPerSec);
 
     for (int i = start; i != end; ++i) {
@@ -1132,8 +1140,6 @@ Silvet::emitNote(int start, int end, int note, FeatureList &noteFeatures)
             }
 
             if (i > partStart + partThreshold && shift != partShift) {
-                
-//                cerr << "i = " << i << ", partStart = " << partStart << ", shift = " << shift << ", partShift = " << partShift << endl;
 
                 // pitch has changed, emit an intermediate note
                 noteFeatures.push_back(makeNoteFeature(partStart,
@@ -1141,8 +1147,19 @@ Silvet::emitNote(int start, int end, int note, FeatureList &noteFeatures)
                                                        note,
                                                        partShift,
                                                        partStrength));
+
+                onOffsetFeatures.push_back(makeOffsetFeature(i,
+                                                             note,
+                                                             partShift));
+                
                 partStart = i;
                 partShift = shift;
+
+                onOffsetFeatures.push_back(makeOnsetFeature(i,
+                                                            note,
+                                                            partShift,
+                                                            partStrength));
+
                 partStrength = 0;
             }
         }
@@ -1153,11 +1170,16 @@ Silvet::emitNote(int start, int end, int note, FeatureList &noteFeatures)
     }
 
     if (end >= partStart + partThreshold) {
+
         noteFeatures.push_back(makeNoteFeature(partStart,
                                                end,
                                                note,
                                                partShift,
                                                partStrength));
+
+        onOffsetFeatures.push_back(makeOffsetFeature(end,
+                                                     note,
+                                                     partShift));
     }
 }
 
@@ -1186,19 +1208,6 @@ Silvet::emitOnset(int start, int note, FeatureList &onOffsetFeatures)
                                                 note,
                                                 shift,
                                                 onsetStrength));
-}
-
-void
-Silvet::emitOffset(int start, int end, int note, FeatureList &onOffsetFeatures)
-{
-    int shift = 0;
-    if (getShiftCount() > 1) {
-        shift = m_pianoRollShifts[start][note];
-    }
-    
-    onOffsetFeatures.push_back(makeOffsetFeature(end,
-                                                 note,
-                                                 shift));
 }
 
 RealTime

@@ -124,15 +124,13 @@ protected:
     
     FeatureChunk noteTrack(); // notes, on/offsets
 
-    void emitNote(int start, int end, int note,
-                  FeatureList &noteFeatures);
+    void emitNoteAndOffset(int start, int end, int note,
+                           FeatureList &noteFeatures,
+                           FeatureList &onOffsetFeatures);
 
     void emitOnset(int start, int note,
                   FeatureList &onOffsetFeatures);
 
-    void emitOffset(int start, int end, int note,
-                    FeatureList &onOffsetFeatures);
-    
     Vamp::RealTime getColumnTimestamp(int column);
     
     Feature makeNoteFeature(int start, int end, int note, int shift, double strength);
