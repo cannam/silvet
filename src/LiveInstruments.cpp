@@ -77,7 +77,9 @@ LiveAdapter::adapt(const InstrumentPack &original)
         for (auto &d: t.data) {
             float sum = 0.f;
             for (auto v: d) sum += v;
-            for (auto &v: d) v /= sum;
+            if (sum > 0.f) {
+                for (auto &v: d) v /= sum;
+            }
         }
     }
     
