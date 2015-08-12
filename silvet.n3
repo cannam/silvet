@@ -70,11 +70,11 @@ plugbase:silvet_param_mode a  vamp:QuantizedParameter ;
     dc:title            "Processing mode" ;
     dc:format           "" ;
     vamp:min_value       0 ;
-    vamp:max_value       2 ;
+    vamp:max_value       1 ;
     vamp:unit           "" ;
     vamp:quantize_step   1  ;
     vamp:default_value   1 ;
-    vamp:value_names     ( "Draft (faster)" "Intensive (higher quality)" "Live (lower latency)");
+    vamp:value_names     ( "Live (faster and lower latency)" "Intensive (higher quality)");
     .
 plugbase:silvet_param_instrument a  vamp:QuantizedParameter ;
     vamp:identifier     "instrument" ;
@@ -121,6 +121,17 @@ plugbase:silvet_output_onsets a  vamp:SparseOutput ;
     vamp:sample_type      vamp:VariableSampleRate ;
     vamp:sample_rate      711 ;
     vamp:computes_event_type   af:Onset ;
+    .
+plugbase:silvet_output_onoffsets a  vamp:SparseOutput ;
+    vamp:identifier       "onoffsets" ;
+    dc:title              "Note onsets and offsets" ;
+    dc:description        """Note onsets and offsets as separate events. Each onset event has time, estimated fundamental frequency in Hz, and a synthetic MIDI velocity (1-127) estimated from the strength of the pitch in the mixture. Offsets are represented in the same way but with a velocity of 0."""  ;
+    vamp:fixed_bin_count  "true" ;
+    vamp:unit             "Hz" ;
+    vamp:bin_count        2 ;
+    vamp:bin_names        ( "Frequency" "Velocity");
+    vamp:sample_type      vamp:VariableSampleRate ;
+    vamp:sample_rate      711 ;
     .
 plugbase:silvet_output_timefreq a  vamp:DenseOutput ;
     vamp:identifier       "timefreq" ;
