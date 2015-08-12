@@ -743,6 +743,7 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
             typedef future<pair<vector<double>, vector<int>>> EMFuture;
             vector<EMFuture> results;
             for (int j = 0; j < emThreadCount && i + j < width; ++j) {
+                cerr << "creating future " << j << " (i = " << i << ", width = " << width << ")" << endl;
                 results.push_back
                     (async(std::launch::async,
                            [&](int index) {
@@ -750,6 +751,7 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
                            }, i + j));
             }
             for (int j = 0; j < emThreadCount && i + j < width; ++j) {
+                cerr << "reaping future " << j << " (i = " << i << ", width = " << width << ")" << endl;
                 auto out = results[j].get();
                 localPitches[i+j] = out.first;
                 if (wantShifts) localBestShifts[i+j] = out.second;
