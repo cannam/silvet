@@ -25,6 +25,10 @@
 #include "MedianFilter.h"
 #include "Instruments.h"
 
+#ifndef MAX_EM_THREADS
+#define MAX_EM_THREADS 8
+#endif
+
 using std::string;
 using std::vector;
 using std::set;

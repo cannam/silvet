@@ -60,6 +60,9 @@ in the Multiple F0 Tracking task:
 
 http://www.music-ir.org/mirex/wiki/2012:Multiple_Fundamental_Frequency_Estimation_%26_Tracking_Results
 
+Also refer to later editions of MIREX (2014 and 2015) for results
+obtained using the Silvet plugin itself.
+
 
 Authors
 -------
@@ -85,6 +88,6 @@ If you make use of this software for academic purposes, please cite:
 
 (See the CITATION file for a BibTeX reference.)
 
-This plugin is Copyright 2014 Queen Mary, University of London. It is
-distributed under the GNU General Public License: see the file COPYING
-for details.
+This plugin is Copyright 2014-2015 Queen Mary, University of
+London. It is distributed under the GNU General Public License: see
+the file COPYING for details.

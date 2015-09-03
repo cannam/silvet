@@ -727,11 +727,10 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
         localBestShifts = vector<vector<int> >(width);
     }
 
-#ifndef MAX_EM_THREADS
-#define MAX_EM_THREADS 8
-#endif
-
     int emThreadCount = MAX_EM_THREADS;
+    if (emThreadCount > int(std::thread::hardware_concurrency())) {
+        emThreadCount = std::thread::hardware_concurrency();
+    }
     if (m_mode == LiveMode && pack.templates.size() == 1) {
         // The EM step is probably not slow enough to merit it
         emThreadCount = 1;
@@ -743,15 +742,12 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
             typedef future<pair<vector<double>, vector<int>>> EMFuture;
             vector<EMFuture> results;
             for (int j = 0; j < emThreadCount && i + j < width; ++j) {
-                cerr << "creating future " << j << " (i = " << i << ", width = " << width << ")" << endl;
+                const vector<double> &column = filtered.at(i + j);
                 results.push_back
                     (async(std::launch::async,
-                           [&](int index) {
-                               return applyEM(pack, filtered.at(index));
-                           }, i + j));
+                           [&]() { return applyEM(pack, column); }));
             }
             for (int j = 0; j < emThreadCount && i + j < width; ++j) {
-                cerr << "reaping future " << j << " (i = " << i << ", width = " << width << ")" << endl;
                 auto out = results[j].get();
                 localPitches[i+j] = out.first;
                 if (wantShifts) localBestShifts[i+j] = out.second;

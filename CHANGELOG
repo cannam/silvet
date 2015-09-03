@@ -1,0 +1,21 @@
+
+Changes in Silvet v1.1 since the previous release v1.0:
+
+ * The "draft" mode has been replaced by "live" mode. This usually
+   produces worse results than "draft" did, but it is much faster and
+   has much lower processing latency. (The "draft" mode occupied an
+   uncomfortable role -- not fast enough to be usable in real-time or
+   low-power situations, not good enough to be a useful alternative to
+   the default processing mode.)
+
+ * The plugin has new outputs for note onsets only; onsets and
+   offsets; pitch activation matrix; and pitch chroma distribution
+   (chromagram).
+
+ * Some thresholds have been adjusted to improve performance in test
+   datasets.
+
+ * The expectation-maximisation process is now initialised
+   deterministically rather than from random data, so the plugin
+   now produces the same results on every run.
+
