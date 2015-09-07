@@ -128,7 +128,7 @@ EM::iterate(const double *column)
     v_convert(norm, column, m_binCount);
     normaliseColumn(norm, m_binCount);
     expectation(norm);
-    maximisation(norm);
+    maximisation();
     deallocate(norm);
 }
 
@@ -192,7 +192,7 @@ EM::expectation(const float *column)
 }
 
 void
-EM::maximisation(const float *column)
+EM::maximisation()
 {
     v_set(m_updatePitches, epsilon, m_noteCount);
 

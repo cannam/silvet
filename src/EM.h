@@ -101,7 +101,7 @@ private:
     void normaliseGrid(float **grid, int size1, int size2);
 
     void expectation(const float *column); // size is m_binCount
-    void maximisation(const float *column); // size is m_binCount
+    void maximisation();
 
     const float *templateFor(int instrument, int note, int shift);
     void rangeFor(int instrument, int &minPitch, int &maxPitch);
