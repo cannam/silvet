@@ -1059,11 +1059,14 @@ Silvet::noteTrack()
     if (width < durationThreshold + 1) {
         return { noteFeatures, onsetFeatures, onOffsetFeatures };
     }
-    
-    for (map<int, double>::const_iterator ni = m_pianoRoll[width-1].begin();
-         ni != m_pianoRoll[width-1].end(); ++ni) {
 
-        int note = ni->first;
+    // Make a copy of the latest column. We need a copy because it is
+    // possible we may erase from the "live" column within the loop.
+    map<int, double> latest = m_pianoRoll[width-1];
+    
+    for (const auto &ni: latest) {
+
+        int note = ni.first;
 
         int end = width;
         int start = end-1;
@@ -1100,7 +1103,9 @@ Silvet::noteTrack()
                 m_current.erase(note);
                 emitNoteAndOffset(start, end-1, note, noteFeatures, onOffsetFeatures);
                 // and remove this so that we start counting the new
-                // note's duration from the current position
+                // note's duration from the current position. (This
+                // erase is why we needed to copy this column at the
+                // top of the loop.)
                 m_pianoRoll[width-1].erase(note);
             }
         }
