@@ -1,7 +1,7 @@
 
-ARCHFLAGS	?= -mmacosx-version-min=10.6 -arch x86_64 -arch i386
+ARCHFLAGS	?= -mmacosx-version-min=10.7 -arch x86_64 -arch i386
 
-CXXFLAGS 	+= $(ARCHFLAGS) -DMALLOC_IS_ALIGNED -O3 -ftree-vectorize -I../vamp-plugin-sdk
+CXXFLAGS 	+= $(ARCHFLAGS) -DMALLOC_IS_ALIGNED -O3 -ftree-vectorize -I../vamp-plugin-sdk -std=c++11 -stdlib=libc++
 
 LDFLAGS	    	+= $(ARCHFLAGS) -dynamiclib ../vamp-plugin-sdk/libvamp-sdk.a -exported_symbols_list vamp-plugin.list -install_name silvet.dylib
 

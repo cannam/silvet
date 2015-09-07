@@ -24,17 +24,21 @@
 #include "LiveInstruments.h"
 
 #include <vector>
-#include <future>
 
 #include <cstdio>
+
+#if (defined(MAX_EM_THREADS) && (MAX_EM_THREADS > 1))
+#include <future>
+using std::future;
+using std::async;
+#endif
 
 using std::vector;
 using std::cout;
 using std::cerr;
 using std::endl;
 using std::pair;
-using std::future;
-using std::async;
+
 using Vamp::RealTime;
 
 static int processingSampleRate = 44100;
@@ -727,7 +731,11 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
         localBestShifts = vector<vector<int> >(width);
     }
 
-    int emThreadCount = MAX_EM_THREADS;
+    int emThreadCount = 1;
+
+#if (defined(MAX_EM_THREADS) && (MAX_EM_THREADS > 1))
+    emThreadCount = MAX_EM_THREADS;
+
     if (emThreadCount > int(std::thread::hardware_concurrency())) {
         emThreadCount = std::thread::hardware_concurrency();
     }
@@ -736,7 +744,6 @@ Silvet::transcribe(const Grid &cqout, Silvet::FeatureSet &fs)
         emThreadCount = 1;
     }
 
-#if (defined(MAX_EM_THREADS) && (MAX_EM_THREADS > 1))
     if (emThreadCount > 1) {
         for (int i = 0; i < width; ) {
             typedef future<pair<vector<double>, vector<int>>> EMFuture;
