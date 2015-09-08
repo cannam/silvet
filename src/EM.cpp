@@ -245,6 +245,8 @@ EM::maximisation()
         }
     }
 
+    deallocate(contributions);
+    
     if (m_pitchSparsity != 1.0) {
         for (int n = 0; n < m_noteCount; ++n) {
             m_updatePitches[n] = 
