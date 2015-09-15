@@ -6,3 +6,9 @@ syntax: glob
 *.bak
 *.so
 
+*.obj
+*.tlog
+*.pdb
+*.idb
+*.lib
+*.dll

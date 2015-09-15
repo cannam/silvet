@@ -1,0 +1,160 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{047E24B5-2891-4DAD-A094-B853DDF56867}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SILVET_EXPORTS;USE_OWN_ALIGNED_MALLOC=1;kiss_fft_scalar=double;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\vamp-plugin-sdk;.;.\constant-q-cpp;.\constant-q-cpp\cq;.\flattendynamics;.\bqvec;.\constant-q-cpp\src\ext\kissfft;.\constant-q-cpp\src\ext\kissfft\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;SILVET_EXPORTS;USE_OWN_ALIGNED_MALLOC=1;kiss_fft_scalar=double;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>..\vamp-plugin-sdk;.;.\constant-q-cpp;.\constant-q-cpp\cq;.\flattendynamics;.\bqvec;.\constant-q-cpp\src\ext\kissfft;.\constant-q-cpp\src\ext\kissfft\tools;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>..\vamp-plugin-sdk\build\Release\VampPluginSDK.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/EXPORT:vampGetPluginDescriptor %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="bqvec\src\Allocators.cpp" />
+    <ClCompile Include="bqvec\src\VectorOpsComplex.cpp" />
+    <ClCompile Include="constant-q-cpp\src\ConstantQ.cpp" />
+    <ClCompile Include="constant-q-cpp\src\CQInverse.cpp" />
+    <ClCompile Include="constant-q-cpp\src\CQKernel.cpp" />
+    <ClCompile Include="constant-q-cpp\src\CQSpectrogram.cpp" />
+    <ClCompile Include="constant-q-cpp\src\dsp\FFT.cpp" />
+    <ClCompile Include="constant-q-cpp\src\dsp\KaiserWindow.cpp" />
+    <ClCompile Include="constant-q-cpp\src\dsp\MathUtilities.cpp" />
+    <ClCompile Include="constant-q-cpp\src\dsp\Resampler.cpp" />
+    <ClCompile Include="constant-q-cpp\src\dsp\SincWindow.cpp" />
+    <ClCompile Include="constant-q-cpp\src\ext\kissfft\kiss_fft.c" />
+    <ClCompile Include="constant-q-cpp\src\ext\kissfft\tools\kiss_fftr.c" />
+    <ClCompile Include="constant-q-cpp\src\Pitch.cpp" />
+    <ClCompile Include="flattendynamics\flattendynamics-ladspa.cpp" />
+    <ClCompile Include="src\EM.cpp" />
+    <ClCompile Include="src\Instruments.cpp" />
+    <ClCompile Include="src\libmain.cpp" />
+    <ClCompile Include="src\LiveInstruments.cpp" />
+    <ClCompile Include="src\Silvet.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bqvec\bqvec\Allocators.h" />
+    <ClInclude Include="bqvec\bqvec\ComplexTypes.h" />
+    <ClInclude Include="bqvec\bqvec\Restrict.h" />
+    <ClInclude Include="bqvec\bqvec\VectorOps.h" />
+    <ClInclude Include="bqvec\bqvec\VectorOpsComplex.h" />
+    <ClInclude Include="bqvec\test\TestVectorOps.h" />
+    <ClInclude Include="constant-q-cpp\cq\ConstantQ.h" />
+    <ClInclude Include="constant-q-cpp\cq\CQBase.h" />
+    <ClInclude Include="constant-q-cpp\cq\CQInverse.h" />
+    <ClInclude Include="constant-q-cpp\cq\CQKernel.h" />
+    <ClInclude Include="constant-q-cpp\cq\CQParameters.h" />
+    <ClInclude Include="constant-q-cpp\cq\CQSpectrogram.h" />
+    <ClInclude Include="constant-q-cpp\src\dsp\FFT.h" />
+    <ClInclude Include="constant-q-cpp\src\dsp\KaiserWindow.h" />
+    <ClInclude Include="constant-q-cpp\src\dsp\MathUtilities.h" />
+    <ClInclude Include="constant-q-cpp\src\dsp\nan-inf.h" />
+    <ClInclude Include="constant-q-cpp\src\dsp\pi.h" />
+    <ClInclude Include="constant-q-cpp\src\dsp\Resampler.h" />
+    <ClInclude Include="constant-q-cpp\src\dsp\SincWindow.h" />
+    <ClInclude Include="constant-q-cpp\src\dsp\Window.h" />
+    <ClInclude Include="constant-q-cpp\src\ext\kissfft\kiss_fft.h" />
+    <ClInclude Include="constant-q-cpp\src\ext\kissfft\tools\kiss_fftr.h" />
+    <ClInclude Include="constant-q-cpp\src\Pitch.h" />
+    <ClInclude Include="data\include\templates.h" />
+    <ClInclude Include="flattendynamics\flattendynamics-ladspa.h" />
+    <ClInclude Include="src\EM.h" />
+    <ClInclude Include="src\Instruments.h" />
+    <ClInclude Include="src\LiveInstruments.h" />
+    <ClInclude Include="src\MedianFilter.h" />
+    <ClInclude Include="src\Silvet.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
