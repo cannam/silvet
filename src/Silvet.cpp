@@ -1020,7 +1020,12 @@ Silvet::postProcess(const vector<double> &pitches,
         active[j] = strength;
 
         if (shiftCount > 1) {
-            activeShifts[j] = bestShifts[j];
+            if (!bestShifts.empty()) {
+                activeShifts[j] = bestShifts[j];
+            } else {
+                // can happen if column was below threshold
+                activeShifts[j] = 0;
+            }
         }
     }
 
