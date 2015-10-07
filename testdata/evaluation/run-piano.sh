@@ -69,7 +69,7 @@ time for infile in $infiles; do
 
     for instrument in $intended_instrument 0 ; do
 
-	for mode in 2 1 0; do 
+	for mode in 1 0; do 
 	    
 	    for norm in no; do
 

@@ -80,7 +80,7 @@ time for infile in $infiles; do
     piece=`basename \`dirname "$infile" \``
     arrangement=`basename "$infile" .wav`
 
-    # Change this to the processing mode you want to test (e.g. 0 for draft)
+    # Change this to the processing mode you want to test (e.g. 0 for live)
     mode=1
 
     echo
