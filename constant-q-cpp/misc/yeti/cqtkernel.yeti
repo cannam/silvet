@@ -1,0 +1,158 @@
+/*
+    Constant-Q library
+    Copyright (c) 2013-2014 Queen Mary, University of London
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use, copy,
+    modify, merge, publish, distribute, sublicense, and/or sell copies
+    of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+    CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+    Except as contained in this notice, the names of the Centre for
+    Digital Music; Queen Mary, University of London; and Chris Cannam
+    shall not be used in advertising or otherwise to promote the sale,
+    use or other dealings in this Software without prior written
+    authorization.
+*/
+
+module cqtkernel;
+
+vec = load may.vector;
+complex = load may.complex;
+window = load may.signal.window;
+fft = load may.transform.fft;
+cm = load may.matrix.complex;
+
+{ pow, round, floor, ceil, nextPowerOfTwo } = load may.mathmisc;
+
+makeKernel { sampleRate, maxFreq, binsPerOctave } =
+   (q = 1;
+    atomHopFactor = 0.25;
+    thresh = 0.0005;
+    minFreq = (maxFreq/2) * (pow 2 (1/binsPerOctave));
+    bigQ = q / ((pow 2 (1/binsPerOctave)) - 1);
+
+    maxNK = round(bigQ * sampleRate / minFreq);
+    minNK = round(bigQ * sampleRate /
+                  (minFreq * (pow 2 ((binsPerOctave-1) / binsPerOctave))));
+
+    atomHop = round(minNK * atomHopFactor);
+    
+    firstCentre = atomHop * (ceil ((ceil (maxNK/2)) / atomHop));
+    
+    fftSize = nextPowerOfTwo (firstCentre + ceil (maxNK/2));
+    
+//    eprintln "sampleRate = \(sampleRate), maxFreq = \(maxFreq), binsPerOctave = \(binsPerOctave), q = \(q), atomHopFactor = \(atomHopFactor), thresh = \(thresh)";
+//    eprintln "minFreq = \(minFreq), bigQ = \(bigQ), maxNK = \(maxNK), minNK = \(minNK), atomHop = \(atomHop), firstCentre = \(firstCentre), fftSize = \(fftSize)";
+    
+    winNr = floor((fftSize - ceil(maxNK/2) - firstCentre) / atomHop) + 1;
+    
+    lastCentre = firstCentre + (winNr - 1) * atomHop;
+    
+    fftHop = (lastCentre + atomHop) - firstCentre;
+    
+//    eprintln "winNr = \(winNr), lastCentre = \(lastCentre), fftHop = \(fftHop)";
+    
+    fftFunc = fft.forward fftSize;
+    
+    // Note the MATLAB uses exp(2*pi*1i*x) for a complex generating
+    // function. We can't do that here; we need to generate real and imag
+    // parts separately as real = cos(2*pi*x), imag = sin(2*pi*x).
+    
+    binFrequencies = array [];
+
+    kernels = map do k:
+    
+        nk = round(bigQ * sampleRate / (minFreq * (pow 2 ((k-1)/binsPerOctave))));
+
+        // the cq MATLAB toolbox uses a symmetric window for
+        // blackmanharris -- which is odd because it uses a periodic one
+        // for other types. Oh well
+        win = vec.divideBy nk
+           (vec.sqrt
+               (window.windowFunction (BlackmanHarris ()) [Symmetric true] nk));
+
+        fk = minFreq * (pow 2 ((k-1)/binsPerOctave));
+
+        push binFrequencies fk;
+
+        genKernel f = vec.multiply
+           [win,
+            vec.fromList
+               (map do i: f (2 * pi * fk * i / sampleRate) done [0..nk-1])];
+    
+        reals = genKernel cos;
+        imags = genKernel sin;
+    
+        atomOffset = firstCentre - ceil(nk/2);
+    
+        map do i:
+    
+            shift = vec.zeros (atomOffset + ((i-1) * atomHop));
+    
+            specKernel = fftFunc
+               (complex.complexArray
+                   (vec.concat [shift, reals])
+                   (vec.concat [shift, imags]));
+
+            map do c:
+                if complex.magnitude c <= thresh then complex.zero else c fi
+                done specKernel;
+
+        done [1..winNr];
+    
+    done [1..binsPerOctave];
+    
+    kmat = cm.toSparse (cm.scaled (1/fftSize) (cm.fromRows (concat kernels)));
+    
+//    eprintln "density = \(cm.density kmat) (\(cm.nonZeroValues kmat) of \(cm.width kmat * cm.height kmat))";
+    
+    // Normalisation
+    
+    wx1 = vec.maxindex (complex.magnitudes (cm.getRow 0 kmat));
+    wx2 = vec.maxindex (complex.magnitudes (cm.getRow (cm.height kmat - 1) kmat));
+
+    subset = cm.flipped (cm.columnSlice kmat wx1 (wx2+1));
+    square = cm.product (cm.conjugateTransposed subset) subset;
+
+    diag = complex.magnitudes (cm.getDiagonal 0 square);
+    wK = vec.slice diag (round(1/q)) (vec.length diag - round(1/q) - 2);
+
+    weight = (fftHop / fftSize) / (vec.mean (vec.abs wK));
+    weight = sqrt(weight);
+
+    kernel = cm.scaled weight kmat;
+
+//    eprintln "weight = \(weight)";
+    
+    {
+        kernel,
+        fftSize,
+        fftHop,
+        binsPerOctave,
+        atomsPerFrame = winNr,
+        atomSpacing = atomHop,
+        firstCentre,
+        maxFrequency = maxFreq,
+        minFrequency = minFreq,
+        binFrequencies,
+        bigQ
+    });
+
+{
+    makeKernel
+}
+

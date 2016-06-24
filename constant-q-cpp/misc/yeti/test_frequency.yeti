@@ -1,0 +1,132 @@
+/*
+    Constant-Q library
+    Copyright (c) 2013-2014 Queen Mary, University of London
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use, copy,
+    modify, merge, publish, distribute, sublicense, and/or sell copies
+    of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+    CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+    Except as contained in this notice, the names of the Centre for
+    Digital Music; Queen Mary, University of London; and Chris Cannam
+    shall not be used in advertising or otherwise to promote the sale,
+    use or other dealings in this Software without prior written
+    authorization.
+*/
+
+module test_frequency;
+
+mat = load may.matrix;
+vec = load may.vector;
+win = load may.signal.window;
+mm = load may.mathmisc;
+cm = load may.matrix.complex;
+syn = load may.stream.syntheticstream;
+plot = load may.plot;
+
+{ compare } = load may.test;
+
+{ cqt } = load cqt;
+
+// Test with a single windowed sinusoid, repeating at various frequencies
+
+sinTestStream sampleRate duration signalFreq = // duration is in samples
+   (sin = syn.sinusoid sampleRate signalFreq;
+    chunk = mat.getRow 0 (sin.read duration);
+    syn.precalculatedMono sampleRate (win.windowed win.hann chunk));
+
+// We want to make a CQ transform spanning more than one octave, but
+// not going all the way to fs/2 so we can test it also with
+// frequencies above and below its extents
+
+sampleRate = 100;
+
+// fs/2 = 50 so 10->40 gives us 2 octaves
+cqmin = 10;
+cqmax = 40;
+bpo = 4; // fairly arbitrary
+
+testFreqs = map (* 5) [ 0..10 ];
+duration = sampleRate * 2;
+
+threshold = 0.08;
+
+streamBuilder = sinTestStream sampleRate duration;
+
+binForFreq f =
+    mm.round (bpo * mm.log2 (f / cqmin)) - 1;
+
+report message matrix =
+   (eprintln message;
+    eprintln "matrix is:";
+    mat.eprint matrix);
+//    chart = plot.plot [Grid matrix];
+//    sleep 100;
+//    chart#dispose());
+
+tests = mapIntoHash
+    do f: "freq_\(f)" done
+    do f: \(
+        str = streamBuilder f;
+        cq = cqt { maxFreq = cqmax, minFreq = cqmin, binsPerOctave = bpo } str;
+        spec = cq.cqSpectrogram;
+        rightSize = all id
+           (map do s:
+            compare (mat.size s) { 
+                rows = cq.kernel.binsPerOctave * cq.octaves,
+                columns = cq.kernel.atomsPerFrame * mm.pow 2 (cq.octaves - 1)
+            }
+            done spec);
+        m = mat.concatHorizontal spec;
+//    println "binFrequencies = \(cq.kernel.binFrequencies)";
+//    println "binForFreq \(f) = \(binForFreq f)";
+        var colno = 0;
+        success = all id
+           (rightSize :: map do c:
+                // The test passes for this column if:
+                //
+                //  * the max bin is the expected one, or
+                //
+                //  * the expected max is out of range entirely (but
+                //  we need to test _something_ in this case --
+                //  what?), or
+                //
+                //  * all bins are below a threshold, or
+                //
+                //  * this is an odd column and the expected max is in
+                //  the lower octave
+                //
+                // We should also check that all values in the lower
+                // octave are zero for odd columns.
+                //
+                expected = binForFreq f;
+                good =
+                   (expected < 0 or expected >= vec.length c) or
+                   ((colno % 2 == 1) and expected < (vec.length c / 2)) or
+                   (vec.max c < threshold) or
+                   (vec.maxindex c == binForFreq f);
+                if (not good) then
+                    report " * bad! maxindex \(vec.maxindex c) != expected \(binForFreq f) for freq \(f) in column \(colno) of \(mat.width m): column is \(vec.list c)" m;
+                fi;
+                colno := colno + 1;
+                good;
+            done (mat.asColumns m));
+        success;
+    ) done
+    testFreqs;
+
+tests is hash<string, () -> boolean>

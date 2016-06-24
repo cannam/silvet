@@ -1,0 +1,11 @@
+syntax: glob
+*~
+*.orig
+*.o
+*.bak
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+

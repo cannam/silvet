@@ -1,0 +1,63 @@
+/*
+    Constant-Q library
+    Copyright (c) 2013-2014 Queen Mary, University of London
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use, copy,
+    modify, merge, publish, distribute, sublicense, and/or sell copies
+    of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+    CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+    Except as contained in this notice, the names of the Centre for
+    Digital Music; Queen Mary, University of London; and Chris Cannam
+    shall not be used in advertising or otherwise to promote the sale,
+    use or other dealings in this Software without prior written
+    authorization.
+*/
+
+module test_cqtkernel;
+
+cm = load may.matrix.complex;
+mm = load may.mathmisc;
+
+{ compare, compareUsing } = load may.test;
+
+{ makeKernel } = load cqtkernel;
+
+eps = 1e-7;
+
+compareClose = compareUsing do a b: abs (a - b) < eps done;
+
+[
+
+"minimal": \(
+    k = makeKernel { sampleRate = 16, maxFreq = 8, binsPerOctave = 4 };
+    compare k.binsPerOctave 4 and
+        compare (cm.size k.kernel) {
+            rows = k.binsPerOctave * k.atomsPerFrame,
+            columns = k.fftSize
+        } and
+        compareClose k.maxFrequency 8 and
+        compareClose k.minFrequency (4 * (mm.pow 2 (1/4))) and
+        compare k.atomsPerFrame 5 and
+        compare k.fftSize 32 and
+        compare (length k.binFrequencies) k.binsPerOctave and
+        compareClose (head k.binFrequencies) k.minFrequency and
+        compareClose (head (reverse k.binFrequencies)) k.maxFrequency
+),
+
+] is hash<string, () -> boolean>
+

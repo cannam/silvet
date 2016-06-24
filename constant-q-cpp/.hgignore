@@ -1,0 +1,12 @@
+syntax: glob
+*~
+*.o
+*.so
+*.a
+*.dylib
+*.dll
+*.class
+doc/
+
+syntax: re
+^test/Test[^.]*$

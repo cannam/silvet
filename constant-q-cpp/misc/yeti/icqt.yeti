@@ -1,0 +1,145 @@
+/*
+    Constant-Q library
+    Copyright (c) 2013-2014 Queen Mary, University of London
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use, copy,
+    modify, merge, publish, distribute, sublicense, and/or sell copies
+    of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+    CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+    Except as contained in this notice, the names of the Centre for
+    Digital Music; Queen Mary, University of London; and Chris Cannam
+    shall not be used in advertising or otherwise to promote the sale,
+    use or other dealings in this Software without prior written
+    authorization.
+*/
+
+module icqt;
+
+cqt = load cqt;
+cm = load may.matrix.complex;
+framer = load may.stream.framer;
+win = load may.signal.window;
+mm = load may.mathmisc;
+vec = load may.vector;
+resamp = load may.stream.resample;
+manip = load may.stream.manipulate;
+mat = load may.matrix;
+
+icqt cq =
+   (kdata = cq.kernel;
+
+    // kdata.kernel is the kernel matrix for a single octave. It has
+    // width kdata.fftSize and height kdata.binsPerOctave *
+    // kdata.atomsPerFrame.
+    //
+    // kdata.fftHop is the overlap between kernel matrices in a single
+    // octave.
+    // 
+    // cq.sampleRate is the output stream sample rate and cq.octaves
+    // the number of octaves.
+    //
+    // cq.cqComplex is the list of complex matrices containing the CQ
+    // output. Each has width kdata.atomsPerFrame * 2^(cq.octaves-1)
+    // and height kdata.binsPerOctave * cq.octaves.
+
+    bpo = kdata.binsPerOctave;
+    atomsPerFrame = kdata.atomsPerFrame;
+    octaves = cq.octaves;
+
+    // transform a single block, all octaves tall, into an array
+    // (indexed by octave) of lists of individual columns (valid
+    // values for that octave only)
+    decomposeOctaves mat = array
+       (map do oct:
+            inverted = cm.fromRows (reverse (cm.asRows mat));
+            octMat = cm.rowSlice inverted (bpo * oct) (bpo * (oct + 1));
+            gap = (mm.pow 2 oct) - 1;
+            pickFrom cols =
+                case cols of
+                c::cs: c::(pickFrom (drop gap cs));
+                _: [];
+                esac;
+            pickFrom (cm.asColumns octMat);
+        done [0..octaves-1]);
+
+    // transform a list of the arrays produced by decomposeOctaves
+    // into a single array (indexed by octave) of lists of the
+    // individual columns
+    flattenOctaves decomposed =
+       (flattenAux acc decomposed = 
+            case decomposed of
+            chunk::rest:
+                flattenAux 
+                   (array
+                       (map do oct:
+                            acc[oct] ++ chunk[oct]
+                            done [0..octaves-1]))
+                    rest;
+            _: acc;
+            esac;
+        flattenAux (array (map \[] [0..octaves-1])) decomposed);
+
+    // given a list of columns, deinterleave and pile up each sequence
+    // of atomsPerFrame columns into a single tall column and return
+    // the resulting list of tall columns
+    pile cols =
+       (pileAux acc cols =
+            if (length cols) >= atomsPerFrame then
+                atoms = take atomsPerFrame cols;
+                juggled = concat (reverse (cm.asRows (cm.fromColumns atoms)));
+                pileAux (juggled :: acc) (drop atomsPerFrame cols);
+            else
+                reverse acc
+            fi;
+        pileAux [] cols);
+
+    octaveColumnLists = 
+        map pile (list (flattenOctaves (map decomposeOctaves cq.cqComplex)));
+
+    for octaveColumnLists do l: println "octave column list length: \(length l)" done;
+
+    kernel = cm.transposed kdata.kernel; // right way around for the multiply
+    
+    spectra = 
+        map do l:
+            map do col:
+                res = cm.transposed (cm.product kernel (cm.newComplexColumnVector col));
+                cm.columnSlice res 0 (kdata.fftSize / 2 + 1)
+            done l;
+        done octaveColumnLists;
+
+    eprintln "calculated spectra, now to ifft, overlap-add...";
+
+    rates = map do oct: cq.sampleRate / (mm.pow 2 oct) done [0..cq.octaves-1];
+    
+    resynthesised =
+        map2 do frames rate:
+            framer.complexStreamed rate kdata.fftSize
+                [ FrequencyDomain true, Window win.boxcar, Hop kdata.fftHop ]
+                frames;
+        done spectra rates;
+
+   eprintln "have streams:";
+   for resynthesised eprintln;
+
+   resampled = map (resamp.resampledTo cq.sampleRate) resynthesised;
+
+   manip.sum resampled;
+);
+
+{icqt}

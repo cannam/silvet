@@ -1,0 +1,41 @@
+
+program plotfile;
+
+af = load may.stream.audiofile;
+plot = load may.plot;
+cm = load may.matrix.complex;
+mat = load may.matrix;
+
+{ cqt } = load cqt;
+
+minFreq = 27.5;
+maxRateDivisor = 3;
+binsPerOctave = 60;
+
+plotfile f =
+   (testStream = af.open f;
+    eprintln "Opened file stream...";
+    start = System#currentTimeMillis();
+    cq = cqt {
+        maxFreq = testStream.sampleRate/maxRateDivisor, 
+        minFreq, 
+        binsPerOctave
+        } testStream;
+    middle = System#currentTimeMillis();
+    eprintln "Generated kernel \(cm.size cq.kernel.kernel) and primed transform (\(cq.octaves) octaves), took \(middle-start)ms, now calculating...";
+    bigM = mat.concatHorizontal cq.cqSpectrogram;
+    finish = System#currentTimeMillis();
+    eprintln "Done, that part took \(finish-middle)ms, all CQ stuff took \(finish-start)ms";
+    eprintln "Plotting...";
+    \() (plot.plot [Contour bigM]));
+
+usage () =
+   (eprintln "\nUsage: plotfile file.wav";
+    eprintln "\n   Loads audio from file.wav and plots a \(binsPerOctave)bpo Constant-Q spectrogram";
+    eprintln "   from \(minFreq)Hz up to 1/\(maxRateDivisor) of the file samplerate");
+
+case (list _argv) of
+file::[]: plotfile file;
+_: usage ();
+esac;
+

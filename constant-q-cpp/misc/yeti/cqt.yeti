@@ -1,0 +1,260 @@
+/*
+    Constant-Q library
+    Copyright (c) 2013-2014 Queen Mary, University of London
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use, copy,
+    modify, merge, publish, distribute, sublicense, and/or sell copies
+    of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+    CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+    Except as contained in this notice, the names of the Centre for
+    Digital Music; Queen Mary, University of London; and Chris Cannam
+    shall not be used in advertising or otherwise to promote the sale,
+    use or other dealings in this Software without prior written
+    authorization.
+*/
+
+module cqt;
+
+cqtkernel = load cqtkernel;
+resample = load may.stream.resample;
+manipulate = load may.stream.manipulate;
+mat = load may.matrix;
+cm = load may.matrix.complex;
+framer = load may.stream.framer;
+cplx = load may.complex;
+fft = load may.transform.fft;
+vec = load may.vector;
+ch = load may.stream.channels;
+
+{ pow, round, floor, ceil, log2, nextPowerOfTwo } = load may.mathmisc;
+
+cqt { maxFreq, minFreq, binsPerOctave } str =
+   (sampleRate = str.sampleRate;
+    octaves = ceil (log2 (maxFreq / minFreq));
+//    actualMinFreq = (maxFreq / (pow 2 octaves)) * (pow 2 (1/binsPerOctave));
+
+    kdata = cqtkernel.makeKernel { sampleRate, maxFreq, binsPerOctave };
+
+//    eprintln "sampleRate = \(sampleRate), maxFreq = \(maxFreq), minFreq = \(minFreq), actualMinFreq = \(actualMinFreq), octaves = \(octaves), binsPerOctave = \(binsPerOctave), fftSize = \(kdata.fftSize), hop = \(kdata.fftHop)";
+
+//    eprintln "atomsPerFrame = \(kdata.atomsPerFrame)";
+
+    padding = (kdata.fftSize * (pow 2 (octaves-1)));
+
+//    eprintln "padding = \(padding)";
+
+    str = manipulate.paddedBy padding str;
+
+    streams = manipulate.duplicated octaves str;
+
+    // forward transform uses the conjugate-transposed kernel, inverse
+    // uses the original
+    kernel = cm.transposed (cm.conjugateTransposed kdata.kernel);
+
+//    eprintln "have kernel";
+
+    fftFunc = fft.forward kdata.fftSize;
+
+    cqblocks =
+        map do octave:
+            frames = map ch.mixedDown //!!! mono for now
+               (framer.frames kdata.fftSize [ Hop kdata.fftHop, Padded false ]
+                   (resample.decimated (pow 2 octave) streams[octave]));
+            map do frame:
+                freq = fftFunc (cplx.complexArray frame (vec.zeros kdata.fftSize));
+// eprintln "octave = \(octave), frame = \(vec.list frame)";
+// eprintln "octave = \(octave), freq = \(freq)";
+                cm.product kernel (cm.newComplexColumnVector freq);
+            done frames;
+        done [0..octaves-1];
+
+    // The cqblocks list is a list<list<matrix>>. Each top-level list
+    // corresponds to an octave, from highest to lowest, each having
+    // twice as many elements in its list as the next octave. The
+    // sub-lists are sampled in time with an effective spacing of
+    // fftSize * 2^(octave-1) audio frames, and the matrices are row
+    // vectors with atomsPerFrame * binsPerOctave complex elements.
+    //
+    // ***
+    // 
+    // In a typical constant-Q structure, each (2^(octaves-1) *
+    // fftHop) input frames gives us an output structure conceptually
+    // like this:
+    //
+    // [][][][][][][][]   <- fftHop frames per highest-octave output value
+    // [][][][][][][][]      layered as many times as binsPerOctave (here 2)
+    // [--][--][--][--]   <- fftHop*2 frames for the next lower octave
+    // [--][--][--][--]      etc
+    // [------][------]
+    // [------][------]
+    // [--------------]
+    // [--------------]
+    //
+    // ***
+    //
+    // But the kernel we're using here has more than one temporally
+    // spaced atom; each individual cell is a row vector with
+    // atomsPerFrame * binsPerOctave elements, but that actually
+    // represents a rectangular matrix of result cells with width
+    // atomsPerFrame and height binsPerOctave. The columns of this
+    // matrix (the atoms) then need to be spaced by 2^(octave-1)
+    // relative to those from the highest octave.
+
+    // Reshape each row vector into the appropriate rectangular matrix
+    // and split into single-atom columns
+
+    emptyHops = kdata.firstCentre / kdata.atomSpacing; //!!! int? round?
+//    maxDrop = emptyHops * (pow 2 (octaves-1)) - emptyHops;
+//    eprintln "maxDrop = \(maxDrop)";
+
+    cqblocks =
+        map do octlist:
+            concatMap do rv:
+                cm.asColumns
+                   (cm.generate do row col:
+                        cm.at rv ((row * kdata.atomsPerFrame) + col) 0
+                    done {
+                        rows = kdata.binsPerOctave,
+                        columns = kdata.atomsPerFrame
+                    })
+            done octlist
+        done cqblocks;
+
+    cqblocks = array (map2 do octlist octave:
+        d = emptyHops * (pow 2 (octaves-octave)) - emptyHops;
+//        eprintln "dropping \(d)";
+        drop d octlist;
+    done cqblocks [1..octaves]);
+
+    assembleBlock bits =
+       (//eprintln "assembleBlock: structure of bits is:";
+        //eprintln (map length bits);
+
+        rows = octaves * kdata.binsPerOctave;
+        columns = (pow 2 (octaves - 1)) * kdata.atomsPerFrame;
+
+        cm.generate do row col:
+
+            // bits structure: [1,2,4,8,...]
+
+            // each elt of bits is a list of the chunks that should
+            // make up this block in that octave (lowest octave first)
+
+            // each chunk has atomsPerFrame * binsPerOctave elts in it
+
+            // row is disposed with 0 at the top, highest octave (in
+            // both pitch and index into bits structure)
+
+            oct = int (row / binsPerOctave);
+            binNo = row % kdata.binsPerOctave;
+
+            chunks = pow 2 oct;
+            colsPerAtom = int (columns / (chunks * kdata.atomsPerFrame));
+            atomNo = int (col / colsPerAtom);
+            atomOffset = col % colsPerAtom;
+
+            if atomOffset == 0 and atomNo < length bits[oct] then
+                bits[oct][atomNo][binNo];
+            else
+                cplx.zero
+            fi;
+
+        done { rows, columns };
+        );
+
+    assembleBlockSpectrogram bits =
+       (// As assembleBlock, but producing a dense magnitude
+        // spectrogram (rather than a complex output). (todo:
+        // interpolation, smoothing)
+
+        //eprintln "assembleBlockSpectrogram: structure of bits is:";
+        //eprintln (map length bits);
+
+        rows = octaves * kdata.binsPerOctave;
+        columns = (pow 2 (octaves - 1)) * kdata.atomsPerFrame;
+
+        mat.generate do row col:
+
+            oct = int (row / binsPerOctave);
+            binNo = row % kdata.binsPerOctave;
+
+            chunks = pow 2 oct;
+            colsPerAtom = int (columns / (chunks * kdata.atomsPerFrame));
+            atomNo = int (col / colsPerAtom);
+
+            if atomNo < length bits[oct] then
+                cplx.magnitude bits[oct][atomNo][binNo];
+            else 
+                0
+            fi;
+
+        done { rows, columns };
+        );
+
+    processOctaveLists assembler octs =
+        case octs[0] of
+        block::rest:
+           (toAssemble = array 
+               (map do oct:
+                    n = kdata.atomsPerFrame * pow 2 oct;
+                    if not empty? octs[oct] then
+                        forBlock = array (take n octs[oct]);
+                        octs[oct] := drop n octs[oct];
+                        forBlock
+                    else
+                        array []
+                    fi
+                done (keys octs));
+            assembler toAssemble :. \(processOctaveLists assembler octs));
+         _: []
+        esac;
+
+//eprintln "cqblocks has \(length cqblocks) entries";
+
+    octaveLists = [:];
+
+    cqblocks = array cqblocks;
+    for [1..octaves] do oct:
+        octaveLists[octaves - oct] := cqblocks[oct-1];
+    done;
+/*
+    \() (map2 do octlist octave:
+println "oct \(octaves) - \(octave) = \(octaves - octave)";
+             octaveLists[octaves - octave] := octlist 
+         done cqblocks [1..octaves]);
+*/
+//eprintln "octaveLists keys are: \(keys octaveLists)";
+
+    {
+        kernel = kdata with {
+            binFrequencies = array
+               (concatMap do octave:
+                    map do freq:
+                        freq / (pow 2 octave);
+                    done (reverse (list kdata.binFrequencies))
+                done [0..octaves-1])
+        },
+        sampleRate,
+        octaves,
+        get cqComplex () = processOctaveLists assembleBlock octaveLists,
+        get cqSpectrogram () = processOctaveLists assembleBlockSpectrogram octaveLists,
+    }
+    );
+
+{ cqt }
+
