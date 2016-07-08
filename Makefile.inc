@@ -11,6 +11,8 @@ PLUGIN_EXT	?= .so
 
 CXX	?= g++
 CC	?= gcc
+AR	?= ar
+RANLIB	?= ranlib
 
 CFLAGS := $(CFLAGS)
 CXXFLAGS := $(CFLAGS) -I. -I$(VAMPSDK_DIR) -I$(CQ_DIR) -I$(BQVEC_DIR) -I$(BQVEC_DIR) -I$(BQVEC_DIR)/bqvec -I$(FD_DIR) $(CXXFLAGS) 
@@ -19,6 +21,7 @@ LDFLAGS := $(LDFLAGS)
 PLUGIN_LDFLAGS := $(LDFLAGS) $(PLUGIN_LDFLAGS)
 
 PLUGIN	:= silvet$(PLUGIN_EXT)
+STATICLIB  := libsilvet.a
 
 PLUGIN_HEADERS := $(SRC_DIR)/Silvet.h $(SRC_DIR)/EM.h $(SRC_DIR)/Instruments.h $(SRC_DIR)/LiveInstruments.h
 PLUGIN_SOURCES := $(SRC_DIR)/Silvet.cpp $(SRC_DIR)/EM.cpp $(SRC_DIR)/Instruments.cpp $(SRC_DIR)/LiveInstruments.cpp $(SRC_DIR)/libmain.cpp
@@ -34,9 +37,9 @@ SOURCES	     := $(PLUGIN_SOURCES) $(BQVEC_SOURCES) $(FD_SOURCES)
 OBJECTS	     := $(SOURCES:.cpp=.o)
 OBJECTS	     := $(OBJECTS:.c=.o)
 
-LIBS	:= $(CQ_DIR)/libcq.a $(VAMPSDK_DIR)/libvamp-sdk.a
+LIBS	     := $(CQ_DIR)/libcq.a
 
-all: constant-q-cpp $(PLUGIN)
+all: constant-q-cpp $(STATICLIB) $(PLUGIN)
 
 .PHONY: constant-q-cpp
 constant-q-cpp: 
@@ -44,6 +47,11 @@ constant-q-cpp:
 
 $(PLUGIN):	$(OBJECTS) $(LIBS)
 	$(CXX) -o $@ $^ $(LIBS) $(PLUGIN_LDFLAGS)
+
+$(STATICLIB):	$(OBJECTS)
+	$(RM) -f $@
+	$(AR) cr $@ $^
+	$(RANLIB) $@
 
 clean:		
 	rm -f $(OBJECTS)
