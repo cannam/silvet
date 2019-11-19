@@ -6,7 +6,7 @@
     A small library for vector arithmetic and allocation in C++ using
     raw C pointer arrays.
 
-    Copyright 2007-2015 Particular Programs Ltd.
+    Copyright 2007-2017 Particular Programs Ltd.
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation
@@ -36,12 +36,20 @@
 #ifndef BQVEC_RESTRICT_H
 #define BQVEC_RESTRICT_H
 
+#ifdef _MSC_VER
+#define BQ_R__ __restrict
+#else
 #ifdef __MSVC__
 #define BQ_R__ __restrict
 #endif
+#endif
 
+#ifdef __clang__
+#define BQ_R__ __restrict__
+#else
 #ifdef __GNUC__
 #define BQ_R__ __restrict__
+#endif
 #endif
 
 #ifndef BQ_R__

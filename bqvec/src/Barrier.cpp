@@ -6,7 +6,7 @@
     A small library for vector arithmetic and allocation in C++ using
     raw C pointer arrays.
 
-    Copyright 2007-2017 Particular Programs Ltd.
+    Copyright 2007-2018 Particular Programs Ltd.
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation
@@ -33,27 +33,48 @@
     Software without prior written authorization.
 */
 
-#ifndef BQVEC_COMPLEX_TYPES_H
-#define BQVEC_COMPLEX_TYPES_H
+#include "Barrier.h"
+
+#if defined __APPLE__
+#if !defined __MAC_10_12
+#include <libkern/OSAtomic.h>
+#endif
+#endif
+#if defined _WIN32 && defined _MSC_VER
+#include <Windows.h>
+#endif
 
 namespace breakfastquay {
 
-#ifndef NO_COMPLEX_TYPES
+void system_memorybarrier()
+{
+#if defined __APPLE__
 
-#ifdef USE_SINGLE_PRECISION_COMPLEX
-typedef float bq_complex_element_t;
+#if defined __MAC_10_12
+    __sync_synchronize();
 #else
-typedef double bq_complex_element_t;
+    OSMemoryBarrier();
+#endif
+    
+#elif (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)
+
+    __sync_synchronize();
+
+#elif defined _WIN32 
+
+#if defined _MSC_VER
+    MemoryBarrier();
+#else /* (mingw) */
+    LONG Barrier = 0;
+    __asm__ __volatile__("xchgl %%eax,%0 "
+                         : "=r" (Barrier));
 #endif
 
-// Convertible with other complex types that store re+im consecutively
-struct bq_complex_t {
-    bq_complex_element_t re;
-    bq_complex_element_t im;
-};
-
+#else
+#warning "No memory barrier defined"
 #endif
+    
+}
 
 }
 
-#endif

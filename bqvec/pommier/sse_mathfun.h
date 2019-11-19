@@ -61,7 +61,7 @@ typedef __m64 v2si;   // vector of 2 int (mmx)
 #define _PI32_CONST(Name, Val)                                            \
   static const ALIGN16_BEG int _pi32_##Name[4] ALIGN16_END = { Val, Val, Val, Val }
 #define _PS_CONST_TYPE(Name, Type, Val)                                 \
-  static const ALIGN16_BEG Type _ps_##Name[4] ALIGN16_END = { Val, Val, Val, Val }
+    static const ALIGN16_BEG Type _ps_##Name[4] ALIGN16_END = { (Type)Val, (Type)Val, (Type)Val, (Type)Val }
 
 _PS_CONST(1  , 1.0f);
 _PS_CONST(0p5, 0.5f);

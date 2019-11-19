@@ -6,7 +6,7 @@
     A small library for vector arithmetic and allocation in C++ using
     raw C pointer arrays.
 
-    Copyright 2007-2014 Particular Programs Ltd.
+    Copyright 2007-2016 Particular Programs Ltd.
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation
@@ -33,13 +33,15 @@
     Software without prior written authorization.
 */
 
-#include "bqvec/Allocators.h"
+#include "Allocators.h"
 
 #ifdef HAVE_IPP
 #include <ipps.h>
 #endif
 
 #include <iostream>
+#include <climits>
+
 using std::cerr;
 using std::endl;
 
@@ -50,16 +52,52 @@ namespace breakfastquay {
 template <>
 float *allocate(size_t count)
 {
-    float *ptr = ippsMalloc_32f(count);
-    if (!ptr) throw (std::bad_alloc());
+    if (count > INT_MAX) {
+#ifndef NO_EXCEPTIONS
+        throw std::length_error("Size overflow in allocate");
+#else
+        abort();
+#endif
+    }
+    
+    float *ptr = ippsMalloc_32f(int(count));
+    if (!ptr) {
+#ifndef NO_EXCEPTIONS
+        throw (std::bad_alloc());
+#else
+        abort();
+#endif
+    }
+
+    for (size_t i = 0; i < count; ++i) {
+        new (ptr + i) float;
+    }
     return ptr;
 }
 
 template <>
 double *allocate(size_t count)
 {
-    double *ptr = ippsMalloc_64f(count);
-    if (!ptr) throw (std::bad_alloc());
+    if (count > INT_MAX) {
+#ifndef NO_EXCEPTIONS
+        throw std::length_error("Size overflow in allocate");
+#else
+        abort();
+#endif
+    }
+    
+    double *ptr = ippsMalloc_64f(int(count));
+    if (!ptr) {
+#ifndef NO_EXCEPTIONS
+        throw (std::bad_alloc());
+#else
+        abort();
+#endif
+    }
+
+    for (size_t i = 0; i < count; ++i) {
+        new (ptr + i) double;
+    }
     return ptr;
 }
 

@@ -1,0 +1,13 @@
+
+# This Makefile resembles the sort of settings one might use on a
+# small device without library support. It's mainly here as another CI
+# test target that is quite different from the default configuration
+
+VECTOR_DEFINES		:= -DNO_EXCEPTIONS -DUSE_SINGLE_PRECISION_COMPLEX -DUSE_POMMIER_MATHFUN -DUSE_APPROXIMATE_ATAN2
+
+ALLOCATOR_DEFINES 	:= -DUSE_OWN_ALIGNED_MALLOC -DLACK_POSIX_MEMALIGN -DMALLOC_IS_NOT_ALIGNED
+
+THIRD_PARTY_INCLUDES	:= 
+THIRD_PARTY_LIBS	:= 
+
+include build/Makefile.inc

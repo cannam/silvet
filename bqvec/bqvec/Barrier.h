@@ -33,27 +33,13 @@
     Software without prior written authorization.
 */
 
-#ifndef BQVEC_COMPLEX_TYPES_H
-#define BQVEC_COMPLEX_TYPES_H
+#ifndef BQVEC_BARRIER_H
+#define BQVEC_BARRIER_H
 
 namespace breakfastquay {
-
-#ifndef NO_COMPLEX_TYPES
-
-#ifdef USE_SINGLE_PRECISION_COMPLEX
-typedef float bq_complex_element_t;
-#else
-typedef double bq_complex_element_t;
-#endif
-
-// Convertible with other complex types that store re+im consecutively
-struct bq_complex_t {
-    bq_complex_element_t re;
-    bq_complex_element_t im;
-};
-
-#endif
-
+    extern void system_memorybarrier();
 }
+
+#define BQ_MBARRIER() ::breakfastquay::system_memorybarrier()
 
 #endif

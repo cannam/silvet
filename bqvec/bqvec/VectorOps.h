@@ -6,7 +6,7 @@
     A small library for vector arithmetic and allocation in C++ using
     raw C pointer arrays.
 
-    Copyright 2007-2015 Particular Programs Ltd.
+    Copyright 2007-2016 Particular Programs Ltd.
 
     Permission is hereby granted, free of charge, to any person
     obtaining a copy of this software and associated documentation
@@ -40,8 +40,12 @@
 #ifndef _MSC_VER
 #include <inttypes.h>
 #endif
+#include <ippversion.h>
 #include <ipps.h>
+#if (IPP_VERSION_MAJOR <= 7)
+// Deprecated in v8, removed in v9
 #include <ippac.h>
+#endif
 #endif
 
 #ifdef HAVE_VDSP
@@ -49,6 +53,7 @@
 #endif
 
 #include <cstring>
+#include <cmath>
 
 #include "Restrict.h"
 
@@ -59,9 +64,17 @@ namespace breakfastquay {
  * 
  * Write basic vector-manipulation loops in such a way as to promote
  * the likelihood that a good current C++ compiler can auto-vectorize
- * them (e.g. gcc-4.x with -ftree-vectorize). Provide calls out to
- * supported vector libraries (e.g. IPP, Accelerate) where useful.
- * No intrinsics or assembly.
+ * them (e.g. gcc-4+ with -ftree-vectorize/-O3). Provide calls out to
+ * supported vector libraries (e.g. IPP, Accelerate) where useful.  No
+ * intrinsics or assembly.
+ *
+ * Size and index arguments are plain machine ints, to facilitate
+ * compiler optimization and vectorization. In general these functions
+ * should be used only with buffers whose sizes are calculated from
+ * known processing parameters and that are known to be much smaller
+ * than 32-bit int range. For security reasons you should not use
+ * these functions with buffers whose sizes may be under control of
+ * the user or external input.
  *
  * Argument ordering:
  *
@@ -71,11 +84,13 @@ namespace breakfastquay {
  * if present (i.e. argument ordering follows memcpy).
  * 
  * The final argument is always a count of the number of elements in
- * each vector. 
+ * each vector.
  *
  * Some functions operate on a set of vectors at once: their names all
  * contain the text _channels, and the number of channels (i.e. number
- * of vectors) is the argument before last.
+ * of vectors) is the argument before last. If the number of input and
+ * output channels may differ, the output channel count immediately
+ * follows the output channel pointer.
  *
  * Any additional arguments, e.g. scale factors, appear between the
  * vector pointers at the start and the counts at the end.
@@ -127,7 +142,7 @@ inline void v_zero(double *const BQ_R__ vec,
 {
     vDSP_vclrD(vec, 1, count);
 }
-#endif
+#endif // HAVE_IPP
 
 /**
  * v_zero_channels
@@ -194,7 +209,7 @@ inline void v_copy(double *const BQ_R__ dst,
 {
     ippsCopy_64f(src, dst, count);
 }
-#endif
+#endif // HAVE_IPP
 
 /**
  * v_copy_channels
@@ -247,7 +262,30 @@ inline void v_move(double *const dst,
 {
     ippsMove_64f(src, dst, count);
 }
-#endif
+#endif // HAVE_IPP
+
+/**
+ * v_move_channels
+ *
+ * Copy the contents of the individual vectors in the set \arg src to
+ * the corresponding vectors in the set \arg dst. All vectors have
+ * length \arg count and there are \arg channels vectors in each set.
+ *
+ * The source vectors may overlap with the target vectors of
+ * corresponding channels. That is, src[i] may overlap with dst[i] but
+ * not with any other source or target vector. (If you know that no
+ * vectors can overlap, use v_copy instead.)
+ */
+template<typename T>
+inline void v_move_channels(T *const *const dst,       // not BQ_R__ (aliased)
+                            const T *const *const src, // not BQ_R__ (aliased)
+                            const int channels,
+                            const int count)
+{
+    for (int c = 0; c < channels; ++c) {
+        v_move(dst[c], src[c], count);
+    }
+}
 
 /**
  * v_convert
@@ -314,7 +352,7 @@ inline void v_convert(float *const BQ_R__ dst,
 {
     vDSP_vdpsp((double *)src, 1, dst, 1, count);
 }
-#endif
+#endif // HAVE_VDSP
 
 /**
  * v_convert_channels
@@ -344,71 +382,55 @@ inline void v_convert_channels(U *const BQ_R__ *const BQ_R__ dst,
  * v_add
  *
  * Add the elements in the vector \arg src to the corresponding
- * elements in the vector \arg dst, both of length arg \count, leaving
- * the result in \arg dst.
+ * elements in the vector \arg srcdst, both of length arg \count, leaving
+ * the result in \arg srcdst.
  *
- * Caller guarantees that \arg src and \arg dst are non-overlapping.
+ * Caller guarantees that \arg src and \arg srcdst are non-overlapping.
  */
 template<typename T>
-inline void v_add(T *const BQ_R__ dst,
+inline void v_add(T *const BQ_R__ srcdst,
                   const T *const BQ_R__ src,
                   const int count)
 {
     for (int i = 0; i < count; ++i) {
-        dst[i] += src[i];
-    }
-}
-
-/**
- * v_add
- *
- * Add the constant \arg value to every element of the vector \arg
- * dst, of length arg \count, leaving the result in \arg dst.
- */
-template<typename T>
-inline void v_add(T *const BQ_R__ dst,
-                  const T value,
-                  const int count)
-{
-    for (int i = 0; i < count; ++i) {
-        dst[i] += value;
+        srcdst[i] += src[i];
     }
 }
 
 #if defined HAVE_IPP
 template<>
-inline void v_add(float *const BQ_R__ dst,
+inline void v_add(float *const BQ_R__ srcdst,
                   const float *const BQ_R__ src,
                   const int count)
 {
-    ippsAdd_32f_I(src, dst, count);
+    ippsAdd_32f_I(src, srcdst, count);
 }    
-inline void v_add(double *const BQ_R__ dst,
+inline void v_add(double *const BQ_R__ srcdst,
                   const double *const BQ_R__ src,
                   const int count)
 {
-    ippsAdd_64f_I(src, dst, count);
+    ippsAdd_64f_I(src, srcdst, count);
 }    
-#endif
+#endif // HAVE_IPP
 
 /**
  * v_add_channels
  *
  * Add the elements in the individual vectors in the set \arg src to
  * the corresponding elements of the corresponding vectors in \arg
- * dst, leaving the results in \arg dst. All vectors have length \arg
+ * srcdst, leaving the results in \arg srcdst. All vectors have length \arg
  * count, and there are \arg channels vectors in each set.
  *
- * Caller guarantees that all of the \arg src and \arg dst vectors are
+ * Caller guarantees that all of the \arg src and \arg srcdst vectors are
  * non-overlapping with each other.
  */
 template<typename T>
-inline void v_add_channels(T *const BQ_R__ *const BQ_R__ dst,
+inline void v_add_channels(T *const BQ_R__ *const BQ_R__ srcdst,
                            const T *const BQ_R__ *const BQ_R__ src,
                            const int channels, const int count)
 {
     for (int c = 0; c < channels; ++c) {
-        v_add(dst[c], src[c], count);
+        v_add(srcdst[c], src[c], count);
     }
 }
 
@@ -417,19 +439,19 @@ inline void v_add_channels(T *const BQ_R__ *const BQ_R__ dst,
  *
  * Add the elements in the vector \arg src, each multiplied by the
  * constant factor \arg gain, to the corresponding elements in the
- * vector \arg dst, both of length arg \count, leaving the result in
- * \arg dst.
+ * vector \arg srcdst, both of length arg \count, leaving the result in
+ * \arg srcdst.
  *
- * Caller guarantees that \arg src and \arg dst are non-overlapping.
+ * Caller guarantees that \arg src and \arg srcdst are non-overlapping.
  */
 template<typename T, typename G>
-inline void v_add_with_gain(T *const BQ_R__ dst,
+inline void v_add_with_gain(T *const BQ_R__ srcdst,
                             const T *const BQ_R__ src,
                             const G gain,
                             const int count)
 {
     for (int i = 0; i < count; ++i) {
-        dst[i] += src[i] * gain;
+        srcdst[i] += src[i] * gain;
     }
 }
 
@@ -438,22 +460,22 @@ inline void v_add_with_gain(T *const BQ_R__ dst,
  *
  * Add the elements in the individual vectors in the set \arg src,
  * each multiplied by the constant factor \arg gain, to the
- * corresponding elements of the corresponding vectors in \arg dst,
- * leaving the results in \arg dst. All vectors have length \arg
+ * corresponding elements of the corresponding vectors in \arg srcdst,
+ * leaving the results in \arg srcdst. All vectors have length \arg
  * count, and there are \arg channels vectors in each set.
  *
- * Caller guarantees that all of the \arg src and \arg dst vectors are
+ * Caller guarantees that all of the \arg src and \arg srcdst vectors are
  * non-overlapping with each other.
  */
 template<typename T, typename G>
-inline void v_add_channels_with_gain(T *const BQ_R__ *const BQ_R__ dst,
+inline void v_add_channels_with_gain(T *const BQ_R__ *const BQ_R__ srcdst,
                                      const T *const BQ_R__ *const BQ_R__ src,
                                      const G gain,
                                      const int channels,
                                      const int count)
 {
     for (int c = 0; c < channels; ++c) {
-        v_add_with_gain(dst[c], src[c], gain, count);
+        v_add_with_gain(srcdst[c], src[c], gain, count);
     }
 }
 
@@ -461,105 +483,121 @@ inline void v_add_channels_with_gain(T *const BQ_R__ *const BQ_R__ dst,
  * v_subtract
  *
  * Subtract the elements in the vector \arg src from the corresponding
- * elements in the vector \arg dst, both of length arg \count, leaving
- * the result in \arg dst.
+ * elements in the vector \arg srcdst, both of length arg \count, leaving
+ * the result in \arg srcdst.
  *
- * Caller guarantees that \arg src and \arg dst are non-overlapping.
+ * Caller guarantees that \arg src and \arg srcdst are non-overlapping.
  */
 template<typename T>
-inline void v_subtract(T *const BQ_R__ dst,
+inline void v_subtract(T *const BQ_R__ srcdst,
                        const T *const BQ_R__ src,
                        const int count)
 {
     for (int i = 0; i < count; ++i) {
-        dst[i] -= src[i];
+        srcdst[i] -= src[i];
     }
 }
 
 #if defined HAVE_IPP
 template<>
-inline void v_subtract(float *const BQ_R__ dst,
+inline void v_subtract(float *const BQ_R__ srcdst,
                        const float *const BQ_R__ src,
                        const int count)
 {
-    ippsSub_32f_I(src, dst, count);
+    ippsSub_32f_I(src, srcdst, count);
 }    
-inline void v_subtract(double *const BQ_R__ dst,
+inline void v_subtract(double *const BQ_R__ srcdst,
                        const double *const BQ_R__ src,
                        const int count)
 {
-    ippsSub_64f_I(src, dst, count);
+    ippsSub_64f_I(src, srcdst, count);
 }    
-#endif
+#endif // HAVE_IPP
 
 /**
  * v_scale
  *
- * Scale the elements in the vector \arg dst, of length \arg count, by
+ * Scale the elements in the vector \arg srcdst, of length \arg count, by
  * the factor \arg gain.
  */
 template<typename T, typename G>
-inline void v_scale(T *const BQ_R__ dst,
+inline void v_scale(T *const BQ_R__ srcdst,
                     const G gain,
                     const int count)
 {
     for (int i = 0; i < count; ++i) {
-        dst[i] *= gain;
+        srcdst[i] *= gain;
     }
 }
 
 #if defined HAVE_IPP 
 template<>
-inline void v_scale(float *const BQ_R__ dst,
+inline void v_scale(float *const BQ_R__ srcdst,
                     const float gain,
                     const int count)
 {
-    ippsMulC_32f_I(gain, dst, count);
+    ippsMulC_32f_I(gain, srcdst, count);
 }
 template<>
-inline void v_scale(double *const BQ_R__ dst,
+inline void v_scale(double *const BQ_R__ srcdst,
                     const double gain,
                     const int count)
 {
-    ippsMulC_64f_I(gain, dst, count);
+    ippsMulC_64f_I(gain, srcdst, count);
 }
-#endif
+#endif // HAVE_IPP
+
+/**
+ * v_increment
+ *
+ * Add a constant quantity \incr to all of the elements in the vector
+ * \arg srcdst, of length \arg count.
+ */
+template<typename T, typename G>
+inline void v_increment(T *const BQ_R__ srcdst,
+                        const G incr,
+                        const int count)
+{
+    for (int i = 0; i < count; ++i) {
+        srcdst[i] += T(incr);
+    }
+}
 
 /**
  * v_multiply
  *
- * Multiply the elements in the vector \arg dst by the corresponding
+ * Multiply the elements in the vector \arg srcdst by the corresponding
  * elements in the vector \arg src, both of length arg \count, leaving
- * the result in \arg dst.
+ * the result in \arg srcdst.
  *
- * Caller guarantees that \arg src and \arg dst are non-overlapping.
+ * Caller guarantees that \arg src and \arg srcdst are non-overlapping.
  */
 template<typename T>
-inline void v_multiply(T *const BQ_R__ dst,
+inline void v_multiply(T *const BQ_R__ srcdst,
                        const T *const BQ_R__ src,
                        const int count)
 {
     for (int i = 0; i < count; ++i) {
-        dst[i] *= src[i];
+        srcdst[i] *= src[i];
     }
 }
 
 #if defined HAVE_IPP 
 template<>
-inline void v_multiply(float *const BQ_R__ dst,
+inline void v_multiply(float *const BQ_R__ srcdst,
                        const float *const BQ_R__ src,
                        const int count)
 {
-    ippsMul_32f_I(src, dst, count);
+    ippsMul_32f_I(src, srcdst, count);
 }
 template<>
-inline void v_multiply(double *const BQ_R__ dst,
+inline void v_multiply(double *const BQ_R__ srcdst,
                        const double *const BQ_R__ src,
                        const int count)
 {
-    ippsMul_64f_I(src, dst, count);
+    ippsMul_64f_I(src, srcdst, count);
 }
-#endif
+#endif // HAVE_IPP
 
 /**
  * v_multiply
@@ -572,10 +610,10 @@ inline void v_multiply(double *const BQ_R__ dst,
  * non-overlapping.
  */
 template<typename T>
-inline void v_multiply(T *const BQ_R__ dst,
-                       const T *const BQ_R__ src1,
-                       const T *const BQ_R__ src2,
-                       const int count)
+inline void v_multiply_to(T *const BQ_R__ dst,
+                          const T *const BQ_R__ src1,
+                          const T *const BQ_R__ src2,
+                          const int count)
 {
     for (int i = 0; i < count; ++i) {
         dst[i] = src1[i] * src2[i];
@@ -584,98 +622,98 @@ inline void v_multiply(T *const BQ_R__ dst,
 
 #if defined HAVE_IPP 
 template<>
-inline void v_multiply(float *const BQ_R__ dst,
-                       const float *const BQ_R__ src1,
-                       const float *const BQ_R__ src2,
-                       const int count)
+inline void v_multiply_to(float *const BQ_R__ dst,
+                          const float *const BQ_R__ src1,
+                          const float *const BQ_R__ src2,
+                          const int count)
 {
     ippsMul_32f(src1, src2, dst, count);
 }    
 template<>
-inline void v_multiply(double *const BQ_R__ dst,
-                       const double *const BQ_R__ src1,
-                       const double *const BQ_R__ src2,
-                       const int count)
+inline void v_multiply_to(double *const BQ_R__ dst,
+                          const double *const BQ_R__ src1,
+                          const double *const BQ_R__ src2,
+                          const int count)
 {
     ippsMul_64f(src1, src2, dst, count);
 }
-#endif
+#endif // HAVE_IPP
 
 /**
  * v_divide
  *
- * Divide the elements in the vector \arg dst by the corresponding
+ * Divide the elements in the vector \arg srcdst by the corresponding
  * elements in the vector \arg src, both of length arg \count, leaving
- * the result in \arg dst.
+ * the result in \arg srcdst.
  *
- * Caller guarantees that \arg src and \arg dst are non-overlapping.
+ * Caller guarantees that \arg src and \arg srcdst are non-overlapping.
  */
 template<typename T>
-inline void v_divide(T *const BQ_R__ dst,
+inline void v_divide(T *const BQ_R__ srcdst,
                      const T *const BQ_R__ src,
                      const int count)
 {
     for (int i = 0; i < count; ++i) {
-        dst[i] /= src[i];
+        srcdst[i] /= src[i];
     }
 }
 
 #if defined HAVE_IPP 
 template<>
-inline void v_divide(float *const BQ_R__ dst,
+inline void v_divide(float *const BQ_R__ srcdst,
                      const float *const BQ_R__ src,
                      const int count)
 {
-    ippsDiv_32f_I(src, dst, count);
+    ippsDiv_32f_I(src, srcdst, count);
 }
 template<>
-inline void v_divide(double *const BQ_R__ dst,
+inline void v_divide(double *const BQ_R__ srcdst,
                      const double *const BQ_R__ src,
                      const int count)
 {
-    ippsDiv_64f_I(src, dst, count);
+    ippsDiv_64f_I(src, srcdst, count);
 }
-#endif
+#endif // HAVE_IPP
 
 /**
  * v_multiply_and_add
  *
  * Multiply the corresponding elements of the vectors \arg src1 and
  * \arg src2, both of length arg \count, and add the results to the
- * corresponding elements of vector \arg dst.
+ * corresponding elements of vector \arg srcdst.
  *
- * Caller guarantees that \arg src1, \arg src2 and \arg dst are
+ * Caller guarantees that \arg src1, \arg src2 and \arg srcdst are
  * non-overlapping.
  */
 template<typename T>
-inline void v_multiply_and_add(T *const BQ_R__ dst,
+inline void v_multiply_and_add(T *const BQ_R__ srcdst,
                                const T *const BQ_R__ src1,
                                const T *const BQ_R__ src2,
                                const int count)
 {
     for (int i = 0; i < count; ++i) {
-        dst[i] += src1[i] * src2[i];
+        srcdst[i] += src1[i] * src2[i];
     }
 }
 
 #if defined HAVE_IPP
 template<>
-inline void v_multiply_and_add(float *const BQ_R__ dst,
+inline void v_multiply_and_add(float *const BQ_R__ srcdst,
                                const float *const BQ_R__ src1,
                                const float *const BQ_R__ src2,
                                const int count)
 {
-    ippsAddProduct_32f(src1, src2, dst, count);
+    ippsAddProduct_32f(src1, src2, srcdst, count);
 }
 template<>
-inline void v_multiply_and_add(double *const BQ_R__ dst,
+inline void v_multiply_and_add(double *const BQ_R__ srcdst,
                                const double *const BQ_R__ src1,
                                const double *const BQ_R__ src2,
                                const int count)
 {
-    ippsAddProduct_64f(src1, src2, dst, count);
+    ippsAddProduct_64f(src1, src2, srcdst, count);
 }
-#endif
+#endif // HAVE_IPP
 
 /**
  * v_sum
@@ -695,32 +733,53 @@ inline T v_sum(const T *const BQ_R__ src,
 }
 
 /**
+ * v_multiply_and_sum
+ *
+ * Multiply the corresponding elements of the vectors \arg src1 and
+ * \arg src2, both of length arg \count, sum the results, and return
+ * the sum as a scalar value.
+ *
+ * Caller guarantees that \arg src1 and \arg src2 are non-overlapping.
+ */
+template<typename T>
+inline T v_multiply_and_sum(const T *const BQ_R__ src1,
+                            const T *const BQ_R__ src2,
+                            const int count)
+{
+    T result = T();
+    for (int i = 0; i < count; ++i) {
+        result += src1[i] * src2[i];
+    }
+    return result;
+}
+
+/**
  * v_log
  *
- * Replace each element in vector \arg dst, of length \arg count, with
+ * Replace each element in vector \arg srcdst, of length \arg count, with
  * its natural logarithm.
  */
 template<typename T>
-inline void v_log(T *const BQ_R__ dst,
+inline void v_log(T *const BQ_R__ srcdst,
                   const int count)
 {
     for (int i = 0; i < count; ++i) {
-        dst[i] = log(dst[i]);
+        srcdst[i] = log(srcdst[i]);
     }
 }
 
 #if defined HAVE_IPP
 template<>
-inline void v_log(float *const BQ_R__ dst,
+inline void v_log(float *const BQ_R__ srcdst,
                   const int count)
 {
-    ippsLn_32f_I(dst, count);
+    ippsLn_32f_I(srcdst, count);
 }
 template<>
-inline void v_log(double *const BQ_R__ dst,
+inline void v_log(double *const BQ_R__ srcdst,
                   const int count)
 {
-    ippsLn_64f_I(dst, count);
+    ippsLn_64f_I(srcdst, count);
 }
 #elif defined HAVE_VDSP
 // no in-place vForce functions for these -- can we use the
@@ -728,50 +787,50 @@ inline void v_log(double *const BQ_R__ dst,
 // use an out-of-place one with temporary buffer and still be faster
 // than doing it any other way?
 template<>
-inline void v_log(float *const BQ_R__ dst,
+inline void v_log(float *const BQ_R__ srcdst,
                   const int count)
 {
     float tmp[count];
-    vvlogf(tmp, dst, &count);
-    v_copy(dst, tmp, count);
+    vvlogf(tmp, srcdst, &count);
+    v_copy(srcdst, tmp, count);
 }
 template<>
-inline void v_log(double *const BQ_R__ dst,
+inline void v_log(double *const BQ_R__ srcdst,
                   const int count)
 {
     double tmp[count];
-    vvlog(tmp, dst, &count);
-    v_copy(dst, tmp, count);
+    vvlog(tmp, srcdst, &count);
+    v_copy(srcdst, tmp, count);
 }
-#endif
+#endif // HAVE_VDSP
 
 /**
  * v_exp
  *
- * Replace each element in vector \arg dst, of length \arg count, with
+ * Replace each element in vector \arg srcdst, of length \arg count, with
  * its base-e exponential.
  */
 template<typename T>
-inline void v_exp(T *const BQ_R__ dst,
+inline void v_exp(T *const BQ_R__ srcdst,
                   const int count)
 {
     for (int i = 0; i < count; ++i) {
-        dst[i] = exp(dst[i]);
+        srcdst[i] = exp(srcdst[i]);
     }
 }
 
 #if defined HAVE_IPP
 template<>
-inline void v_exp(float *const BQ_R__ dst,
+inline void v_exp(float *const BQ_R__ srcdst,
                   const int count)
 {
-    ippsExp_32f_I(dst, count);
+    ippsExp_32f_I(srcdst, count);
 }
 template<>
-inline void v_exp(double *const BQ_R__ dst,
+inline void v_exp(double *const BQ_R__ srcdst,
                   const int count)
 {
-    ippsExp_64f_I(dst, count);
+    ippsExp_64f_I(srcdst, count);
 }
 #elif defined HAVE_VDSP
 // no in-place vForce functions for these -- can we use the
@@ -779,50 +838,50 @@ inline void v_exp(double *const BQ_R__ dst,
 // use an out-of-place one with temporary buffer and still be faster
 // than doing it any other way?
 template<>
-inline void v_exp(float *const BQ_R__ dst,
+inline void v_exp(float *const BQ_R__ srcdst,
                   const int count)
 {
     float tmp[count];
-    vvexpf(tmp, dst, &count);
-    v_copy(dst, tmp, count);
+    vvexpf(tmp, srcdst, &count);
+    v_copy(srcdst, tmp, count);
 }
 template<>
-inline void v_exp(double *const BQ_R__ dst,
+inline void v_exp(double *const BQ_R__ srcdst,
                   const int count)
 {
     double tmp[count];
-    vvexp(tmp, dst, &count);
-    v_copy(dst, tmp, count);
+    vvexp(tmp, srcdst, &count);
+    v_copy(srcdst, tmp, count);
 }
-#endif
+#endif // HAVE_VDSP
 
 /**
  * v_sqrt
  *
- * Replace each element in vector \arg dst, of length \arg count, with
+ * Replace each element in vector \arg srcdst, of length \arg count, with
  * its square root.
  */
 template<typename T>
-inline void v_sqrt(T *const BQ_R__ dst,
+inline void v_sqrt(T *const BQ_R__ srcdst,
                    const int count)
 {
     for (int i = 0; i < count; ++i) {
-        dst[i] = sqrt(dst[i]);
+        srcdst[i] = sqrt(srcdst[i]);
     }
 }
 
 #if defined HAVE_IPP
 template<>
-inline void v_sqrt(float *const BQ_R__ dst,
+inline void v_sqrt(float *const BQ_R__ srcdst,
                    const int count)
 {
-    ippsSqrt_32f_I(dst, count);
+    ippsSqrt_32f_I(srcdst, count);
 }
 template<>
-inline void v_sqrt(double *const BQ_R__ dst,
+inline void v_sqrt(double *const BQ_R__ srcdst,
                    const int count)
 {
-    ippsSqrt_64f_I(dst, count);
+    ippsSqrt_64f_I(srcdst, count);
 }
 #elif defined HAVE_VDSP
 // no in-place vForce functions for these -- can we use the
@@ -830,95 +889,95 @@ inline void v_sqrt(double *const BQ_R__ dst,
 // use an out-of-place one with temporary buffer and still be faster
 // than doing it any other way?
 template<>
-inline void v_sqrt(float *const BQ_R__ dst,
+inline void v_sqrt(float *const BQ_R__ srcdst,
                    const int count)
 {
     float tmp[count];
-    vvsqrtf(tmp, dst, &count);
-    v_copy(dst, tmp, count);
+    vvsqrtf(tmp, srcdst, &count);
+    v_copy(srcdst, tmp, count);
 }
 template<>
-inline void v_sqrt(double *const BQ_R__ dst,
+inline void v_sqrt(double *const BQ_R__ srcdst,
                    const int count)
 {
     double tmp[count];
-    vvsqrt(tmp, dst, &count);
-    v_copy(dst, tmp, count);
+    vvsqrt(tmp, srcdst, &count);
+    v_copy(srcdst, tmp, count);
 }
-#endif
+#endif // HAVE_VDSP
 
 /**
  * v_square
  *
- * Replace each element in vector \arg dst, of length \arg count, with
+ * Replace each element in vector \arg srcdst, of length \arg count, with
  * its square.
  */
 template<typename T>
-inline void v_square(T *const BQ_R__ dst,
+inline void v_square(T *const BQ_R__ srcdst,
                    const int count)
 {
     for (int i = 0; i < count; ++i) {
-        dst[i] = dst[i] * dst[i];
+        srcdst[i] = srcdst[i] * srcdst[i];
     }
 }
 
 #if defined HAVE_IPP
 template<>
-inline void v_square(float *const BQ_R__ dst,
+inline void v_square(float *const BQ_R__ srcdst,
                    const int count)
 {
-    ippsSqr_32f_I(dst, count);
+    ippsSqr_32f_I(srcdst, count);
 }
 template<>
-inline void v_square(double *const BQ_R__ dst,
+inline void v_square(double *const BQ_R__ srcdst,
                    const int count)
 {
-    ippsSqr_64f_I(dst, count);
+    ippsSqr_64f_I(srcdst, count);
 }
-#endif
+#endif // HAVE_IPP
 
 /**
  * v_abs
  *
- * Replace each element in vector \arg dst, of length \arg count, with
+ * Replace each element in vector \arg srcdst, of length \arg count, with
  * its absolute value.
  */
 template<typename T>
-inline void v_abs(T *const BQ_R__ dst,
+inline void v_abs(T *const BQ_R__ srcdst,
                   const int count)
 {
     for (int i = 0; i < count; ++i) {
-        dst[i] = fabs(dst[i]);
+        srcdst[i] = fabs(srcdst[i]);
     }
 }
 
 #if defined HAVE_IPP
 template<>
-inline void v_abs(float *const BQ_R__ dst,
+inline void v_abs(float *const BQ_R__ srcdst,
                   const int count)
 {
-    ippsAbs_32f_I(dst, count);
+    ippsAbs_32f_I(srcdst, count);
 }
 template<>
-inline void v_abs(double *const BQ_R__ dst,
+inline void v_abs(double *const BQ_R__ srcdst,
                   const int count)
 {
-    ippsAbs_64f_I(dst, count);
+    ippsAbs_64f_I(srcdst, count);
 }
 #elif defined HAVE_VDSP
 template<>
-inline void v_abs(float *const BQ_R__ dst,
+inline void v_abs(float *const BQ_R__ srcdst,
                   const int count)
 {
     float tmp[count];
 #if (defined(MACOSX_DEPLOYMENT_TARGET) && MACOSX_DEPLOYMENT_TARGET <= 1070 && MAC_OS_X_VERSION_MIN_REQUIRED <= 1070)
-    vvfabf(tmp, dst, &count);
+    vvfabf(tmp, srcdst, &count);
 #else
-    vvfabsf(tmp, dst, &count);
+    vvfabsf(tmp, srcdst, &count);
 #endif
-    v_copy(dst, tmp, count);
+    v_copy(srcdst, tmp, count);
 }
-#endif
+#endif // HAVE_VDSP
 
 /**
  * v_interleave
@@ -959,6 +1018,8 @@ inline void v_interleave(T *const BQ_R__ dst,
 }
 
 #if defined HAVE_IPP 
+#if (IPP_VERSION_MAJOR <= 7)
+// Deprecated in v8, removed in v9
 template<>
 inline void v_interleave(float *const BQ_R__ dst,
                          const float *const BQ_R__ *const BQ_R__ src,
@@ -969,6 +1030,7 @@ inline void v_interleave(float *const BQ_R__ dst,
 }
 // IPP does not (currently?) provide double-precision interleave
 #endif
+#endif // HAVE_IPP
 
 /**
  * v_deinterleave
@@ -1009,6 +1071,8 @@ inline void v_deinterleave(T *const BQ_R__ *const BQ_R__ dst,
 }
 
 #if defined HAVE_IPP
+#if (IPP_VERSION_MAJOR <= 7)
+// Deprecated in v8, removed in v9
 template<>
 inline void v_deinterleave(float *const BQ_R__ *const BQ_R__ dst,
                            const float *const BQ_R__ src,
@@ -1019,6 +1083,7 @@ inline void v_deinterleave(float *const BQ_R__ *const BQ_R__ dst,
 }
 // IPP does not (currently?) provide double-precision deinterleave
 #endif
+#endif // HAVE_IPP
 
 /**
  * v_fftshift
@@ -1043,12 +1108,13 @@ inline void v_fftshift(T *const BQ_R__ vec,
  * v_mean
  *
  * Return the mean of the values in the vector \arg vec, of length
- * \arg count.
+ * \arg count. For an empty vector, return 0.0.
  */
 template<typename T>
 inline T v_mean(const T *const BQ_R__ vec, const int count)
 {
     T t = T(0);
+    if (count == 0) return t;
     for (int i = 0; i < count; ++i) {
         t += vec[i];
     }
@@ -1074,6 +1140,144 @@ inline T v_mean_channels(const T *const BQ_R__ *const BQ_R__ vec,
     }
     t /= T(channels);
     return t;
+}
+
+/**
+ * v_mix
+ *
+ * Mixdown N channels to 1 channel by simple averaging.
+ *
+ * Add the elements in the individual vectors in the set \arg in,
+ * each multiplied by the a constant factor 1 / \arg channels, and
+ * leave the results in \arg out. All vectors have length \arg count,
+ * and there are \arg channels vectors in the input set.
+ *
+ * Caller guarantees that all of the \arg in and \arg out vectors are
+ * non-overlapping with each other.
+ */
+template <typename T>
+inline void v_mix(T *const BQ_R__ out,
+                  const T *const BQ_R__ *const BQ_R__ in,
+                  const int channels,
+                  const int count)
+{
+    v_zero(out, count);
+    for (int c = 0; c < channels; ++c) {
+        v_add(out, in[c], count);
+    }
+    v_scale(out, T(1.0) / T(channels), count);
+}
+
+/**
+ * v_reconfigure_channels
+ *
+ * Adapt a fixed number of frames from n to m channels.
+ * 
+ * We vaguely assume these channel ordering conventions (from
+ * Vorbis/Opus docs):
+ *
+ * 1 channel = mono
+ * 2 = stereo
+ * 3 = l/c/r
+ * 4 = fl/fr/rl/rr
+ * 5 = fl/c/fr/rl/rr
+ * 6 (= 5.1) = fl/c/fr/rl/rr/lfe
+ * 7 (= 6.1) = fl/c/fr/sl/sr/rc/lfe
+ * 8 (= 7.1) = fl/c/fr/sl/sr/rl/rr/lfe
+ * >8 = application-specific
+ *
+ * (where l = left, c = centre, r = right, fl/fr = front l/r; sl/sr =
+ * side l/r; rl/rr = rear l/r; lfe = low-frequency effects channel)
+ *
+ * The reconfiguration rules are:
+ * -- if n == m, copy the input through unchanged
+ * -- else if m == 1, mixdown to mono by averaging all n input channels
+ * -- else if n == 1, duplicate the mono input across all m output channels
+ * -- else if m == 2 and n == 3 or n >= 5, take 1st and 3rd channels of input
+ * -- else if n == 2 and m == 3 or m >= 5, copy to 1st and 3rd, the rest silent
+ * -- else if n > m, take the first m channels of the input
+ * -- else take all n channels of the input and add m-n silent channels
+ * 
+ * The aim here is to be simple and not unreasonable, to reconfigure,
+ * not to properly convert - that would involve more
+ * application-specific decisions.
+ */
+template<typename T>
+inline void v_reconfigure_channels(T *const BQ_R__ *const BQ_R__ out,
+                                   const int m, /* out channel count */
+                                   const T *const BQ_R__ *const BQ_R__ in,
+                                   const int n, /* in channel count */
+                                   const int count)
+{
+    if (n == m) {
+        v_copy_channels(out, in, n, count);
+    } else if (m == 1) {
+        v_mix(out[0], in, n, count);
+    } else if (n == 1) {
+        for (int c = 0; c < m; ++c) {
+            v_copy(out[c], in[0], count);
+        }
+    } else if (m == 2 && (n == 3 || n >= 5)) {
+        v_copy(out[0], in[0], count);
+        v_copy(out[1], in[2], count);
+    } else if (n == 2 && (m == 3 || m >= 5)) {
+        v_copy(out[0], in[0], count);
+        v_zero(out[1], count);
+        v_copy(out[2], in[1], count);
+        for (int c = 3; c < m; ++c) {
+            v_zero(out[c], count);
+        }
+    } else {
+        int c = 0;
+        while (c < n && c < m) {
+            v_copy(out[c], in[c], count);
+            ++c;
+        }
+        while (c < m) {
+            v_zero(out[c], count);
+            ++c;
+        }
+    }
+}
+
+/**
+ * v_reconfigure_channels_inplace
+ *
+ * Convert a fixed number of frames from n to m channels, operating
+ * in-place. That is, the input and output buffer arrays are the same,
+ * having space for max(n, m) channel arrays, and we read n channels
+ * from them and write back m.
+ *
+ * The rules are:
+ * -- if n >= m and m > 1, leave unchanged
+ * -- else if m == 1, mixdown to mono by averaging all n channels
+ * -- else if n == 1, duplicate the mono input across all m channels
+ * -- else leave first n channels and add m-n silent channels
+ */
+template<typename T>
+inline void v_reconfigure_channels_inplace(T *const BQ_R__ *const BQ_R__ inout,
+                                           const int m, /* out channel count */
+                                           const int n, /* in channel count */
+                                           const int count)
+{
+    if (n >= m && m > 1) {
+        return;
+    } else if (m == 1) {
+        for (int c = 1; c < n; ++c) {
+            v_add(inout[0], inout[c], count);
+        }
+        v_scale(inout[0], T(1.0) / T(n), count);
+    } else if (n == 1) {
+        for (int c = 1; c < m; ++c) {
+            v_copy(inout[c], inout[0], count);
+        }
+    } else {
+        int c = n;
+        while (c < m) {
+            v_zero(inout[c], count);
+            ++c;
+        }
+    }
 }
 
 }

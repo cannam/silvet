@@ -33,26 +33,24 @@
     Software without prior written authorization.
 */
 
-#ifndef BQVEC_COMPLEX_TYPES_H
-#define BQVEC_COMPLEX_TYPES_H
+#ifndef BQVEC_RANGE_H
+#define BQVEC_RANGE_H
 
 namespace breakfastquay {
 
-#ifndef NO_COMPLEX_TYPES
-
-#ifdef USE_SINGLE_PRECISION_COMPLEX
-typedef float bq_complex_element_t;
-#else
-typedef double bq_complex_element_t;
-#endif
-
-// Convertible with other complex types that store re+im consecutively
-struct bq_complex_t {
-    bq_complex_element_t re;
-    bq_complex_element_t im;
-};
-
-#endif
+/** Check whether an integer index is in range for a container,
+    avoiding overflows and signed/unsigned comparison warnings.
+*/
+template<typename T, typename C>
+bool in_range_for(const C &container, T i)
+{
+    if (i < 0) return false;
+    if (sizeof(T) > sizeof(typename C::size_type)) {
+	return i < static_cast<T>(container.size());
+    } else {
+	return static_cast<typename C::size_type>(i) < container.size();
+    }
+}
 
 }
 
